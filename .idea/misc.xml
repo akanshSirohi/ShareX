@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_about.xml" value="0.2555" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_arrow_left.xml" value="0.2555" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_arrow_reset.xml" value="0.2555" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_arrow_right.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_auto_open.xml" value="0.146" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_blank.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_caret_down.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_caret_up.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_check.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_delete.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_delete_swipe.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_feedback.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_offline.xml" value="0.194" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_pc_mob.xml" value="0.2385" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/ic_terminal.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/instruction_card_bg.xml" value="0.2555" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/log_down_btn.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/sett_card_bg.xml" value="0.2555" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/trans_off_to_on.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/trans_on_to_off.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/drawable/url_box.xml" value="0.239" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/about_view.xml" value="0.2441123188405797" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/activity_main.xml" value="0.152" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/activity_transfer_history.xml" value="0.2441123188405797" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/drawer_header.xml" value="0.2441123188405797" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/main_view.xml" value="0.2" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/qr_scanner_layout.xml" value="0.2441123188405797" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/qr_view.xml" value="0.2" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/settings_view.xml" value="0.25" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/slider1.xml" value="0.25" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/slider2.xml" value="0.25" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/slider3.xml" value="0.25" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/slider4.xml" value="0.25" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/slider5.xml" value="0.25" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/slider6.xml" value="0.2164855072463768" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/layout/trans_hist_item.xml" value="0.6" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/menu/menu.xml" value="0.1" />
+        <entry key="..\:/AndroidProjects/ShareX/app/src/main/res/menu/menu_h.xml" value="0.264" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+  <component name="SuppressABINotification">
+    <option name="modulesWithSuppressedNotConfigured">
+      <set>
+        <option value="app" />
+      </set>
+    </option>
+  </component>
+</project>

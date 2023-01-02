@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/settings"
+        android:icon="@drawable/ic_setting"
+        android:title="Settings" />
+
+    <item android:title="QR Scanner"
+        android:id="@+id/scan_qr"
+        android:icon="@drawable/ic_qr_scan"
+        />
+    <item
+        android:id="@+id/trans_hist"
+        android:icon="@drawable/ic_history"
+        android:title="Transfer History" />
+    <item
+        android:id="@+id/clear_log"
+        android:icon="@drawable/ic_clear_log"
+        android:title="Clear Logs" />
+    <item
+        android:id="@+id/privacy_policy"
+        android:icon="@drawable/ic_privacy_policy"
+        android:title="Privacy Policy" />
+    <item
+        android:id="@+id/feedback"
+        android:icon="@drawable/ic_feedback"
+        android:title="Feedback" />
+    <item
+        android:id="@+id/about"
+        android:icon="@drawable/ic_about"
+        android:title="About" />
+</menu>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/bg_color"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        card_view:cardCornerRadius="3dp"
+        card_view:cardElevation="2dp"
+        card_view:cardUseCompatPadding="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/click_panel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/ripple_bg_"
+            android:clickable="true">
+
+            <ImageView
+                android:id="@+id/hitem_icon"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_send"
+                tools:ignore="VectorDrawableCompat" />
+
+            <TextView
+                android:id="@+id/hitem_filename"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="middle"
+                android:fontFamily="@font/product_sans"
+                android:singleLine="true"
+                android:text="Filename..."
+                android:textColor="@color/txt_color"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/hitem_icon"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/hitem_path"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="middle"
+                android:fontFamily="@font/product_sans"
+                android:singleLine="true"
+                android:text="/storage/emulated/0"
+                android:textColor="@color/txt_color_secondary"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/hitem_filename"
+                app:layout_constraintTop_toBottomOf="@+id/hitem_filename" />
+
+            <TextView
+                android:id="@+id/hitem_type"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="8dp"
+                android:fontFamily="@font/product_sans"
+                android:text="Type: image/png"
+                android:textColor="@color/txt_color_secondary"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/hitem_path"
+                app:layout_constraintTop_toBottomOf="@+id/hitem_path" />
+
+            <TextView
+                android:id="@+id/hitem_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/product_sans"
+                android:text="Size: 10.00 MB"
+                android:textColor="@color/txt_color_secondary"
+                android:textSize="12sp"
+                app:layout_constraintStart_toStartOf="@+id/hitem_type"
+                app:layout_constraintTop_toBottomOf="@+id/hitem_type" />
+
+            <TextView
+                android:id="@+id/hitem_dt_stamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/product_sans"
+                android:text="12/07/2020 | 12:30 PM"
+                android:textColor="@color/txt_color_secondary"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/hitem_size"
+                app:layout_constraintTop_toBottomOf="@+id/hitem_size" />
+
+            <ImageButton
+                android:id="@+id/hitem_share_btn"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/ripple_bg"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:tint="@color/txt_color_secondary"
+                app:layout_constraintBottom_toBottomOf="@+id/hitem_del_btn"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/hitem_del_btn"
+                app:srcCompat="@drawable/ic_share"
+                tools:ignore="VectorDrawableCompat" />
+
+            <ImageButton
+                android:id="@+id/hitem_del_btn"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/ripple_bg"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                android:tint="@color/txt_color_secondary"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/hitem_share_btn"
+                app:layout_constraintTop_toBottomOf="@+id/hitem_type"
+                app:layout_constraintVertical_bias="0.612"
+                app:srcCompat="@drawable/ic_delete"
+                tools:ignore="VectorDrawableCompat" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

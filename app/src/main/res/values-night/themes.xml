@@ -1,0 +1,28 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+   <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:fontFamily">@font/product_sans</item>
+        <item name="titleTextColor">@android:color/white</item>
+        <item name="android:tint">@android:color/white</item>
+    </style>
+
+    <style name="ProductSansStyle" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="itemTextColor">@android:color/white</item>
+        <item name="android:fontFamily">@font/product_sans</item>
+        <item name="android:textColorSecondary">@android:color/white</item>
+        <item name="itemBackground">@drawable/ripple_bg</item>
+    </style>
+
+    <color name="white">@color/color_white</color>
+    <color name="bg_color">#222</color>
+    <color name="bg_color_sec">#171717</color>
+    <color name="txt_color">@color/color_white</color>
+    <color name="txt_color_secondary">#AFAFAF</color>
+</resources>
