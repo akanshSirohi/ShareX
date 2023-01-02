@@ -14,4 +14,8 @@
 
 > One of many ongoing projects, so more features and app stability will be increased in next versions
 <br><br>
+
+## ShareX Web Directory
+This directory contains the code of web based file manager. It is the GUI of app on browser side to send and receive files.
+
 ### More Info Will Be Updated Soon...
