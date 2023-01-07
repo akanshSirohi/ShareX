@@ -1,0 +1,8 @@
+Features
+- No need of this app on another device to send and receive files.
+- Can work with Windows, Mac, Linux, Android, iPhone.
+- Unique lightweight app designed for faster, multiple and parallel file sharing purposes.
+- Send and receive files over wifi or within a network with anyone or on any device.
+- Flexible and easy to use app.
+- Works offline, it uses no data to share your files.
+- Etc.
