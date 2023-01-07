@@ -69,8 +69,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.sanojpunchihewa.updatemanager.UpdateManager;
-import com.sanojpunchihewa.updatemanager.UpdateManagerConstant;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 
@@ -119,8 +117,6 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> storagePermissionResultLauncher;
     ActivityResultLauncher<Intent> folderPickerResultLauncher;
     ActivityResultLauncher<Intent> batteryActivityResultLauncher;
-
-    UpdateManager mUpdateManager;
 
     int exit = 0;
     boolean requestingStorage = false;
@@ -399,8 +395,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initializeApp() {
-        mUpdateManager = UpdateManager.Builder(this).mode(UpdateManagerConstant.FLEXIBLE);
-        mUpdateManager.start();
 
         if(utils.isServiceRunning(ServerService.class)) {
             changeUI(Constants.SERVER_ON);
