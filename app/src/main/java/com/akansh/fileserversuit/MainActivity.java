@@ -421,15 +421,15 @@ public class MainActivity extends AppCompatActivity {
         });
         File f=new File("/data/data/"+getPackageName()+"/"+Constants.NEW_DIR+"/index.html");
         if(!f.exists()) {
-            ContentFetcher contentFetcher=new ContentFetcher(getPackageName());
-            contentFetcher.downloadListeners=new ContentFetcher.DownloadListeners() {
+            WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this);
+            webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {
                 @Override
-                public void onDownloadCompeted(boolean status) {
+                public void onSetupCompeted(boolean status) {
                     progress.cancel();
                     if(!status) {
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                         builder.setTitle(utils.getSpannableFont("Error"));
-                        builder.setMessage(utils.getSpannableFont("Something went wrong!\nCheck your internet connectivity and try again later!"));
+                        builder.setMessage(utils.getSpannableFont("Something went wrong!"));
                         builder.setPositiveButton("OK", (dialog, id) -> {
                             dialog.dismiss();
                             finishAffinity();
@@ -451,7 +451,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onDownloadStarted(boolean updating) {
+                public void onSetupStarted(boolean updating) {
                     progress=new ProgressDialog( MainActivity.this);
                     try {
                         progress.setTitle(utils.getSpannableFont(getResources().getString(R.string.app_name)));
@@ -471,7 +471,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             };
-            contentFetcher.execute();
+            webInterfaceSetup.execute();
         }else{
             askIgnoreBatteryOptimizations();
         }
@@ -634,9 +634,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
+            public void onAnimationRepeat(Animation animation) {}
         });
         logger_wrapper.startAnimation(animation);
         utils.saveSetting(Constants.IS_LOGGER_VISIBLE,!utils.loadSetting(Constants.IS_LOGGER_VISIBLE));
