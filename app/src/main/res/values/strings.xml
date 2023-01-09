@@ -1,12 +1,12 @@
 <resources>
     <string name="app_name">ShareX Pro</string>
     <string name="header_end">X Pro</string>
-    <string name="ver">v2.1</string>
+    <string name="ver">v2.3</string>
     <string name="sutitle">By Akansh Sirohi</string>
     <string name="instructions">1) Turn on this device hotspot or connect to any other hotspot.\n2) Push START button and click on QR Code button to see the url or QR Code to scan.\n3) Scan that Qr code with any QR scanner app or enter the url in another device and start sharing files!\n\nNOTE:-\n 1) You can use Private Mode Setting to select and share only limited files.\n 2) This app completely works offline, no internet is used for file sharing.</string>
     <string name="note">Another device should be on same network or connected with your device hotspot.</string>
     <string name="font_ps">fonts/product_sans.ttf</string>
     <string name="open_drawer">Open Drawer</string>
     <string name="close_drawer">Close Drawer</string>
-    <string name="credits">Developed By: Akansh Sirohi\nMade in INDIA</string>
+    <string name="credits">Developed By: Akansh Sirohi\n\nMade with ❤️ in INDIA</string>
 </resources>

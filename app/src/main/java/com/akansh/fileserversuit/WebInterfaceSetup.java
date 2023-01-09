@@ -1,6 +1,7 @@
 package com.akansh.fileserversuit;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -9,21 +10,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.net.URL;
+import java.io.OutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.net.ssl.HttpsURLConnection;
-
-public class ContentFetcher extends AsyncTask<Void, Void, Void> {
+public class WebInterfaceSetup extends AsyncTask<Void, Void, Void> {
 
     String packageName;
+    Context ctx;
 
-    public ContentFetcher(String packageName) {
+    public WebInterfaceSetup(String packageName, Context ctx) {
         this.packageName = packageName;
+        this.ctx = ctx;
     }
 
-    DownloadListeners downloadListeners;
+    SetupListeners setupListeners;
     boolean status=false;
 
     @Override
@@ -31,9 +32,9 @@ public class ContentFetcher extends AsyncTask<Void, Void, Void> {
     protected void onPreExecute() {
         File pV=new File(String.format("/data/data/%s/%s/index.html",packageName,Constants.OLD_DIR));
         if(pV.exists()) {
-            downloadListeners.onDownloadStarted(true);
+            setupListeners.onSetupStarted(true);
         }else{
-            downloadListeners.onDownloadStarted(false);
+            setupListeners.onSetupStarted(false);
         }
     }
 
@@ -41,25 +42,24 @@ public class ContentFetcher extends AsyncTask<Void, Void, Void> {
     @SuppressLint("SdCardPath")
     protected Void doInBackground(Void... voids) {
         try {
-            URL file = new URL(Constants.ZIP_DOWNLOAD_URL);
-            HttpsURLConnection urlConnection = (HttpsURLConnection) file.openConnection();
-            urlConnection.connect();
-            InputStream inputStream = urlConnection.getInputStream();
-            File f=new File("/data/data/"+packageName,Constants.ZIP_FILE);
-            FileOutputStream stream = new FileOutputStream(f);
-            int bytesRead;
+            InputStream myInput =  ctx.getAssets().open(Constants.ZIP_FILE_ASSETS);
+            File outFile=new File("/data/data/"+packageName, Constants.ZIP_FILE_ASSETS);
+            OutputStream myOutput = new FileOutputStream(outFile);
             byte[] buffer = new byte[2048];
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                stream.write(buffer, 0, bytesRead);
-
+            int length;
+            while ((length = myInput.read(buffer)) > 0) {
+                myOutput.write(buffer, 0, length);
             }
-            stream.close();
-            inputStream.close();
-            File zipFile = new File(String.format("/data/data/%s/%s",packageName,Constants.ZIP_FILE));
+            // Close the streams
+            myOutput.flush();
+            myOutput.close();
+            myInput.close();
+
+            File zipFile = new File(String.format("/data/data/%s/%s",packageName,Constants.ZIP_FILE_ASSETS));
             File destDir = new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR));
             status=unzip(zipFile, destDir);
             if(!status) {
-                f.delete();
+                outFile.delete();
                 Log.d(Constants.LOG_TAG,"Failed To Unzip File!");
             }
 
@@ -70,7 +70,7 @@ public class ContentFetcher extends AsyncTask<Void, Void, Void> {
                 deleteDirectory(pV);
             }
         }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,e.getMessage());
+            Log.d(Constants.LOG_TAG,e.toString());
             status=false;
             Log.d(Constants.LOG_TAG,"Failed To Download File!");
         }
@@ -79,13 +79,13 @@ public class ContentFetcher extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected void onPostExecute(Void aVoid) {
-        downloadListeners.onDownloadCompeted(status);
+        setupListeners.onSetupCompeted(status);
     }
 
 
-    public interface DownloadListeners {
-        void onDownloadCompeted(boolean status);
-        void onDownloadStarted(boolean updating);
+    public interface SetupListeners {
+        void onSetupCompeted(boolean status);
+        void onSetupStarted(boolean updating);
     }
 
     public boolean unzip(File zipFile, File targetDirectory) {
