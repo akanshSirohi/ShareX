@@ -1,6 +1,7 @@
 package com.akansh.fileserversuit;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -394,8 +395,8 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
     }
 
+    @SuppressLint("SdCardPath")
     public void initializeApp() {
-
         if(utils.isServiceRunning(ServerService.class)) {
             changeUI(Constants.SERVER_ON);
             String u=utils.loadString(Constants.TEMP_URL);
@@ -419,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
             changeUI(Constants.SERVER_OFF);
         }
         });
-        File f=new File("/data/data/"+getPackageName()+"/"+Constants.NEW_DIR+"/index.html");
+        File f=new File(String.format("/data/data/%s/%s/index.html",getPackageName(),Constants.NEW_DIR));
         if(!f.exists()) {
             WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this);
             webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {

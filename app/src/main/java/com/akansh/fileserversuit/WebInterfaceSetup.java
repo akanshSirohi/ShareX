@@ -2,17 +2,14 @@ package com.akansh.fileserversuit;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class WebInterfaceSetup extends AsyncTask<Void, Void, Void> {
 
@@ -42,37 +39,20 @@ public class WebInterfaceSetup extends AsyncTask<Void, Void, Void> {
     @SuppressLint("SdCardPath")
     protected Void doInBackground(Void... voids) {
         try {
-            InputStream myInput =  ctx.getAssets().open(Constants.ZIP_FILE_ASSETS);
-            File outFile=new File("/data/data/"+packageName, Constants.ZIP_FILE_ASSETS);
-            OutputStream myOutput = new FileOutputStream(outFile);
-            byte[] buffer = new byte[2048];
-            int length;
-            while ((length = myInput.read(buffer)) > 0) {
-                myOutput.write(buffer, 0, length);
-            }
-            // Close the streams
-            myOutput.flush();
-            myOutput.close();
-            myInput.close();
-
-            File zipFile = new File(String.format("/data/data/%s/%s",packageName,Constants.ZIP_FILE_ASSETS));
-            File destDir = new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR));
-            status=unzip(zipFile, destDir);
+            status = copyDirFromAssetManager(Constants.WEB_INTERFACE_DIR, Constants.NEW_DIR);
             if(!status) {
-                outFile.delete();
                 Log.d(Constants.LOG_TAG,"Failed To Unzip File!");
+                deleteDirectory(new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR)));
             }
-
             // Delete Prev-Ver Files
-            Log.d(Constants.LOG_TAG,"Old Version Found!");
             File pV=new File(String.format("/data/data/%s/%s",packageName,Constants.OLD_DIR));
             if(pV.exists()) {
+                Log.d(Constants.LOG_TAG,"Old Version Found!");
                 deleteDirectory(pV);
             }
         }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,e.toString());
             status=false;
-            Log.d(Constants.LOG_TAG,"Failed To Download File!");
+            Log.d(Constants.LOG_TAG,"Failed To Copy Dir!");
         }
         return null;
     }
@@ -88,53 +68,62 @@ public class WebInterfaceSetup extends AsyncTask<Void, Void, Void> {
         void onSetupStarted(boolean updating);
     }
 
-    public boolean unzip(File zipFile, File targetDirectory) {
+    public boolean copyDirFromAssetManager(String arg_assetDir, String arg_destinationDir) {
         try {
-            ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFile)));
-            ZipEntry ze;
-            int count;
-            byte[] buffer = new byte[8192];
-            while ((ze = zis.getNextEntry()) != null) {
-                File file = new File(targetDirectory, ze.getName());
-                boolean b = ensureZipPathSafety(file, targetDirectory);
-                if (!b) {
-                    return false;
-                }
-                File dir = ze.isDirectory() ? file : file.getParentFile();
-                if (!dir.isDirectory() && !dir.mkdirs())
-                    return false;
-                if (ze.isDirectory())
-                    continue;
-                FileOutputStream fout = new FileOutputStream(file);
-                try {
-                    while ((count = zis.read(buffer)) != -1)
-                        fout.write(buffer, 0, count);
-                }catch (Exception e){
-                    Log.d(Constants.LOG_TAG,e.getMessage());
-                }finally {
-                    fout.close();
-                }
-            }
-            zis.close();
-            zipFile.delete();
-            return true;
-        }catch(Exception e) {
-            Log.d(Constants.LOG_TAG,e.getMessage());
-        }
-        return false;
-    }
+            String dest_dir_path = "/data/data/" + packageName + addLeadingSlash(arg_destinationDir);
+            File dest_dir = new File(dest_dir_path);
+            if (!dest_dir.exists()) {
 
-    private boolean ensureZipPathSafety(final File outputFile, final File destDirectory) {
-        try {
-            String destDirCanonicalPath = destDirectory.getCanonicalPath();
-            String outputFileCanonicalPath = outputFile.getCanonicalPath();
-            if (!outputFileCanonicalPath.startsWith(destDirCanonicalPath)) {
-                return false;
+                dest_dir.mkdirs();
+            }
+            AssetManager asset_manager = ctx.getAssets();
+            String[] files = asset_manager.list(arg_assetDir);
+            for (int i = 0; i < files.length; i++) {
+                String abs_asset_file_path = addTrailingSlash(arg_assetDir) + files[i];
+                String[] sub_files = asset_manager.list(abs_asset_file_path);
+                if (sub_files.length == 0) {
+                    String dest_file_path = addTrailingSlash(dest_dir_path) + files[i];
+                    if (!copyAssetFile(abs_asset_file_path, dest_file_path)) {
+                        return false;
+                    }
+                } else {
+                    copyDirFromAssetManager(abs_asset_file_path, addTrailingSlash(arg_destinationDir) + files[i]);
+                }
             }
             return true;
         }catch (Exception e) {
             return false;
         }
+    }
+
+    public boolean copyAssetFile(String assetFilePath, String destinationFilePath) {
+        try {
+            InputStream in = ctx.getAssets().open(assetFilePath);
+            OutputStream out = new FileOutputStream(destinationFilePath);
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0)
+                out.write(buf, 0, len);
+            in.close();
+            out.close();
+            return true;
+        }catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String addTrailingSlash(String path) {
+        if (path.charAt(path.length() - 1) != '/') {
+            path += "/";
+        }
+        return path;
+    }
+
+    public String addLeadingSlash(String path) {
+        if (path.charAt(0) != '/') {
+            path = "/" + path;
+        }
+        return path;
     }
 
     public void deleteDirectory(File fileOrDirectory) {
