@@ -35,5 +35,4 @@ public class Constants {
     public static final String OLD_DIR = "sharex_v1_6";
     public static final String NEW_DIR = "sharex_v1_7";
     public static final String WEB_INTERFACE_DIR = "sharex_web_v1_7";
-    public static final String ZIP_FILE_ASSETS = "sharex_web_v1_7.zip";
 }
