@@ -16,6 +16,12 @@
 <br><br>
 
 ## ShareX Web Directory
+Dir: app\src\main\assets\sharex_web_v1_7 <br>
 This directory contains the code of web based file manager. It is the GUI of app on browser side to send and receive files.
+
+## Download
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="100">](https://f-droid.org/packages/com.akansh.fileserversuit/)
 
 ### More Info Will Be Updated Soon...
