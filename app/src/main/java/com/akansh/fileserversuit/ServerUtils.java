@@ -25,13 +25,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import fi.iki.elonen.NanoHTTPD;
-
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
 
 public class ServerUtils {
-    private List<ApplicationInfo> packages = null;
-    private PackageManager packageManager=null;
-    private Context ctx;
+    private final List<ApplicationInfo> packages;
+    private final PackageManager packageManager;
+    private final Context ctx;
     Utils utils;
     SendProgressListener sendProgressListener;
     UpdateTransferHistoryListener updateTransferHistoryListener;
@@ -365,12 +364,9 @@ public class ServerUtils {
                     FileInputStream fis = new FileInputStream(path);
                     fis.skip(start);
                     ProgressInputStream pis = new ProgressInputStream(fis, (int) fileLength);
-                    pis.addListener(new ProgressInputStream.ProgressListener() {
-                        @Override
-                        public void process(double percent) {
-                            if (sendProgressListener != null) {
-                                sendProgressListener.onProgressUpdate((int) percent);
-                            }
+                    pis.addListener(percent -> {
+                        if (sendProgressListener != null) {
+                            sendProgressListener.onProgressUpdate((int) percent);
                         }
                     });
                     response = newFixedLengthResponse(NanoHTTPD.Response.Status.PARTIAL_CONTENT,"application/octet-stream", pis,fileLength);

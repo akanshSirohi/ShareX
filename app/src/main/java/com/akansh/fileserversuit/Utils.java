@@ -150,7 +150,7 @@ public class Utils {
 
     public boolean loadSetting(String constant) {
         boolean def = false;
-        if (constant == Constants.FORCE_DOWNLOAD || constant == Constants.IS_LOGGER_VISIBLE) {
+        if (constant.equals(Constants.FORCE_DOWNLOAD) || constant.equals(Constants.IS_LOGGER_VISIBLE) || constant.equals(Constants.RESTRICT_MODIFY)) {
             def = true;
         }
         SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
