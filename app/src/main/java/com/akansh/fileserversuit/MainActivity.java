@@ -84,14 +84,13 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final String[] PERMISSIONS_OLD = {
-            Manifest.permission.CAMERA,
+    private final String[] PERMISSIONS = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
-    private final String[] PERMISSIONS_NEW = {
-            Manifest.permission.CAMERA,
-    };
+//    private final String[] PERMISSIONS_NEW = {
+//            Manifest.permission.CAMERA,
+//    };
 
     private ImageButton serverBtn,hide_logger_btn;
     Utils utils;
@@ -200,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions();
+            initRequestPermissions();
         } else {
             initializeApp();
         }
@@ -482,7 +481,11 @@ public class MainActivity extends AppCompatActivity {
             if(itemId == R.id.settings) {
                 toggleSettings();
             }else if(itemId == R.id.scan_qr) {
-                initQrScanner();
+                if(checkCameraPermission()) {
+                    initQrScanner();
+                }else{
+                    requestCameraPermission();
+                }
             }else if(itemId == R.id.trans_hist) {
                 Intent intent=new Intent(MainActivity.this,TransferHistory.class);
                 startActivity(intent);
@@ -523,15 +526,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public boolean checkPermissions() {
+    public boolean checkStoragePermissions() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            return ActivityCompat.checkSelfPermission(this,PERMISSIONS_OLD[0]) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this,PERMISSIONS_OLD[1]) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this,PERMISSIONS_OLD[2]) == PackageManager.PERMISSION_GRANTED;
-        }else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-            return ActivityCompat.checkSelfPermission(this,PERMISSIONS_NEW[0]) == PackageManager.PERMISSION_GRANTED;
+            return ActivityCompat.checkSelfPermission(this,PERMISSIONS[0]) == PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this,PERMISSIONS[1]) == PackageManager.PERMISSION_GRANTED;
         }
         return true;
+    }
+
+    public boolean checkCameraPermission() {
+        return ActivityCompat.checkSelfPermission(this,Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public void requestCameraPermission() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA},Constants.CAMERA_REQ_CODE);
+        }
     }
 
     public void requestStoragePermissions() {
@@ -553,29 +563,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void requestPermissions() {
+    public void initRequestPermissions() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            requestPermissions(PERMISSIONS_OLD,Constants.STORAGE_REQ_CODE);
+            requestPermissions(PERMISSIONS,Constants.STORAGE_REQ_CODE);
         }else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-            requestPermissions(PERMISSIONS_NEW,Constants.STORAGE_REQ_CODE);
+            if (!Environment.isExternalStorageManager()) {
+                requestStoragePermissions();
+            } else {
+                initializeApp();
+            }
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == Constants.STORAGE_REQ_CODE) {
-            if (!checkPermissions()) {
-                requestPermissions();
+            if (!checkStoragePermissions()) {
+                initRequestPermissions();
                 return;
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                if (!Environment.isExternalStorageManager()) {
-                    requestStoragePermissions();
-                } else {
-                    initializeApp();
-                }
-            } else {
-                initializeApp();
+            initializeApp();
+        }else if(requestCode == Constants.CAMERA_REQ_CODE) {
+            if(checkCameraPermission()) {
+                initQrScanner();
             }
         }else{
             super.onRequestPermissionsResult(requestCode, permissions, grantResults);
