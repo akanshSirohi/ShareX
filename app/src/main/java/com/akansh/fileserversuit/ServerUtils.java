@@ -1,5 +1,6 @@
 package com.akansh.fileserversuit;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -23,6 +24,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import fi.iki.elonen.NanoHTTPD;
 import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
@@ -54,12 +56,11 @@ public class ServerUtils {
         StringBuilder code=new StringBuilder();
         try {
             if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-
                 File f = new File(path);
-//            Log.d(Constants.LOG_TAG, "Files Path: " + f.getAbsolutePath());
+//                Log.d(Constants.LOG_TAG, "Files Path: " + f.getAbsolutePath());
                 if (f.exists()) {
                     File[] files = f.listFiles();
-//                Log.d(Constants.LOG_TAG, "Files Length: " + files.length);
+//                    Log.d(Constants.LOG_TAG, "Files Length: " + files.length);
                     Collections.sort(Arrays.asList(files), new FilesComparator());
                     String name = "";
                     int len = 0;
@@ -71,22 +72,22 @@ public class ServerUtils {
                             }
                         }
                         len++;
-                        code.append("<tr id=\"row_" + name + "\"><td class=\"align-middle icon-col\" style=\"padding-left:25px;\">");
+                        code.append("<tr id=\"row_").append(name).append("\"><td class=\"align-middle icon-col\" style=\"padding-left:25px;\">");
                         code.append("<div class=\"custom-control custom-checkbox\">");
-                        code.append("<input type=\"checkbox\" class=\"custom-control-input\" name=\"fChkBoxes\" id=\"" + name + "\" onchange=\"notifyChkBoxUI();\">");
-                        code.append("<label class=\"custom-control-label\" for=\"" + name + "\"></label>");
+                        code.append("<input type=\"checkbox\" class=\"custom-control-input\" name=\"fChkBoxes\" id=\"").append(name).append("\" onchange=\"notifyChkBoxUI();\">");
+                        code.append("<label class=\"custom-control-label\" for=\"").append(name).append("\"></label>");
                         code.append("</div>");
                         if (files[i].isDirectory()) {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"" + name + "\" onclick=\"openFolder(this.dataset.ctxmap)\">");
+                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(name).append("\" onclick=\"openFolder(this.dataset.ctxmap)\">");
                         } else if (utils.getMimeType(files[i]).startsWith("image")) {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"" + name + "\" onclick=\"viewFile(this.dataset.ctxmap)\">");
+                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(name).append("\" onclick=\"viewFile(this.dataset.ctxmap)\">");
                         } else {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"" + name + "\" onclick=\"openFile(this.dataset.ctxmap)\">");
+                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(name).append("\" onclick=\"openFile(this.dataset.ctxmap)\">");
                         }
                         if (files[i].isDirectory()) {
                             code.append("<i class=\"fas fa-folder\"></i>");
                         } else if (utils.getMimeType(files[i]).startsWith("image")) {
-                            code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=" + files[i].getAbsolutePath() + "\"></img>");
+                            code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=").append(files[i].getAbsolutePath()).append("\"></img>");
                         } else {
                             code.append(utils.getIconCode(files[i]));
                         }
@@ -129,16 +130,16 @@ public class ServerUtils {
                                 fTemp = new File(pth);
                                 name = fTemp.getName();
                                 len++;
-                                code.append("<tr id=\"row_" + fTemp.getAbsolutePath() + "\"><td class=\"align-middle icon-col\" style=\"padding-left:25px;\">");
+                                code.append("<tr id=\"row_").append(fTemp.getAbsolutePath()).append("\"><td class=\"align-middle icon-col\" style=\"padding-left:25px;\">");
                                 code.append("<div class=\"custom-control custom-checkbox\">");
-                                code.append("<input type=\"checkbox\" class=\"custom-control-input\" name=\"fChkBoxes\" id=\"" + fTemp.getAbsolutePath() + "\" onchange=\"notifyChkBoxUI();\">");
-                                code.append("<label class=\"custom-control-label\" for=\"" + fTemp.getAbsolutePath() + "\"></label>");
+                                code.append("<input type=\"checkbox\" class=\"custom-control-input\" name=\"fChkBoxes\" id=\"").append(fTemp.getAbsolutePath()).append("\" onchange=\"notifyChkBoxUI();\">");
+                                code.append("<label class=\"custom-control-label\" for=\"").append(fTemp.getAbsolutePath()).append("\"></label>");
                                 code.append("</div>");
                                 if (utils.getMimeType(pth).startsWith("image")) {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"" + stripRoot(fTemp.getAbsolutePath()) + "\" onclick=\"viewFile_p(this.dataset.ctxmap)\">");
-                                    code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=" + fTemp.getAbsolutePath() + "\"></img>");
+                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"viewFile_p(this.dataset.ctxmap)\">");
+                                    code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=").append(fTemp.getAbsolutePath()).append("\"></img>");
                                 } else {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"" + stripRoot(fTemp.getAbsolutePath()) + "\" onclick=\"openFile_p(this.dataset.ctxmap)\">");
+                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"openFile_p(this.dataset.ctxmap)\">");
                                     code.append(utils.getIconCode(fTemp));
                                 }
                                 code.append("&nbsp;&nbsp;");
@@ -171,7 +172,7 @@ public class ServerUtils {
     public String getAppsListCode() {
         Comparator<ApplicationInfo> comparator= (obj1, obj2) -> packageManager.getApplicationLabel(obj1).toString().compareToIgnoreCase(packageManager.getApplicationLabel(obj2).toString());
         Collections.sort(packages,comparator);
-        StringBuffer code=new StringBuffer();
+        StringBuilder code=new StringBuilder();
         IconUtils iconUtils=new IconUtils();
         File base=new File(Environment.getExternalStorageDirectory(),"ShareX/.thumbs");
         if(!base.exists()) {
@@ -190,16 +191,16 @@ public class ServerUtils {
                 String appName=packageManager.getApplicationLabel(applicationInfo).toString();
                 code.append("<tr>");
                 code.append("<td>");
-                code.append("<img src=\"/ShareX/thumbnail/app/"+pkg+"\" class=\"app-icon\" />");
+                code.append("<img src=\"/ShareX/thumbnail/app/").append(pkg).append("\" class=\"app-icon\" />");
                 code.append("</td>");
                 code.append("<td>");
                 code.append("<div class=\"row\"><div class=\"col\">");
                 code.append(appName);
-                code.append("<br><small>"+pkg);
+                code.append("<br><small>").append(pkg);
                 code.append("<br><b>Size: </b>");
                 code.append(fileSize(apk));
                 code.append("</small></div><div class=\"col\" style=\"text-align:right;\">");
-                code.append("<button class=\"btn btn-primary\" onclick=\"getApp('"+pkg+"');\"><i class=\"fas fa-download\"></i></button>");
+                code.append("<button class=\"btn btn-primary\" onclick=\"getApp('").append(pkg).append("');\"><i class=\"fas fa-download\"></i></button>");
                 code.append("</div></div>");
                 code.append("</tr>");
             }
@@ -214,7 +215,7 @@ public class ServerUtils {
                 output = new DecimalFormat("##.##").format(file.length()) + " B";
                 return output;
             }
-            float size = file.length() / 1024;
+            float size = file.length() / 1024f;
             if (size >= 1024) {
                 size = size / 1024;
                 if(size >= 1024) {
@@ -258,8 +259,8 @@ public class ServerUtils {
                 response = newFixedLengthResponse(NanoHTTPD.Response.Status.OK, m, pis, b);
                 if (pushHistory) {
                     Calendar c = Calendar.getInstance();
-                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-                    SimpleDateFormat tf = new SimpleDateFormat("hh:mm a");
+                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+                    SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
                     updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), m, new File(path).getAbsolutePath()));
                 }
             }else{
@@ -338,8 +339,8 @@ public class ServerUtils {
                 response = newFixedLengthResponse(NanoHTTPD.Response.Status.OK, "application/octet-stream", pis, b);
                 if (pushHistory) {
                     Calendar c = Calendar.getInstance();
-                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-                    SimpleDateFormat tf = new SimpleDateFormat("hh:mm a");
+                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+                    SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
                     updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), utils.getMimeType(new File(path)), new File(path).getAbsolutePath()));
                 }
             }else{
@@ -395,8 +396,8 @@ public class ServerUtils {
             response = newFixedLengthResponse(NanoHTTPD.Response.Status.OK,"application/vnd.android.package-archive", str, b);
             response.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
             Calendar c = Calendar.getInstance();
-            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-            SimpleDateFormat tf = new SimpleDateFormat("hh:mm a");
+            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+            SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
             updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), "Application",pkg));
         }catch (Exception e) {
             return newFixedLengthResponse(e.getMessage());
@@ -446,6 +447,7 @@ public class ServerUtils {
         return path.replace(Environment.getExternalStorageDirectory().toString(),"");
     }
 
+    @SuppressLint("SdCardPath")
     public boolean isInPrivateFiles(String path) {
         try {
             File file=new File("/data/data/"+ctx.getPackageName()+"/","pFilesList.bin");

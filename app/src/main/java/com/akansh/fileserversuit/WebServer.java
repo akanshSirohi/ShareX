@@ -7,7 +7,6 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.akansh.t_history.HistoryDBManager;
-import com.akansh.t_history.HistoryItem;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -19,7 +18,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import fi.iki.elonen.NanoFileUpload;
 import fi.iki.elonen.NanoHTTPD;
@@ -72,16 +73,16 @@ public class WebServer extends NanoHTTPD {
                 }
             }
             String uri=session.getUri();
-            String path="";
+            String path;
             if(uri.equals("/ShareX")) {
                 Map<String, List<String>> params=session.getParameters();
-                String action=params.get("action").get(0);
+                String action = Objects.requireNonNull(params.get("action")).get(0);
                 if(action.equals("listFiles")) {
-                    String loc = params.get("location").get(0);
+                    String loc = Objects.requireNonNull(params.get("location")).get(0);
                     c_parent = loc;
                     return newFixedLengthResponse(serverUtils.getFilesListCode(root + loc, allowHiddenMedia));
                 }else if(action.equals("openFile")){
-                    String loc=root+params.get("location").get(0);
+                    String loc = root + Objects.requireNonNull(params.get("location")).get(0);
                     File f=new File(loc);
                     sendLog("msg","msg","Sending file: "+f.getName());
                     if(utils.loadSetting(Constants.FORCE_DOWNLOAD)) {
@@ -90,20 +91,20 @@ public class WebServer extends NanoHTTPD {
                         return serverUtils.serveFile(loc,true,range);
                     }
                 }else if(action.equals("viewImage")) {
-                    String loc=root+params.get("location").get(0);
+                    String loc=root+ Objects.requireNonNull(params.get("location")).get(0);
                     return serverUtils.serveFile(loc,false,range);
                 }else if(action.equals("thumbImage")) {
-                    String loc=params.get("location").get(0);
+                    String loc= Objects.requireNonNull(params.get("location")).get(0);
                     return serverUtils.serveFile(loc,false,range);
                 }else if(action.equals("delFiles")) {
                     if(!utils.loadSetting(Constants.RESTRICT_MODIFY) && !utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        JSONArray jsonArray = new JSONArray(params.get("data").get(0));
-                        String names="";
+                        JSONArray jsonArray = new JSONArray(Objects.requireNonNull(params.get("data")).get(0));
+                        StringBuilder names = new StringBuilder();
                         for (int i = 0; i < jsonArray.length(); i++) {
                             String file = jsonArray.getString(i);
                             File f=new File(root + file);
                             utils.deleteFileOrDir(f);
-                            names+="'"+f.getName()+"' ";
+                            names.append("'").append(f.getName()).append("' ");
                         }
                         sendLog("msg","msg","Deleted File/Folder: "+names);
                         return newFixedLengthResponse(jsonArray.length()+" files deleted successfully!;");
@@ -113,7 +114,7 @@ public class WebServer extends NanoHTTPD {
 
                 }else if(action.equals("downloadFiles")) {
                     Log.d(Constants.LOG_TAG,"Download Files Hitted!");
-                    JSONArray jsonArray=new JSONArray(params.get("data").get(0));
+                    JSONArray jsonArray=new JSONArray(Objects.requireNonNull(params.get("data")).get(0));
                     boolean serveOne=false;
                     File f;
                     if(!utils.loadSetting(Constants.PRIVATE_MODE)) {
@@ -129,7 +130,7 @@ public class WebServer extends NanoHTTPD {
                     }
                     if(!serveOne) {
                         sendLog("msg","msg","Zipping files to download...");
-                        String fileName = "ShareX_zip_" + params.get("filename").get(0) + ".zip";
+                        String fileName = "ShareX_zip_" + Objects.requireNonNull(params.get("filename")).get(0) + ".zip";
                         File base = new File(Environment.getExternalStorageDirectory() + "/ShareX/.temp", fileName);
                         String loc;
                         boolean b=utils.loadSetting(Constants.PRIVATE_MODE);
@@ -162,9 +163,9 @@ public class WebServer extends NanoHTTPD {
                     }
                 }else if(action.equals("renF")) {
                     if(!utils.loadSetting(Constants.RESTRICT_MODIFY) && !utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        File old = new File(root + params.get("old_n").get(0));
-                        File new_n = new File(root + params.get("parent").get(0), params.get("new_n").get(0));
-                        String s = String.valueOf(old.renameTo(new_n));
+                        File old = new File(root + Objects.requireNonNull(params.get("old_n")).get(0));
+                        File new_n = new File(root + Objects.requireNonNull(params.get("parent")).get(0), Objects.requireNonNull(params.get("new_n")).get(0));
+                        old.renameTo(new_n);
                         sendLog("msg","msg","File/folder renamed \""+old.getName()+"\" to \""+new_n.getName()+"\"");
                         return newFixedLengthResponse("File/Folder Renamed Successfully!;");
                     }else{
@@ -172,8 +173,8 @@ public class WebServer extends NanoHTTPD {
                     }
                 }else if(action.equals("newF")) {
                     if(!utils.loadSetting(Constants.RESTRICT_MODIFY) && !utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        File f = new File(root + params.get("parent").get(0), params.get("name").get(0));
-                        String s = String.valueOf(f.mkdirs());
+                        File f = new File(root + Objects.requireNonNull(params.get("parent")).get(0), Objects.requireNonNull(params.get("name")).get(0));
+                        f.mkdirs();
                         sendLog("msg","msg","New folder created at "+f.getAbsolutePath());
                         return newFixedLengthResponse("Folder Created Successfully!;");
                     }else{
@@ -182,7 +183,7 @@ public class WebServer extends NanoHTTPD {
                 }else if(action.equals("listApps")) {
                     return newFixedLengthResponse(serverUtils.getAppsListCode());
                 }else if(action.equals("getApp")) {
-                    String pkg=params.get("pkg").get(0);
+                    String pkg = Objects.requireNonNull(params.get("pkg")).get(0);
                     PackageManager packageManager=ctx.getPackageManager();
                     String appName = packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg,PackageManager.GET_META_DATA)).toString();
                     String appPath = packageManager.getApplicationInfo(pkg,PackageManager.GET_META_DATA).sourceDir;
@@ -192,7 +193,7 @@ public class WebServer extends NanoHTTPD {
                     return newFixedLengthResponse(serverUtils.getInfo());
                 }else if(action.equals("getUploadLocation")) {
                     if(!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        if(c_parent=="") {
+                        if(c_parent.isEmpty()) {
                             c_parent = "/";
                         }else if(c_parent.startsWith("//")) {
                             c_parent = c_parent.replace("//","/");
@@ -205,7 +206,7 @@ public class WebServer extends NanoHTTPD {
                     return newFixedLengthResponse(String.valueOf(utils.loadSetting(Constants.PRIVATE_MODE)));
                 }else if(action.equals("auth")) {
                     final DeviceManager deviceManager=new DeviceManager(ctx);
-                    final String device_id=params.get("device_id").get(0);
+                    final String device_id = Objects.requireNonNull(params.get("device_id")).get(0);
                     if(deviceManager.isDeviceExist(device_id)) {
                         return newFixedLengthResponse("true");
                     }else if(deviceManager.isDeviceDenied(device_id)){
@@ -313,8 +314,8 @@ public class WebServer extends NanoHTTPD {
 
     public void pushHistory(File f,int itemType) {
         Calendar c = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat tf = new SimpleDateFormat("hh:mm a");
+        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+        SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
         String mime=utils.getMimeType(f);
         if(mime==null) {
             mime="folder";
