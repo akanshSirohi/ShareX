@@ -105,8 +105,8 @@
               ></a>
               <div class="dropdown-menu" aria-labelledby="info">
                 <h4
-                  class="dropdown-header"
-                  style="color: #c3c3c3; font-size: 15px"
+                  class="dropdown-header text-muted"
+                  style="color: var(--bs-secondary); font-size: 15px"
                 >
                   Battery Info
                 </h4>
@@ -157,7 +157,7 @@
             <div class="btn-group" role="group">
               <button
                 id="btnGroupDrop1"
-                class="btn btn-light dropdown-toggle"
+                class="btn btn-outline-dark dropdown-toggle"
                 data-bs-toggle="dropdown"
               >
                 &nbsp;<i class="fas fa-bars"></i>&nbsp;
@@ -498,14 +498,13 @@
         <!-- Context Menu Start  -->
         <ul id="contextMenu" class="dropdown-menu" style="display: none">
           <li class="ctx-head">Options</li>
-          <li class="dropdown-divider" style="border-top-color: #141414"></li>
+          <li class="dropdown-divider"></li>
           <li class="dropdown-item">
             <a
               class="ctx-item"
               tabindex="-1"
               href="#"
               npaction="ctx_dwnldItem"
-              style="color: white; text-decoration: none"
               ><i class="fas fa-download"></i>&nbsp;&nbsp;Download</a
             >
           </li>
@@ -515,7 +514,6 @@
               tabindex="-1"
               href="#"
               npaction="ctx_renameItem"
-              style="color: white; text-decoration: none"
               ><i class="fas fa-i-cursor"></i>&nbsp;&nbsp;Rename</a
             >
           </li>
@@ -525,7 +523,6 @@
               tabindex="-1"
               href="#"
               npaction="ctx_delItem"
-              style="color: white; text-decoration: none"
               ><i class="fas fa-trash"></i>&nbsp;&nbsp;Delete</a
             >
           </li>

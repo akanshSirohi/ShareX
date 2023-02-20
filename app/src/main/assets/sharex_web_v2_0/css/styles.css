@@ -90,10 +90,21 @@ hr {
   display: block;
   width: 100%;
   padding: 0.25rem 0rem 0rem 1rem;
+  color: invert(var(--bs-body-bg)) !important;
+  font-weight: bold;
 }
 
 .ctx-item-danger:hover {
   background-color: var(--bs-red);
+}
+
+#contextMenu {
+  background-color: var(--bs-light) !important;
+}
+
+#contextMenu a {
+  text-decoration: none !important;
+  color: invert(var(--bs-body-bg)) !important;
 }
 
 .dropdown-toggle::after {
