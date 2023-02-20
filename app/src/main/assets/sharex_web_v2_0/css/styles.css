@@ -238,6 +238,9 @@ input[type='checkbox'] {
   float: none !important;
 }
 
+.jq-toast-single {
+  background-color: var(--bs-light);
+}
 
 #appsList .d-flex {
   justify-content: space-between !important;

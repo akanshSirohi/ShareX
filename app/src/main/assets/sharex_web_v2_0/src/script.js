@@ -481,6 +481,5 @@ function toast(heading, msg, hideAfter = false) {
     showHideTransition: "plain",
     hideAfter: hideAfter,
     loader: true,
-    bgColor: "#282828",
   });
 }
