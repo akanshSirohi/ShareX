@@ -72,20 +72,20 @@ public class ServerUtils {
                             }
                         }
                         len++;
-                        code.append("<tr id=\"row_").append(name).append("\"><td class=\"align-middle icon-col\" style=\"padding-left:25px;\">");
-                        code.append("<div class=\"custom-control custom-checkbox\">");
-                        code.append("<input type=\"checkbox\" class=\"custom-control-input\" name=\"fChkBoxes\" id=\"").append(name).append("\" onchange=\"notifyChkBoxUI();\">");
-                        code.append("<label class=\"custom-control-label\" for=\"").append(name).append("\"></label>");
+                        code.append("<tr id=\"row_").append(name).append("\"><td class=\"align-middle icon-col text-center\">");
+                        code.append("<div class=\"form-check\">");
+                        code.append("<input type=\"checkbox\" class=\"form-check-input\" name=\"fChkBoxes\" id=\"").append(name).append("\" onchange=\"notifyChkBoxUI();\">");
+                        code.append("<label class=\"form-check-label\" for=\"").append(name).append("\"></label>");
                         code.append("</div>");
                         if (files[i].isDirectory()) {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(name).append("\" onclick=\"openFolder(this.dataset.ctxmap)\">");
+                            code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(name).append("\" onclick=\"openFolder(this.dataset.ctxmap)\">");
                         } else if (utils.getMimeType(files[i]).startsWith("image")) {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(name).append("\" onclick=\"viewFile(this.dataset.ctxmap)\">");
+                            code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(name).append("\" onclick=\"viewFile(this.dataset.ctxmap)\">");
                         } else {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(name).append("\" onclick=\"openFile(this.dataset.ctxmap)\">");
+                            code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(name).append("\" onclick=\"openFile(this.dataset.ctxmap)\">");
                         }
                         if (files[i].isDirectory()) {
-                            code.append("<i class=\"fas fa-folder\"></i>");
+                            code.append("<i class=\"fa-solid fa-folder-closed\"></i>");
                         } else if (utils.getMimeType(files[i]).startsWith("image")) {
                             code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=").append(files[i].getAbsolutePath()).append("\"></img>");
                         } else {
@@ -109,10 +109,10 @@ public class ServerUtils {
                         code.append("</tr>");
                     }
                     if (len == 0) {
-                        code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"far fa-folder\"></i>&nbsp;&nbsp;Empty Folder!</td></tr>");
+                        code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"fa-regular fa-folder-open\"></i>&nbsp;&nbsp;Empty Folder!</td></tr>");
                     }
                 } else {
-                    code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"far fa-folder\"></i>&nbsp;&nbsp;Empty Folder!</td></tr>");
+                    code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"fa-regular fa-folder-open\"></i>&nbsp;&nbsp;Empty Folder!</td></tr>");
                 }
 
 
@@ -136,10 +136,10 @@ public class ServerUtils {
                                 code.append("<label class=\"custom-control-label\" for=\"").append(fTemp.getAbsolutePath()).append("\"></label>");
                                 code.append("</div>");
                                 if (utils.getMimeType(pth).startsWith("image")) {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"viewFile_p(this.dataset.ctxmap)\">");
+                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"viewFile_p(this.dataset.ctxmap)\">");
                                     code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=").append(fTemp.getAbsolutePath()).append("\"></img>");
                                 } else {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"openFile_p(this.dataset.ctxmap)\">");
+                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"openFile_p(this.dataset.ctxmap)\">");
                                     code.append(utils.getIconCode(fTemp));
                                 }
                                 code.append("&nbsp;&nbsp;");
@@ -191,15 +191,17 @@ public class ServerUtils {
                 String appName=packageManager.getApplicationLabel(applicationInfo).toString();
                 code.append("<tr>");
                 code.append("<td>");
+                code.append("<div class=\"d-flex\">");
+                code.append("<div class=\"ps-2 appInfo\">");
                 code.append("<img src=\"/ShareX/thumbnail/app/").append(pkg).append("\" class=\"app-icon\" />");
-                code.append("</td>");
-                code.append("<td>");
-                code.append("<div class=\"row\"><div class=\"col\">");
+                code.append("<div class=\"px-3\">");
                 code.append(appName);
                 code.append("<br><small>").append(pkg);
                 code.append("<br><b>Size: </b>");
                 code.append(fileSize(apk));
-                code.append("</small></div><div class=\"col\" style=\"text-align:right;\">");
+                code.append("</small></div>");
+                code.append("</div>");
+                code.append("<div class=\"apk-dwl-btn pe-2\">");
                 code.append("<button class=\"btn btn-primary\" onclick=\"getApp('").append(pkg).append("');\"><i class=\"fas fa-download\"></i></button>");
                 code.append("</div></div>");
                 code.append("</tr>");

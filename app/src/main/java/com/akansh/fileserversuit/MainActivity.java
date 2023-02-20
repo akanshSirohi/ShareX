@@ -419,8 +419,9 @@ public class MainActivity extends AppCompatActivity {
             changeUI(Constants.SERVER_OFF);
         }
         });
+
         File f=new File(String.format("/data/data/%s/%s/index.html",getPackageName(),Constants.NEW_DIR));
-        if(!f.exists()) {
+        if(!f.exists() || Constants.DEBUG) {
             WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this);
             webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {
                 @Override
@@ -446,7 +447,9 @@ public class MainActivity extends AppCompatActivity {
                     }catch (Exception e) {
                         //Do Nothing!
                     }
-                    showAbout();
+                    if(!Constants.DEBUG) {
+                        showAbout();
+                    }
                     askIgnoreBatteryOptimizations();
                 }
 
