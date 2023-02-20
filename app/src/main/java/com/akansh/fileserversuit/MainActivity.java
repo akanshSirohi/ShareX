@@ -143,10 +143,8 @@ public class MainActivity extends AppCompatActivity {
         scan_url = findViewById(R.id.scan_url);
         drawerLayout = findViewById(R.id.root_container);
 
-
         ImageButton nav_btn = findViewById(R.id.nav_btn);
         nav_btn.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
-
 
         //Settings Components
         settDRoot = findViewById(R.id.sett_subtitle1);

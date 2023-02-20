@@ -291,6 +291,9 @@ public class WebServer extends NanoHTTPD {
             }else{
                 if(uri.equals("/")) {
                     path= utils.getFileProperPath("index.html");
+                }else if(uri.equals("/libs/bootstrap/css/theme_bootstrap.min.css")) {
+                    uri = uri.replace("theme","cerulean");
+                    path=utils.getFileProperPath(uri);
                 }else{
                     path=utils.getFileProperPath(uri);
                 }
