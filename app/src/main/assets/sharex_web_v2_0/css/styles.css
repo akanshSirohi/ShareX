@@ -44,11 +44,10 @@
 }
 
 .addrBar {
-  background-color: rgba(0, 0, 0, 0);
   border-style: solid;
   padding: 2px 15px 2px 5px;
   border-radius: 2px 10px 10px 2px;
-  color: white;
+  color: var(--bs-dark);
   position: relative;
   -webkit-box-flex: 1;
   -ms-flex: 1 1 auto;
@@ -183,7 +182,7 @@ hr {
   display: inline-block;
   position: relative;
   border: 3px solid;
-  border-color: #fff #fff transparent transparent;
+  border-color: var(--bs-dark) var(--bs-dark) transparent transparent;
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
 }
@@ -199,7 +198,7 @@ hr {
   bottom: 0;
   margin: auto;
   border: 3px solid;
-  border-color: transparent transparent #2a9fd6 #2a9fd6;
+  border-color: transparent transparent var(--bs-primary) var(--bs-primary);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -211,7 +210,7 @@ hr {
 .loader::before {
   width: 32px;
   height: 32px;
-  border-color: #fff #fff transparent transparent;
+  border-color: var(--bs-dark) var(--bs-dark) transparent transparent;
   animation: rotation 1.5s linear infinite;
 }
 
