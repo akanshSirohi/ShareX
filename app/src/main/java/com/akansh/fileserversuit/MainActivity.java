@@ -100,13 +100,14 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog progress;
     private String serverRoot = null;
     private ConstraintLayout settings_view, main_view, qr_view, logger_wrapper;
-    private TextView settDRoot, settRemDev;
+    private TextView settDRoot, settRemDev, settTheme;
     private TextView logger;
     private TextView scan_url;
 
     private ImageView main_bg,second_bg;
     BroadcastReceiver updateUIReciver;
     List<String> pmode_send_images = new ArrayList<>(), pmode_send_files = new ArrayList<>(), pmode_send_final_files = new ArrayList<>();
+    ThemesData themesData = new ThemesData();
     private DrawerLayout drawerLayout;
     Dialog qrDialog;
 
@@ -117,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> batteryActivityResultLauncher;
 
     int exit = 0;
+    int currentTheme;
     boolean requestingStorage = false;
 
     @Override
@@ -149,8 +151,12 @@ public class MainActivity extends AppCompatActivity {
         //Settings Components
         settDRoot = findViewById(R.id.sett_subtitle1);
         settRemDev = findViewById(R.id.sett_subtitle6);
+        settTheme = findViewById(R.id.sett_subtitle7);
         String dev_count = deviceManager.getRemDevices() + " devices remembered";
         settRemDev.setText(dev_count);
+        settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME)));
+
+        currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME);
 
         logger.setOnLongClickListener(v -> true);
         clearLog();
@@ -654,6 +660,7 @@ public class MainActivity extends AppCompatActivity {
         CardView card4=findViewById(R.id.sett_card4);
         CardView card5=findViewById(R.id.sett_card5);
         CardView card6=findViewById(R.id.sett_card6);
+        CardView card7=findViewById(R.id.sett_card7);
         CheckBox settHFCheck=findViewById(R.id.sett_hideF_checkBox);
         CheckBox settRMCheck=findViewById(R.id.sett_resMod_checkBox);
         CheckBox settFDCheck=findViewById(R.id.sett_frceDwl_checkBox);
@@ -702,6 +709,23 @@ public class MainActivity extends AppCompatActivity {
                     MainActivity.this.runOnUiThread(() -> settRemDev.setText(deviceManager.getRemDevices()+" devices remembered"));
                 }
             },500);
+        });
+        card7.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Choose Theme");
+            builder.setSingleChoiceItems(themesData.getDisplayList(), currentTheme, (dialog, which) -> {
+                currentTheme = which;
+            });
+            builder.setPositiveButton("Set", (dialog, which) -> {
+                utils.saveInt(Constants.WEB_INTERFACE_THEME, currentTheme);
+                settTheme.setText(themesData.getDisplayItem(currentTheme));
+                dialog.dismiss();
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
+                currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME);
+                dialog.dismiss();
+            });
+            builder.show();
         });
         settResetRoot.setOnClickListener(view -> {
             serverRoot = Environment.getExternalStorageDirectory().toString();
