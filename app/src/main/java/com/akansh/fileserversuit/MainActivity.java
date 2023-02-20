@@ -79,6 +79,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -88,9 +89,6 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
-//    private final String[] PERMISSIONS_NEW = {
-//            Manifest.permission.CAMERA,
-//    };
 
     private ImageButton serverBtn,hide_logger_btn;
     Utils utils;
@@ -125,8 +123,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         logger = findViewById(R.id.logger);
         logger_wrapper = findViewById(R.id.logger_wrapper);
         hide_logger_btn = findViewById(R.id.hide_logger_btn);
@@ -146,12 +142,11 @@ public class MainActivity extends AppCompatActivity {
         second_bg = findViewById(R.id.second_bg);
         scan_url = findViewById(R.id.scan_url);
         drawerLayout = findViewById(R.id.root_container);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_drawer, R.string.close_drawer);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu);
+
+
+        ImageButton nav_btn = findViewById(R.id.nav_btn);
+        nav_btn.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+
 
         //Settings Components
         settDRoot = findViewById(R.id.sett_subtitle1);
@@ -724,11 +719,9 @@ public class MainActivity extends AppCompatActivity {
         if(settings_view.getVisibility()==View.GONE) {
             settings_view.setVisibility(View.VISIBLE);
             main_view.setVisibility(View.GONE);
-            getSupportActionBar().setTitle("Settings");
         }else{
             settings_view.setVisibility(View.GONE);
             main_view.setVisibility(View.VISIBLE);
-            getSupportActionBar().setTitle(getResources().getString(R.string.app_name));
         }
     }
 

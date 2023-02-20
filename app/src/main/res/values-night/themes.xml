@@ -9,8 +9,7 @@
 
     <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.Light">
         <item name="android:fontFamily">@font/product_sans</item>
-        <item name="titleTextColor">@android:color/white</item>
-        <item name="android:tint">@android:color/white</item>
+
     </style>
 
     <style name="ProductSansStyle" parent="Theme.AppCompat.Light.NoActionBar">
