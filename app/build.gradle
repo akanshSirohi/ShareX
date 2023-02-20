@@ -45,7 +45,7 @@ dependencies {
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'org.nanohttpd:nanohttpd-apache-fileupload:2.3.1'
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
-    implementation 'net.lingala.zip4j:zip4j:2.2.4'
+    implementation 'net.lingala.zip4j:zip4j:2.11.4'
     implementation 'com.github.TutorialsAndroid:FilePicker:v8.0.19'
     implementation 'com.zhihu.android:matisse:0.5.3-beta3'
     implementation 'com.github.clans:fab:1.6.4'
