@@ -22,6 +22,7 @@
     <color name="white">@color/color_white</color>
     <color name="bg_color">#222</color>
     <color name="bg_color_sec">#171717</color>
+    <color name="bg_color_header">#2B2B2B</color>
     <color name="txt_color">@color/color_white</color>
     <color name="txt_color_secondary">#AFAFAF</color>
 </resources>
