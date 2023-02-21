@@ -37,7 +37,6 @@
   border-style: solid;
   padding: 2px 15px 2px 5px;
   border-radius: 2px 10px 10px 2px;
-  /* color: var(--bs-dark); */
   position: relative;
   -webkit-box-flex: 1;
   -ms-flex: 1 1 auto;
@@ -245,4 +244,9 @@ input[type='checkbox'] {
 #bat_p,
 #bat_plg {
   pointer-events: none !important;
+}
+
+.notyf_info {
+  background-color: var(--bs-light);
+  color: var(--bs-dark);
 }

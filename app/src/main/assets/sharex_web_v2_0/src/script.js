@@ -1,5 +1,5 @@
 let parent = "/";
-let toastNotify = null;
+let notyf = null;
 let tab = 0;
 let opened_img = "";
 let openFlg = false;
@@ -468,18 +468,28 @@ function reload() {
   loadFiles(parent);
 }
 
-function toast(heading, msg, hideAfter = false) {
-  if (toastNotify != null) {
-    toastNotify.reset();
+function toast(heading, msg, hideAfter = 0) {
+  if(notyf != null) {
+    notyf.dismissAll();
   }
-  toastNotify = $.toast({
-    heading: heading,
-    text: msg,
-    icon: "success",
-    position: "bottom-right",
-    allowToastClose: true,
-    showHideTransition: "plain",
-    hideAfter: hideAfter,
-    loader: true,
+  notyf = new Notyf({
+    duration: hideAfter,
+    ripple: true,
+    dismissible: true,
+    types: [
+      {
+        type: 'info',
+        className: "notyf_info",
+        icon: {
+          className: 'fa-solid fa-info',
+          tagName: 'i',
+          text: ''
+        }
+      }
+    ]
+  });
+  notyf.open({
+    type: 'info',
+    message: `<b>${heading}</b><br>${msg}`
   });
 }
