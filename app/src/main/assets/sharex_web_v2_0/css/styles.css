@@ -37,7 +37,7 @@
   border-style: solid;
   padding: 2px 15px 2px 5px;
   border-radius: 2px 10px 10px 2px;
-  color: var(--bs-dark);
+  /* color: var(--bs-dark); */
   position: relative;
   -webkit-box-flex: 1;
   -ms-flex: 1 1 auto;
@@ -77,10 +77,6 @@ hr {
 
 .ctx-item-danger:hover {
   background-color: var(--bs-red);
-}
-
-#contextMenu {
-  background-color: var(--bs-light) !important;
 }
 
 #contextMenu a {
@@ -244,4 +240,9 @@ input[type='checkbox'] {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+#bat_p,
+#bat_plg {
+  pointer-events: none !important;
 }
