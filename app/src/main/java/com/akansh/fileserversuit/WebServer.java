@@ -34,6 +34,7 @@ public class WebServer extends NanoHTTPD {
     private Context ctx;
     private ServerUtils serverUtils;
     private String c_parent = "";
+    private ThemesData themesData;
 
     WebServer(String hostname, int port) {
         super(hostname, port);
@@ -43,6 +44,7 @@ public class WebServer extends NanoHTTPD {
         utils=new Utils(context);
         historyDBManager=new HistoryDBManager(context);
         ctx=context;
+        themesData = new ThemesData();
         serverUtils = new ServerUtils(ctx);
 
         serverUtils.setSendProgressListener(progress -> {
@@ -291,6 +293,9 @@ public class WebServer extends NanoHTTPD {
             }else{
                 if(uri.equals("/")) {
                     path= utils.getFileProperPath("index.html");
+                }else if(uri.equals("/libs/bootstrap/css/theme_bootstrap.min.css")) {
+                    uri = uri.replace("theme", themesData.getPrefix(utils.loadInt(Constants.WEB_INTERFACE_THEME)));
+                    path=utils.getFileProperPath(uri);
                 }else{
                     path=utils.getFileProperPath(uri);
                 }

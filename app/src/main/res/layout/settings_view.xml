@@ -3,14 +3,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/bg_color">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/bg_color"
         android:orientation="vertical">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/bg_color_header">
+
+            <TextView
+                android:id="@+id/textView15"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                android:fontFamily="@font/product_sans"
+                android:text="Settings"
+                android:textColor="@color/txt_color"
+                android:textSize="34sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/sett_card1"
@@ -22,7 +43,7 @@
             android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/bg_color"
             app:cardCornerRadius="0dp"
-            app:cardElevation="5dp"
+            app:cardElevation="0dp"
             app:contentPadding="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -88,7 +109,7 @@
             android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/bg_color"
             app:cardCornerRadius="0dp"
-            app:cardElevation="5dp"
+            app:cardElevation="0dp"
             app:contentPadding="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -133,6 +154,60 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/sett_card7"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:cardBackgroundColor="@color/bg_color"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="0dp"
+            app:contentPadding="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeColor="@color/colorAccent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/sett_card_bg">
+
+                <TextView
+                    android:id="@+id/sett_title7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="14dp"
+                    android:fontFamily="@font/product_sans"
+                    android:text="Web Interface Theme"
+                    android:textColor="@color/txt_color"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/sett_subtitle7"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="14dp"
+                    android:fontFamily="@font/product_sans"
+                    android:text="Cyborg (Default)"
+                    android:textColor="@color/txt_color_secondary"
+                    android:textSize="12sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="@+id/sett_title7"
+                    app:layout_constraintTop_toBottomOf="@+id/sett_title7" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
             android:id="@+id/sett_card2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -142,7 +217,7 @@
             android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/bg_color"
             app:cardCornerRadius="0dp"
-            app:cardElevation="5dp"
+            app:cardElevation="0dp"
             app:contentPadding="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -206,7 +281,7 @@
             android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/bg_color"
             app:cardCornerRadius="0dp"
-            app:cardElevation="5dp"
+            app:cardElevation="0dp"
             app:contentPadding="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -269,7 +344,7 @@
             android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/bg_color"
             app:cardCornerRadius="0dp"
-            app:cardElevation="5dp"
+            app:cardElevation="0dp"
             app:contentPadding="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -333,7 +408,7 @@
             android:foreground="?android:attr/selectableItemBackground"
             app:cardBackgroundColor="@color/bg_color"
             app:cardCornerRadius="0dp"
-            app:cardElevation="5dp"
+            app:cardElevation="0dp"
             app:contentPadding="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

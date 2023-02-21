@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.akansh.t_history.HistoryDBManager;
@@ -45,9 +46,9 @@ public class TransferHistory extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transfer_history);
-        Toolbar toolbar=findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Transfer History");
+//        Toolbar toolbar=findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
+//        getSupportActionBar().setTitle("Transfer History");
         historyDBManager=new HistoryDBManager(this);
         history_list = findViewById(R.id.history_list);
         ArrayList<HistoryItem> historyItems=historyDBManager.getHistory();
@@ -156,19 +157,9 @@ public class TransferHistory extends AppCompatActivity {
                 }
             }
         });
-        history_list.setAdapter(transferHistoryAdapter);
-        init();
-    }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_h,menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if(item.getItemId() == R.id.clear_h) {
+        ImageButton btn_clear_hist = findViewById(R.id.btn_clear_hist);
+        btn_clear_hist.setOnClickListener(v -> {
             if(transferHistoryAdapter.getItemCount()==0) {
                 showSnackbar("No history found!");
             }else{
@@ -176,8 +167,10 @@ public class TransferHistory extends AppCompatActivity {
                 checkEmptyList();
                 showSnackbar("Transfer history cleared!");
             }
-        }
-        return super.onOptionsItemSelected(item);
+        });
+
+        history_list.setAdapter(transferHistoryAdapter);
+        init();
     }
 
     @Override

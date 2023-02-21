@@ -1,6 +1,7 @@
 package com.akansh.fileserversuit;
 
 public class Constants {
+    public static final boolean DEBUG = true;
     public static final String LOG_TAG = "ASOFT";
     public static final String APP_LOAD_F1 = "app_load_f1";
     public static final String LOAD_HIDDEN_MEDIA = "load_hidden_media";
@@ -11,6 +12,7 @@ public class Constants {
     public static final String IS_LOGGER_VISIBLE = "is_logger_visible";
     public static final String ASKED_BATTERY_OPT = "asked_battery_opt";
     public static final String LOGGER_HEIGHT = "logger_height";
+    public static final String WEB_INTERFACE_THEME = "web_interface_theme";
     public static final int SERVER_ON = 1;
     public static final int SERVER_OFF = 0;
     public static final int MATISSE_REQ_CODE = 101;
@@ -33,7 +35,7 @@ public class Constants {
     public static final String PRIVACY_POLICY_URL = "http://akanshsirohi.github.io/sharexpro_privacy_policy.html";
 
     // WEB INTERFACE VERSION CONTROL
-    public static final String OLD_DIR = "sharex_v1_6";
-    public static final String NEW_DIR = "sharex_v1_7";
-    public static final String WEB_INTERFACE_DIR = "sharex_web_v1_7";
+    public static final String OLD_DIR = "sharex_v1_7";
+    public static final String NEW_DIR = "sharex_v2_0";
+    public static final String WEB_INTERFACE_DIR = "sharex_web_v2_0";
 }

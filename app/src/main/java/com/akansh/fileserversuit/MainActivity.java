@@ -47,9 +47,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
@@ -88,9 +86,6 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
-//    private final String[] PERMISSIONS_NEW = {
-//            Manifest.permission.CAMERA,
-//    };
 
     private ImageButton serverBtn,hide_logger_btn;
     Utils utils;
@@ -102,13 +97,14 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog progress;
     private String serverRoot = null;
     private ConstraintLayout settings_view, main_view, qr_view, logger_wrapper;
-    private TextView settDRoot, settRemDev;
+    private TextView settDRoot, settRemDev, settTheme;
     private TextView logger;
     private TextView scan_url;
 
     private ImageView main_bg,second_bg;
     BroadcastReceiver updateUIReciver;
     List<String> pmode_send_images = new ArrayList<>(), pmode_send_files = new ArrayList<>(), pmode_send_final_files = new ArrayList<>();
+    ThemesData themesData = new ThemesData();
     private DrawerLayout drawerLayout;
     Dialog qrDialog;
 
@@ -119,14 +115,13 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> batteryActivityResultLauncher;
 
     int exit = 0;
+    int currentTheme;
     boolean requestingStorage = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         logger = findViewById(R.id.logger);
         logger_wrapper = findViewById(R.id.logger_wrapper);
         hide_logger_btn = findViewById(R.id.hide_logger_btn);
@@ -146,18 +141,19 @@ public class MainActivity extends AppCompatActivity {
         second_bg = findViewById(R.id.second_bg);
         scan_url = findViewById(R.id.scan_url);
         drawerLayout = findViewById(R.id.root_container);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_drawer, R.string.close_drawer);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu);
+
+        ImageButton nav_btn = findViewById(R.id.nav_btn);
+        nav_btn.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
         //Settings Components
         settDRoot = findViewById(R.id.sett_subtitle1);
         settRemDev = findViewById(R.id.sett_subtitle6);
+        settTheme = findViewById(R.id.sett_subtitle7);
         String dev_count = deviceManager.getRemDevices() + " devices remembered";
         settRemDev.setText(dev_count);
+        settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME)));
+
+        currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME);
 
         logger.setOnLongClickListener(v -> true);
         clearLog();
@@ -419,8 +415,9 @@ public class MainActivity extends AppCompatActivity {
             changeUI(Constants.SERVER_OFF);
         }
         });
+
         File f=new File(String.format("/data/data/%s/%s/index.html",getPackageName(),Constants.NEW_DIR));
-        if(!f.exists()) {
+        if(!f.exists() || Constants.DEBUG) {
             WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this);
             webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {
                 @Override
@@ -446,7 +443,9 @@ public class MainActivity extends AppCompatActivity {
                     }catch (Exception e) {
                         //Do Nothing!
                     }
-                    showAbout();
+                    if(!Constants.DEBUG) {
+                        showAbout();
+                    }
                     askIgnoreBatteryOptimizations();
                 }
 
@@ -658,6 +657,7 @@ public class MainActivity extends AppCompatActivity {
         CardView card4=findViewById(R.id.sett_card4);
         CardView card5=findViewById(R.id.sett_card5);
         CardView card6=findViewById(R.id.sett_card6);
+        CardView card7=findViewById(R.id.sett_card7);
         CheckBox settHFCheck=findViewById(R.id.sett_hideF_checkBox);
         CheckBox settRMCheck=findViewById(R.id.sett_resMod_checkBox);
         CheckBox settFDCheck=findViewById(R.id.sett_frceDwl_checkBox);
@@ -707,6 +707,23 @@ public class MainActivity extends AppCompatActivity {
                 }
             },500);
         });
+        card7.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Choose Theme");
+            builder.setSingleChoiceItems(themesData.getDisplayList(), currentTheme, (dialog, which) -> {
+                currentTheme = which;
+            });
+            builder.setPositiveButton("Set", (dialog, which) -> {
+                utils.saveInt(Constants.WEB_INTERFACE_THEME, currentTheme);
+                settTheme.setText(themesData.getDisplayItem(currentTheme));
+                dialog.dismiss();
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
+                currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME);
+                dialog.dismiss();
+            });
+            builder.show();
+        });
         settResetRoot.setOnClickListener(view -> {
             serverRoot = Environment.getExternalStorageDirectory().toString();
             utils.saveRoot(serverRoot);
@@ -721,11 +738,9 @@ public class MainActivity extends AppCompatActivity {
         if(settings_view.getVisibility()==View.GONE) {
             settings_view.setVisibility(View.VISIBLE);
             main_view.setVisibility(View.GONE);
-            getSupportActionBar().setTitle("Settings");
         }else{
             settings_view.setVisibility(View.GONE);
             main_view.setVisibility(View.VISIBLE);
-            getSupportActionBar().setTitle(getResources().getString(R.string.app_name));
         }
     }
 
@@ -820,7 +835,7 @@ public class MainActivity extends AppCompatActivity {
             main_view.setVisibility(View.VISIBLE);
             qr_view.setVisibility(View.GONE);
             ImageView qr_view=findViewById(R.id.qr_img);
-            qr_view.setImageResource(R.drawable.ic_launcher);
+            qr_view.setImageResource(R.drawable.ic_logo);
             scan_url.setText("Start ShareX First!");
         }
     }
@@ -1002,7 +1017,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             Logo logo = new Logo();
-            logo.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
+            logo.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_logo));
             logo.setBorderRadius(10);
             logo.setBorderWidth(10);
             logo.setScale(0.2f);
@@ -1077,7 +1092,7 @@ public class MainActivity extends AppCompatActivity {
                         .setNegativeButton("Don't Allow", dialogClickListener)
                         .setNeutralButton("Always allow this device", dialogClickListener)
                         .setTitle("Request Confirmation")
-                        .setIcon(R.drawable.ic_launcher)
+                        .setIcon(R.drawable.ic_logo)
                         .setCancelable(false).show();
                 TextView textView = dialog.findViewById(android.R.id.message);
                 TextView textView2 = dialog.findViewById(android.R.id.button1);

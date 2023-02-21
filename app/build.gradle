@@ -8,8 +8,8 @@ android {
         applicationId "com.akansh.fileserversuit"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 27
-        versionName "2.3.2"
+        versionCode 28
+        versionName "2.3.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -40,12 +40,12 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'org.nanohttpd:nanohttpd-apache-fileupload:2.3.1'
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
-    implementation 'net.lingala.zip4j:zip4j:2.2.4'
+    implementation 'net.lingala.zip4j:zip4j:2.11.4'
     implementation 'com.github.TutorialsAndroid:FilePicker:v8.0.19'
     implementation 'com.zhihu.android:matisse:0.5.3-beta3'
     implementation 'com.github.clans:fab:1.6.4'
@@ -56,8 +56,8 @@ dependencies {
     implementation 'com.github.SumiMakito:AwesomeQRCode:1.2.0'
 
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
 repositories {
     mavenCentral()

@@ -142,6 +142,17 @@ public class Utils {
         return sharedPrefs.getString(constant, null);
     }
 
+    public void saveInt(String constant, int val) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putInt(constant, val);
+        editor.apply();
+    }
+
+    public int loadInt(String constant) {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getInt(constant, 0);
+    }
+
     public void saveSetting(String constant, boolean b) {
         SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
         editor.putBoolean(constant, b);

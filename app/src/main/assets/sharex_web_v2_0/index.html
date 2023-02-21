@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>ShareX</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="libs/bootstrap/css/theme_bootstrap.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="libs/fontawesome/dist/all.min.css" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="libs/notyf/notyf.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+    <script type="text/javascript" src="libs/jquery-3.6.3.min.js"></script>
+    <script type="text/javascript" src="libs/bootstrap/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="libs/fontawesome/dist/all.min.js"></script>
+    <script
+      type="text/javascript"
+      src="libs/notyf/notyf.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="libs/contextMenuPlugin/jquery.npContextMenu.js"
+    ></script>
+    <script type="text/javascript" src="libs/CookieManager.js"></script>
+    <script type="text/javascript" src="src/contextMenu.js"></script>
+    <script type="text/javascript" src="src/script.js"></script>
+    <script type="text/javascript" src="src/uploadMgr.js"></script>
+    <link rel="shortcut icon" href="images/logo.png" type="image/png" />
+  </head>
+  <body>
+    <section id="init_wait">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-center">
+            <img src="images/logo.png" class="static_logo" style="display: none;"/>
+            <div class="logo_wrapper mb-3">
+              <img src="images/logo_bg.png" class="img-fluid" />
+              <img src="images/logo_fg.png" class="logo_fg" />
+            </div>
+            <h4>
+              <span id="init_wait_text">Waiting for authentication...</span>
+            </h4>
+          </div>
+        </div>
+    </section>
+    <section id="main_bdy">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand ms-3" href="#"
+          ><img
+            src="images/logo.png"
+            alt=""
+            width="45"
+            draggable="false"
+            dragstart="false;"
+          />
+          ShareX</a
+        >
+        <button
+          class="navbar-toggler me-2"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarColor02"
+          aria-controls="navbarColor02"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse ps-2" id="navbarColor02">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active show">
+              <a class="nav-link" href="#"
+                >File Manager <span class="sr-only">(current)</span></a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#fileUploadModel"
+                id="fileUploadModelBtn"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false"
+                >Send Files</a
+              >
+            </li>
+            <li class="nav-item dropdown" id="info">
+              <a
+                class="nav-link dropdown-toggle"
+                data-bs-toggle="dropdown"
+                href="#"
+                id="info"
+                aria-expanded="false"
+                >Info &nbsp;<i class="fas fa-caret-down"></i
+              ></a>
+              <div class="dropdown-menu" aria-labelledby="info">
+                <h4
+                  class="dropdown-header text-muted"
+                  style="color: var(--bs-secondary); font-size: 15px;"
+                >
+                  Battery Info
+                </h4>
+                <a
+                  class="dropdown-item show"
+                  href="#"
+                  id="bat_p"
+                  >Percentage: 58%</a
+                >
+                <a
+                  class="dropdown-item show"
+                  href="#"
+                  id="bat_plg"
+                  >Plugged: AC Charger</a
+                >
+              </div>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#aboutModel"
+                data-bs-backdrop="static"
+                data-bs-keyboard="false"
+                >About</a
+              >
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="container" style="margin-top: 80px; padding-bottom: 50px">
+        <br />
+
+        <div class="input-group mt-2">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search for file or folder..."
+            aria-label="Search..."
+            aria-describedby="basic-addon2"
+            id="search"
+          />
+          <div class="btn-group float-right" role="group">
+            <div class="btn-group" role="group">
+              <button
+                id="btnGroupDrop1"
+                class="btn btn-outline-dark dropdown-toggle"
+                data-bs-toggle="dropdown"
+              >
+                &nbsp;<i class="fas fa-bars"></i>&nbsp;
+              </button>
+              <div
+                class="dropdown-menu"
+                aria-labelledby="btnGroupDrop1"
+                data-popper-placement="bottom-start"
+              >
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  id="more_home"
+                  name="moreOpts"
+                  ><i class="fas fa-home"></i>&nbsp;&nbsp;Home</a
+                >
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  id="more_refresh"
+                  name="moreOpts"
+                  ><i
+                    class="fas fa-redo-alt"
+                    style="transform: rotateY(180deg)"
+                  ></i
+                  >&nbsp;&nbsp;Refresh</a
+                >
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  id="more_createFolder"
+                  name="moreOpts"
+                  ><i class="fas fa-folder-plus"></i>&nbsp;&nbsp;New Folder</a
+                >
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  id="more_download"
+                  name="moreOpts"
+                  ><i class="fas fa-download"></i>&nbsp;&nbsp;Download</a
+                >
+                <a
+                  class="dropdown-item ctx-item-danger"
+                  href="#"
+                  id="delBtn"
+                  name="moreOpts"
+                  ><i class="fas fa-trash"></i>&nbsp;&nbsp;Delete</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="selectLbl" style="display: none" class="mt-2"></div>
+        <!-- Tabs Started Here -->
+
+        <ul class="nav nav-tabs mt-3">
+          <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#fxFiles"
+              ><i class="fa-solid fa-box-archive"></i>&nbsp;&nbsp;File Manager</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#fxApps"
+              ><i class="fab fa-android"></i>&nbsp;&nbsp;Apps</a
+            >
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="fxFiles">
+            <div class="input-group mt-3">
+              <button class="btn btn-primary" id="back_btn">
+                <i class="fas fa-reply"></i>&nbsp;
+              </button>
+              <div class="addrBar" id="addrBar"></div>
+            </div>
+            <div
+              style="display: block; overflow-y: auto; max-height: 600px"
+              class="mt-2"
+            >
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th
+                      class="align-middle icon-col text-center px-3"
+                    >
+                      <div class="form-check">
+                        <input
+                          type="checkbox"
+                          class="form-check-input"
+                          id="chkAll"
+                          onchange="checkAll(this.checked);" 
+                        /><label class="form-check-label" for="chkAll"></label>
+                      </div>
+                    </th>
+                    <th>File</th>
+                    <th>Size</th>
+                  </tr>
+                </thead>
+                <tbody id="filesList" class="noselect"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="fxApps">
+            <div
+              style="
+                display: block;
+                overflow-y: scroll;
+                overflow-x: hidden;
+                max-height: 600px;
+              "
+              class="mt-3"
+            >
+              <table class="table table-striped">
+                <tbody id="appsList" class="noselect">
+                  <tr>
+                    <td colspan="4" class="text-center">
+                      <span class="loader"></span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs Ended Here -->
+
+        <!-- ============================== Sub Modules Start ============================== -->
+        <!-- File Upload Model Start -->
+        <div class="modal fade" id="fileUploadModel">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Send Files</h4>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <div id="drop-area" class="text-center">
+                    <div class="mb-3" style="word-wrap: break-word">
+                      Select Files Or Drop Files Here To Upload...
+                      <div id="fUpLbl" style="margin-top: 5px"></div>
+                    </div>
+                    <input
+                      type="file"
+                      name="uploadFile"
+                      id="uploadFile"
+                      accept="*.*"
+                      multiple
+                    />
+                    <label
+                      class="btn btn-primary mt-2"
+                      for="uploadFile"
+                      style="margin-bottom: 0; cursor: pointer"
+                      ><i class="fas fa-inbox"></i>&nbsp;Select Files</label
+                    >&nbsp;&nbsp;
+                    <button class="btn btn-primary mt-2" id="fileUploadBtn">
+                      <i class="fas fa-upload"></i>&nbsp;Upload
+                    </button>
+                  </div>
+                  <div
+                    id="upload_pBar_container"
+                    style="display: none; margin-top: 15px"
+                  >
+                    <div class="progress">
+                      <div
+                        class="progress-bar progress-bar-striped progress-bar-animated"
+                        id="upload_pBar"
+                        role="progressbar"
+                        aria-valuenow="0"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        style="width: 0%"
+                      ></div>
+                      <span id="upload_pBar_lbl"></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between">
+                      <label class="mt-2" id="up_speed"
+                        >Speed: 0 kbps</label
+                      >
+                      <label class="mt-2" id="upload_pBar_lbl_time"
+                        >Elapsed Time: 00:00:00</label
+                      >
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between">
+                      <label id="upload_pBar_lbl2"
+                        >Transferred: 0 KB</label
+                      >
+                      <label id="upload_pBar_lbl_time2"
+                        >Estimated Time: 0 seconds</label
+                      >
+                    </div>
+
+                  </div>
+                </div>
+                <div class="text-center mt-3" id="upload_location_lbl">
+                  Upload Location: ...
+                </div>
+              </div>
+              <div class="modal-footer" style="justify-content: space-between;">
+                <label
+                  id="fCount"
+                  class="mr-auto"
+                  style="margin-top: auto; margin-bottom: auto"
+                  >Files Selected: 0<br />Total Size: 0 KB</label
+                >
+                <div>
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="c_upload"
+                    style="display: none"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-warning"
+                    data-bs-dismiss="modal"
+                    id="closeFUM"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- File Upload Model End   -->
+
+        <!-- About Model Start -->
+        <div class="modal fade" id="aboutModel">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">ShareX</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body text-center">
+                <img
+                  src="images/logo.png"
+                  class="img-fluid"
+                  alt=""
+                  width="120"
+                /><br /><br />
+                ShareX is unique lightweight app designed for
+                faster,multiple,parallel and cross platform file sharing purposes.<br><br>
+                All Bootstrap v5.0 themes are designed by <a href="https://bootswatch.com/" target="_blank">Bootswatch.com</a>
+                <hr />
+                Developed By: Akansh Sirohi<br />
+                Made with ❤️ in INDIA
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- About Model End  -->
+
+        <!-- File Rename Model Start -->
+        <div class="modal fade" id="fRenameModel">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Rename File/Folder</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="newFName"
+                      placeholder="New File/Folder Name..."
+                    />
+                    <button class="btn btn-primary" id="renMBtn">
+                      Rename
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- File Rename Model End  -->
+
+        <!-- Folder Create Model Start -->
+        <div class="modal fade" id="fCreateModel">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Create Folder</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="newFolName"
+                      placeholder="New Folder Name..."
+                    />
+                    <button class="btn btn-primary" id="newMfBtn">
+                      Create Folder
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Folder Create Model End  -->
+
+        <!-- ImageView Model Start -->
+        <div class="modal fade" id="imgViewModel">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">View Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body text-center" style="padding: 0">
+                <img src="" alt="" class="img-fluid" id="imgPreview" />
+              </div>
+              <div class="modal-footer">
+                <div style="text-align: right">
+                  <button class="btn btn-primary" onclick="openImg();">
+                    Download
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ImageView Model End  -->
+
+        <!-- Context Menu Start  -->
+        <ul id="contextMenu" class="dropdown-menu" style="display: none">
+          <li class="ctx-head">Options</li>
+          <li class="dropdown-divider"></li>
+          <li class="dropdown-item">
+            <a
+              class="ctx-item"
+              tabindex="-1"
+              href="#"
+              npaction="ctx_dwnldItem"
+              ><i class="fas fa-download"></i>&nbsp;&nbsp;Download</a
+            >
+          </li>
+          <li class="dropdown-item ext-ctx">
+            <a
+              class="ctx-item"
+              tabindex="-1"
+              href="#"
+              npaction="ctx_renameItem"
+              ><i class="fas fa-i-cursor"></i>&nbsp;&nbsp;Rename</a
+            >
+          </li>
+          <li class="dropdown-item ctx-item-danger ext-ctx">
+            <a
+              class="ctx-item"
+              tabindex="-1"
+              href="#"
+              npaction="ctx_delItem"
+              ><i class="fas fa-trash"></i>&nbsp;&nbsp;Delete</a
+            >
+          </li>
+        </ul>
+        <!-- Context Menu End  -->
+        <!-- ============================= Sub Modules End ============================= -->
+      </div>
+    </section>
+  </body>
+</html>
