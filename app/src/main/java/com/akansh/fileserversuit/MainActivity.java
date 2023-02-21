@@ -47,9 +47,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
@@ -79,7 +77,6 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -838,7 +835,7 @@ public class MainActivity extends AppCompatActivity {
             main_view.setVisibility(View.VISIBLE);
             qr_view.setVisibility(View.GONE);
             ImageView qr_view=findViewById(R.id.qr_img);
-            qr_view.setImageResource(R.drawable.ic_launcher);
+            qr_view.setImageResource(R.drawable.ic_logo);
             scan_url.setText("Start ShareX First!");
         }
     }
@@ -1020,7 +1017,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             Logo logo = new Logo();
-            logo.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
+            logo.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_logo));
             logo.setBorderRadius(10);
             logo.setBorderWidth(10);
             logo.setScale(0.2f);
@@ -1095,7 +1092,7 @@ public class MainActivity extends AppCompatActivity {
                         .setNegativeButton("Don't Allow", dialogClickListener)
                         .setNeutralButton("Always allow this device", dialogClickListener)
                         .setTitle("Request Confirmation")
-                        .setIcon(R.drawable.ic_launcher)
+                        .setIcon(R.drawable.ic_logo)
                         .setCancelable(false).show();
                 TextView textView = dialog.findViewById(android.R.id.message);
                 TextView textView2 = dialog.findViewById(android.R.id.button1);

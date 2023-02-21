@@ -25,7 +25,8 @@
                 android:id="@+id/imageView3"
                 android:layout_width="200dp"
                 android:layout_height="200dp"
-                app:srcCompat="@drawable/ic_launcher" />
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/ic_logo" />
 
             <TextView
                 android:id="@+id/textView4"
