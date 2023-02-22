@@ -1,8 +1,17 @@
-Features
+Features:
+
+- Open-Source app.
+- Web based interface.
+- Private mode for limited file sharing.
+- View transfer history.
+- Restrict modification of any file or folder.
+- Realtime logs.
+- Fastest QR scanner.
+- Show/hide hidden files.
+- Remember authorised devices.
+- Multiple and switchable web interface themes.
 - No need of this app on another device to send and receive files.
-- Can work with Windows, Mac, Linux, Android, iPhone.
-- Unique lightweight app designed for faster, multiple and parallel file sharing purposes.
+- Work with Windows, Mac, Linux, Android, iPhone.
+- Lightweight app designed for faster, multiple and parallel file sharing purposes.
 - Send and receive files over wifi or within a network with anyone or on any device.
-- Flexible and easy to use app.
-- Works offline, it uses no data to share your files.
-- Etc.
+- Completely works offline, it uses no data to share your files.
