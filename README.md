@@ -70,4 +70,16 @@ Use of this software under any "non-free" license is NOT permitted.
 ```
 See the [GNU General Public License](https://github.com/akanshSirohi/ShareX/blob/master/LICENSE) for more details.
 
-### More Info Will Be Updated Soon...
+## Building from Source
+
+1. If you don't have Android Studio & Android SDK installed, please visit official [Android Studio](https://developer.android.com/studio) site.
+2. Fetch latest source code from master branch.
+```
+git clone https://github.com/akanshSirohi/ShareX.git
+```
+3. Run the app with Android Studio.
+
+
+## Contribute
+
+Contributions are welcome. Please read our [contributing guidelines](https://github.com/akanshSirohi/ShareX/blob/master/CONTRIBUTING.md) before contributing.
