@@ -31,7 +31,7 @@
 ## Download
 [<img src="images/get_github.png"
      alt="Download from GitHub"
-     height="90">](https://github.com/Sangwan5688/BlackHole/releases)
+     height="90">](https://github.com/akanshSirohi/ShareX/releases)
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
      height="90">](https://f-droid.org/packages/com.akansh.fileserversuit/)
