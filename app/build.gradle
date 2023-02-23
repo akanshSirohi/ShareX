@@ -47,7 +47,7 @@ android {
             include '**/*.html', '**/*.css', '**/*.js'
             filter {
                 String line = it.toString()
-                line.replaceAll("\\r\\n", "\\n")
+                line.replaceAll("(?<!\\r)\\n", "\\r\\n")
             }
         }
         into('build/intermediates/assets/release')
