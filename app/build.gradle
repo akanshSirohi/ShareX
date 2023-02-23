@@ -8,8 +8,8 @@ android {
         applicationId "com.akansh.fileserversuit"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 28
-        versionName "2.3.5"
+        versionCode 29
+        versionName "2.3.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -34,6 +34,25 @@ android {
             excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0', 'META-INF/*.kotlin_module']
         }
     }
+
+    task fixLineEndings(type: Copy) {
+        from('src/main/assets') {
+            include '**/*.html', '**/*.css', '**/*.js'
+            filter {
+                String line = it.toString()
+                line.replaceAll("\\r\\n", "\\n")
+            }
+        }
+        into('build/intermediates/assets/release')
+    }
+
+    tasks.whenTaskAdded { task ->
+        if (task.name.startsWith('assemble')) {
+            task.dependsOn fixLineEndings
+        }
+    }
+
+
     namespace 'com.akansh.fileserversuit'
 
 }
