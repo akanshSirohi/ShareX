@@ -29,12 +29,16 @@
 - Completely works offline, it uses no data to share your files.
 
 ## Download
-[<img src="images/get_github.png"
-     alt="Download from GitHub"
-     height="90">](https://github.com/akanshSirohi/ShareX/releases)
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
      height="90">](https://f-droid.org/packages/com.akansh.fileserversuit/)
+[<img src="images/get_github.png"
+     alt="Download from GitHub"
+     height="90">](https://github.com/akanshSirohi/ShareX/releases)
+[<img src="images/get_telegram.png"
+     alt="Download from Telegram"
+     height="90">](https://t.me/sharex_app)
+
      
 ## Screenshots
 <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/4.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/5.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/6.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/7.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/8.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/9.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/10.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/11.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/12.png?raw=true" width="32%">
