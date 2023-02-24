@@ -83,3 +83,6 @@ git clone https://github.com/akanshSirohi/ShareX.git
 ## Contribute
 
 Contributions are welcome. Please read our [contributing guidelines](https://github.com/akanshSirohi/ShareX/blob/master/CONTRIBUTING.md) before contributing.
+
+## Liked My Work?
+[<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >](https://www.buymeacoffee.com/akanshsirohi)
