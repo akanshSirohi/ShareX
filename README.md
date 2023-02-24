@@ -79,6 +79,15 @@ git clone https://github.com/akanshSirohi/ShareX.git
 ```
 3. Run the app with Android Studio.
 
+## Quick Open ShareX Url In PC
+1) Open Notepad
+2) Paste the below code in it
+```batch
+@echo off
+powershell.exe -Command "$ip = Get-WmiObject -Class Win32_IP4RouteTable | where { $_.destination -eq '0.0.0.0' -and $_.mask -eq '0.0.0.0'} | Sort-Object metric1 | select nexthop; Start-Process \"http://$($ip.nexthop):6060\""
+```
+3) Save it with the name `open_sharex.bat`.
+4) Double click on it to run anytime you want to open ShareX url in your PC.
 
 ## Contribute
 
