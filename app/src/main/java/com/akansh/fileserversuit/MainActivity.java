@@ -616,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void toggleLogger() {
         Animation animation;
-        int modifier = logger_wrapper.getHeight() - 95;
+        int modifier = logger_wrapper.getHeight() - 115;
         utils.saveString(Constants.LOGGER_HEIGHT,String.valueOf(modifier));
         animation = utils.loadSetting(Constants.IS_LOGGER_VISIBLE) ? new TranslateAnimation(0, 0,0, modifier) : new TranslateAnimation(0, 0,modifier, 0);
         animation.setDuration(500);
