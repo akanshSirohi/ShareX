@@ -31,6 +31,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.text.Html;
+import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -38,6 +40,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -67,6 +70,7 @@ import com.github.sumimakito.awesomeqr.option.logo.Logo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
@@ -151,9 +155,9 @@ public class MainActivity extends AppCompatActivity {
         settTheme = findViewById(R.id.sett_subtitle7);
         String dev_count = deviceManager.getRemDevices() + " devices remembered";
         settRemDev.setText(dev_count);
-        settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME)));
+        settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME,0)));
 
-        currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME);
+        currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME,0);
 
         logger.setOnLongClickListener(v -> true);
         clearLog();
@@ -658,10 +662,12 @@ public class MainActivity extends AppCompatActivity {
         CardView card5=findViewById(R.id.sett_card5);
         CardView card6=findViewById(R.id.sett_card6);
         CardView card7=findViewById(R.id.sett_card7);
+        CardView card8=findViewById(R.id.sett_card8);
         CheckBox settHFCheck=findViewById(R.id.sett_hideF_checkBox);
         CheckBox settRMCheck=findViewById(R.id.sett_resMod_checkBox);
         CheckBox settFDCheck=findViewById(R.id.sett_frceDwl_checkBox);
         CheckBox settPMCheck=findViewById(R.id.sett_pMode_checkBox);
+        TextView settPort=findViewById(R.id.sett_subtitle8);
         ImageButton settResetRoot = findViewById(R.id.sett_reset_root);
         card1.setOnClickListener(view -> {
             try {
@@ -674,6 +680,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         settDRoot.setText(serverRoot);
+        settPort.setText("Port: "+utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT));
         settHFCheck.setChecked(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
         settHFCheck.setOnCheckedChangeListener((compoundButton, b) -> {
             utils.saveSetting(Constants.LOAD_HIDDEN_MEDIA,b);
@@ -719,7 +726,31 @@ public class MainActivity extends AppCompatActivity {
                 dialog.dismiss();
             });
             builder.setNegativeButton("Cancel", (dialog, which) -> {
-                currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME);
+                currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME,0);
+                dialog.dismiss();
+            });
+            builder.show();
+        });
+        card8.setOnClickListener(v-> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("ShareX Port:");
+            TextInputLayout textInputLayout = new TextInputLayout(MainActivity.this);
+            textInputLayout.setPadding(getResources().getDimensionPixelOffset(R.dimen.dp_19),0,getResources().getDimensionPixelOffset(R.dimen.dp_19),0);
+            final EditText input = new EditText(MainActivity.this);
+            input.setText(String.valueOf(utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT)));
+            input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_NORMAL);
+            textInputLayout.addView(input);
+            builder.setView(textInputLayout);
+            builder.setPositiveButton("Set", (dialog, which) -> {
+                if(input.getText().toString().length()>0) {
+                    int port = Integer.parseInt(input.getText().toString());
+                    utils.saveInt(Constants.SERVER_PORT, port);
+                    settPort.setText("Port: " + port);
+                    Toast.makeText(MainActivity.this,"ShareX port changed to "+port,Toast.LENGTH_LONG).show();
+                    dialog.dismiss();
+                }
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
                 dialog.dismiss();
             });
             builder.show();
