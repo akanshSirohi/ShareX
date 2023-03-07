@@ -1,7 +1,7 @@
 package com.akansh.fileserversuit;
 
 public class Constants {
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
     public static final String LOG_TAG = "ASOFT";
     public static final String APP_LOAD_F1 = "app_load_f1";
     public static final String LOAD_HIDDEN_MEDIA = "load_hidden_media";
@@ -13,6 +13,8 @@ public class Constants {
     public static final String ASKED_BATTERY_OPT = "asked_battery_opt";
     public static final String LOGGER_HEIGHT = "logger_height";
     public static final String WEB_INTERFACE_THEME = "web_interface_theme";
+    public static final String SERVER_PORT = "server_port";
+    public static final int SERVER_PORT_DEFAULT = 6060;
     public static final int SERVER_ON = 1;
     public static final int SERVER_OFF = 0;
     public static final int MATISSE_REQ_CODE = 101;

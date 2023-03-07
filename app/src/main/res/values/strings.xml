@@ -9,4 +9,13 @@
     <string name="open_drawer">Open Drawer</string>
     <string name="close_drawer">Close Drawer</string>
     <string name="credits">Developed By: Akansh Sirohi\n\nMade with ❤️ in INDIA</string>
+    <string name="logger_init_txt">$ Welcome To ShareX\n</string>
+    <string name="pvt_lbl">Private Mode Enabled</string>
+
+    <string name="cd_start_stop_btn">Start or stop ShareX</string>
+    <string name="cd_bg">Background</string>
+    <string name="cd_show_qr_btn">Show QR</string>
+    <string name="cd_toggle_logger">Toggle Log</string>
+    <string name="cd_open_navbar">Open Navigation Bar</string>
+
 </resources>
