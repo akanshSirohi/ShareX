@@ -36,7 +36,7 @@ public class ServerService extends Service {
         if(intent.getAction() == null) {
             try {
                 String host = utils.getIPAddress(true);
-                webServer = new WebServer(host, utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT));
+                webServer = new WebServer(host, 6060);
                 webServer.setContext(context);
                 webServer.setRoot(utils.loadRoot());
                 webServer.setAllowHiddenMedia(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
@@ -47,10 +47,6 @@ public class ServerService extends Service {
                 showForegroundNotification("Running At: " + url);
             } catch (IOException e) {
                 Toast.makeText(this, "Server Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                sendLog(Constants.ACTION_UPDATE_UI_STOP,"","");
-                sendLog(Constants.ACTION_MSG,"msg","Try to change ShareX port");
-                stopForeground(true);
-                stopSelf();
             }
         }else if(intent.getAction().equals(Constants.ACTION_STOP_SERVICE)) {
             sendLog(Constants.ACTION_UPDATE_UI_STOP,"","");

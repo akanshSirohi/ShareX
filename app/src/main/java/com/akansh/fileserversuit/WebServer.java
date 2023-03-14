@@ -229,6 +229,7 @@ public class WebServer extends NanoHTTPD {
                     }
                     DiskFileItemFactory factory = new DiskFileItemFactory();
                     if(!utils.loadSetting(Constants.PRIVATE_MODE)) {
+//                        factory.setRepository(new File(Environment.getExternalStorageDirectory() + c_parent));
                         factory.setRepository(new File(utils.loadRoot() + c_parent));
                     }else{
                         factory.setRepository(new File(Environment.getExternalStorageDirectory() + "/ShareX"));
@@ -242,6 +243,7 @@ public class WebServer extends NanoHTTPD {
                                 File received;
                                 if(!utils.loadSetting(Constants.PRIVATE_MODE)) {
                                     received = new File(utils.loadRoot() + c_parent + "/" +fileName);
+//                                    received = new File(Environment.getExternalStorageDirectory() + c_parent + "/" + fileName);
                                 }else{
                                     received = new File(Environment.getExternalStorageDirectory() + "/ShareX/" + fileName);
                                 }
@@ -292,7 +294,7 @@ public class WebServer extends NanoHTTPD {
                 if(uri.equals("/")) {
                     path= utils.getFileProperPath("index.html");
                 }else if(uri.equals("/libs/bootstrap/css/theme_bootstrap.min.css")) {
-                    uri = uri.replace("theme", themesData.getPrefix(utils.loadInt(Constants.WEB_INTERFACE_THEME,0)));
+                    uri = uri.replace("theme", themesData.getPrefix(utils.loadInt(Constants.WEB_INTERFACE_THEME)));
                     path=utils.getFileProperPath(uri);
                 }else{
                     path=utils.getFileProperPath(uri);

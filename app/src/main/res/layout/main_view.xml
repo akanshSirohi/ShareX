@@ -11,7 +11,6 @@
         android:layout_height="0dp"
         android:scaleType="centerCrop"
         android:visibility="visible"
-        android:contentDescription="@string/cd_bg"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -19,6 +18,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/bg_green" />
+
+<!--    <ImageView-->
+<!--        android:id="@+id/main_bg_2"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:scaleType="centerCrop"-->
+<!--        android:visibility="invisible"-->
+<!--        app:layout_constraintBottom_toBottomOf="@+id/logger"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.0"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintVertical_bias="0.0"-->
+<!--        app:srcCompat="@drawable/bg_green" />-->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/logger_wrapper"
@@ -31,12 +44,11 @@
 
         <ImageButton
             android:id="@+id/hide_logger_btn"
-            android:layout_width="58dp"
-            android:layout_height="48dp"
+            android:layout_width="48dp"
+            android:layout_height="38dp"
             android:background="@drawable/log_down_btn"
-            android:padding="12dp"
+            android:padding="10dp"
             android:scaleType="fitCenter"
-            android:contentDescription="@string/cd_toggle_logger"
             app:layout_constraintBottom_toTopOf="@+id/logger"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/ic_caret_down" />
@@ -50,18 +62,17 @@
             android:focusable="false"
             android:focusableInTouchMode="false"
             android:fontFamily="@font/inconsolata"
-            android:inputType="textMultiLine|textNoSuggestions"
+            android:inputType="textMultiLine"
             android:padding="8dp"
             android:scrollbars="vertical"
-            android:text="@string/logger_init_txt"
+            android:text="$ Welcome To ShareX\n"
             android:textColor="#00FF00"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            tools:ignore="TextViewEdits" />
+            app:layout_constraintVertical_bias="1.0" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageButton
@@ -70,7 +81,6 @@
         android:layout_height="200dp"
         android:background="@android:color/transparent"
         android:scaleType="fitCenter"
-        android:contentDescription="@string/cd_start_stop_btn"
         app:layout_constraintBottom_toBottomOf="@+id/main_bg"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -90,14 +100,13 @@
             android:id="@+id/top_panel_msg"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="#007A33"
+            android:background="#00C853"
             android:fontFamily="@font/product_sans"
-            android:text="@string/pvt_lbl"
+            android:text="Private Mode Enabled"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:paddingVertical="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -121,8 +130,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="@string/cd_show_qr_btn"
         app:backgroundTint="#DD2C00"
         app:fabSize="normal"
         app:layout_constraintEnd_toEndOf="parent"
@@ -135,10 +142,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="26dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/ripple_bg"
         android:clickable="true"
-        android:contentDescription="@string/cd_open_navbar"
         android:focusable="true"
         android:padding="10dp"
         app:layout_constraintStart_toStartOf="parent"

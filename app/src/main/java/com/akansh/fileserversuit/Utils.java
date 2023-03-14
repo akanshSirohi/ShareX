@@ -148,9 +148,9 @@ public class Utils {
         editor.apply();
     }
 
-    public int loadInt(String constant, int defValue) {
+    public int loadInt(String constant) {
         SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
-        return sharedPrefs.getInt(constant, defValue);
+        return sharedPrefs.getInt(constant, 0);
     }
 
     public void saveSetting(String constant, boolean b) {
