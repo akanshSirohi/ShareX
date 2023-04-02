@@ -734,6 +734,7 @@ public class MainActivity extends AppCompatActivity {
         card8.setOnClickListener(v-> {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("ShareX Port:");
+            builder.setMessage("Please enter a port number between 1024 and 65535");
             TextInputLayout textInputLayout = new TextInputLayout(MainActivity.this);
             textInputLayout.setPadding(getResources().getDimensionPixelOffset(R.dimen.dp_19),0,getResources().getDimensionPixelOffset(R.dimen.dp_19),0);
             final EditText input = new EditText(MainActivity.this);
@@ -744,10 +745,15 @@ public class MainActivity extends AppCompatActivity {
             builder.setPositiveButton("Set", (dialog, which) -> {
                 if(input.getText().toString().length()>0) {
                     int port = Integer.parseInt(input.getText().toString());
-                    utils.saveInt(Constants.SERVER_PORT, port);
-                    settPort.setText("Port: " + port);
-                    Toast.makeText(MainActivity.this,"ShareX port changed to "+port,Toast.LENGTH_LONG).show();
-                    dialog.dismiss();
+                    if(port >= 1024 && port <= 65535) {
+                        utils.saveInt(Constants.SERVER_PORT, port);
+                        settPort.setText("Port: " + port);
+                        Toast.makeText(MainActivity.this, "ShareX port changed to " + port, Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                        restartServer();
+                    }else{
+                        Toast.makeText(MainActivity.this, "Please enter a valid port number", Toast.LENGTH_LONG).show();
+                    }
                 }
             });
             builder.setNegativeButton("Cancel", (dialog, which) -> {

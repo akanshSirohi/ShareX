@@ -18,6 +18,7 @@
 - View transfer history.
 - Restrict modification of any file or folder.
 - Realtime logs.
+- Custom port selection.
 - Fastest QR scanner.
 - Show/hide hidden files.
 - Remember authorised devices.
@@ -27,6 +28,7 @@
 - Lightweight app designed for faster, multiple and parallel file sharing purposes.
 - Send and receive files over wifi or within a network with anyone or on any device.
 - Completely works offline, it uses no data to share your files.
+- 13 built-in web interface themes.
 
 ## Download
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"

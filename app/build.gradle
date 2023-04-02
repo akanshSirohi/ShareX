@@ -8,8 +8,8 @@ android {
         applicationId "com.akansh.fileserversuit"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 29
-        versionName "2.3.6"
+        versionCode 30
+        versionName "2.3.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
