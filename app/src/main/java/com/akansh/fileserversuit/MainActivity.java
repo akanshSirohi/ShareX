@@ -29,7 +29,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Parcelable;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.InputType;
@@ -74,10 +73,8 @@ import com.zhihu.matisse.MimeType;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -438,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
 
         File f=new File(String.format("/data/data/%s/%s/index.html",getPackageName(),Constants.NEW_DIR));
         if(!f.exists() || Constants.DEBUG) {
-            WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this);
+            WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this, this);
             webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {
                 @Override
                 public void onSetupCompeted(boolean status) {
@@ -490,7 +487,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             };
-            webInterfaceSetup.execute();
+            webInterfaceSetup.setup();
         }else{
             askIgnoreBatteryOptimizations();
         }

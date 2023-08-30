@@ -26,7 +26,6 @@ public class WifiApManager {
             }
             return WIFI_AP_STATE.class.getEnumConstants()[tmp];
         } catch (Exception e) {
-//            Log.e(this.getClass().toString(), "", e);
             return WIFI_AP_STATE.WIFI_AP_STATE_FAILED;
         }
     }

@@ -12,11 +12,21 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.akansh.t_history.HistoryItem;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.target.Target;
+
+import org.nanohttpd.protocols.http.response.Response;
+import org.nanohttpd.protocols.http.response.Status;
+import static org.nanohttpd.protocols.http.response.Response.newFixedLengthResponse;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -25,9 +35,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-
-import fi.iki.elonen.NanoHTTPD;
-import static fi.iki.elonen.NanoHTTPD.newFixedLengthResponse;
 
 public class ServerUtils {
     private final List<ApplicationInfo> packages;
@@ -233,8 +240,60 @@ public class ServerUtils {
         return output;
     }
 
-    public NanoHTTPD.Response serveFile(String path,boolean pushHistory,String rangeHeader) {
-        NanoHTTPD.Response response;
+    public Response serveThumbnail(String path, String rangeHeader) {
+        Response response;
+        try {
+            int thumbnailSize = 100;
+            Bitmap thumbnail = Glide.with(this.ctx)
+                    .asBitmap()
+                    .load(path)
+                    .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .override(thumbnailSize, thumbnailSize)
+                    .submit(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                    .get();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            thumbnail.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            InputStream is = new ByteArrayInputStream(baos.toByteArray());
+            int fileLength = is.available();
+            ProgressInputStream pis = new ProgressInputStream(is, fileLength);
+            if(rangeHeader==null) {
+                response = newFixedLengthResponse(Status.OK, "image/jpeg", pis, fileLength);
+                return response;
+            }else{
+                String rangeValue = rangeHeader.trim().substring("bytes=".length());
+                long start, end;
+                if (rangeValue.startsWith("-")) {
+                    end = fileLength - 1;
+                    start = fileLength - 1
+                            - Long.parseLong(rangeValue.substring("-".length()));
+                } else {
+                    String[] range = rangeValue.split("-");
+                    start = Long.parseLong(range[0]);
+                    end = range.length > 1 ? Long.parseLong(range[1])
+                            : fileLength - 1;
+                }
+                if (end > fileLength - 1) {
+                    end = fileLength - 1;
+                }
+                if (start <= end) {
+                    long contentLength = end - start + 1;
+                    is.skip(start);
+                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT, "image/jpeg", pis, fileLength);
+                    response.addHeader("Content-Length", String.valueOf(contentLength));
+                    response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+                } else {
+                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE, "image/jpeg", rangeHeader);
+                }
+                return response;
+            }
+        }catch (Exception e) {
+            return newFixedLengthResponse(e.getMessage());
+        }
+    }
+
+    public Response serveFile(String path, boolean pushHistory, String rangeHeader) {
+        Response response;
         try {
             if(utils.loadSetting(Constants.PRIVATE_MODE)) {
                 File f=new File(path);
@@ -247,16 +306,16 @@ public class ServerUtils {
             if(m==null) {
                 m = "";
             }
+            long b = utils.getTotalBytes(path);
+            FileInputStream fis = new FileInputStream(path);
             if(rangeHeader==null) {
-                long b = utils.getTotalBytes(path);
-                FileInputStream fis = new FileInputStream(path);
                 ProgressInputStream pis = new ProgressInputStream(fis, (int) b);
                 pis.addListener(percent -> {
                     if (sendProgressListener != null) {
                         sendProgressListener.onProgressUpdate((int) percent);
                     }
                 });
-                response = newFixedLengthResponse(NanoHTTPD.Response.Status.OK, m, pis, b);
+                response = newFixedLengthResponse(Status.OK, m, pis, b);
                 if (pushHistory) {
                     Calendar c = Calendar.getInstance();
                     SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
@@ -282,22 +341,18 @@ public class ServerUtils {
                 }
                 if (start <= end) {
                     long contentLength = end - start + 1;
-                    FileInputStream fis = new FileInputStream(path);
                     fis.skip(start);
                     ProgressInputStream pis = new ProgressInputStream(fis, (int) fileLength);
-                    pis.addListener(new ProgressInputStream.ProgressListener() {
-                        @Override
-                        public void process(double percent) {
-                            if (sendProgressListener != null) {
-                                sendProgressListener.onProgressUpdate((int) percent);
-                            }
+                    pis.addListener(percent -> {
+                        if (sendProgressListener != null) {
+                            sendProgressListener.onProgressUpdate((int) percent);
                         }
                     });
-                    response = newFixedLengthResponse(NanoHTTPD.Response.Status.PARTIAL_CONTENT, m, pis,fileLength);
+                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT, m, pis,fileLength);
                     response.addHeader("Content-Length", contentLength + "");
                     response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
                 } else {
-                    response = newFixedLengthResponse(NanoHTTPD.Response.Status.RANGE_NOT_SATISFIABLE, m, rangeHeader);
+                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE, m, rangeHeader);
                 }
             }
             if(m.startsWith("image") || m.startsWith("video") || name.endsWith("pdf")) {
@@ -315,8 +370,8 @@ public class ServerUtils {
         }
     }
 
-    public NanoHTTPD.Response downloadFile(String path,boolean pCheck,boolean pushHistory,String rangeHeader) {
-        NanoHTTPD.Response response;
+    public Response downloadFile(String path,boolean pCheck,boolean pushHistory,String rangeHeader) {
+        Response response;
         try {
             if(pCheck) {
                 if (utils.loadSetting(Constants.PRIVATE_MODE)) {
@@ -336,7 +391,7 @@ public class ServerUtils {
                         sendProgressListener.onProgressUpdate((int) percent);
                     }
                 });
-                response = newFixedLengthResponse(NanoHTTPD.Response.Status.OK, "application/octet-stream", pis, b);
+                response = newFixedLengthResponse(Status.OK, "application/octet-stream", pis, b);
                 if (pushHistory) {
                     Calendar c = Calendar.getInstance();
                     SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
@@ -370,11 +425,11 @@ public class ServerUtils {
                             sendProgressListener.onProgressUpdate((int) percent);
                         }
                     });
-                    response = newFixedLengthResponse(NanoHTTPD.Response.Status.PARTIAL_CONTENT,"application/octet-stream", pis,fileLength);
+                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT,"application/octet-stream", pis,fileLength);
                     response.addHeader("Content-Length", contentLength + "");
                     response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
                 } else {
-                    response = newFixedLengthResponse(NanoHTTPD.Response.Status.RANGE_NOT_SATISFIABLE,"application/octet-stream", rangeHeader);
+                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE,"application/octet-stream", rangeHeader);
                 }
             }
             response.addHeader("Content-type","application/octet-stream");
@@ -387,13 +442,13 @@ public class ServerUtils {
         }
     }
 
-    public NanoHTTPD.Response serveApp(String name,String path,String pkg) {
-        NanoHTTPD.Response response;
+    public Response serveApp(String name,String path,String pkg) {
+        Response response;
         try {
             FileInputStream str = new FileInputStream(path);
             Utils utils = new Utils(ctx);
             long b = utils.getTotalBytes(path);
-            response = newFixedLengthResponse(NanoHTTPD.Response.Status.OK,"application/vnd.android.package-archive", str, b);
+            response = newFixedLengthResponse(Status.OK,"application/vnd.android.package-archive", str, b);
             response.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
             Calendar c = Calendar.getInstance();
             SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
@@ -466,7 +521,7 @@ public class ServerUtils {
             br.close();
             fr.close();
         }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,"Error is_in_p_func: "+e.toString());
+            Log.d(Constants.LOG_TAG,"Error is_in_p_func: "+e);
             return false;
         }
         return false;
