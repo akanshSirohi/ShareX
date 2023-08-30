@@ -248,7 +248,7 @@ public class ServerUtils {
                     .asBitmap()
                     .load(path)
                     .centerCrop()
-                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .override(thumbnailSize, thumbnailSize)
                     .submit(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .get();

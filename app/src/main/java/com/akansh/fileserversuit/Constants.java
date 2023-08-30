@@ -1,7 +1,7 @@
 package com.akansh.fileserversuit;
 
 public class Constants {
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
     public static final String LOG_TAG = "ASOFT";
     public static final String APP_LOAD_F1 = "app_load_f1";
     public static final String LOAD_HIDDEN_MEDIA = "load_hidden_media";
