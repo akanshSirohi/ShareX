@@ -29,9 +29,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.text.Html;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -59,9 +59,6 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.developer.filepicker.model.DialogConfigs;
-import com.developer.filepicker.model.DialogProperties;
-import com.developer.filepicker.view.FilePickerDialog;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
 import com.github.sumimakito.awesomeqr.AwesomeQrRenderer;
 import com.github.sumimakito.awesomeqr.RenderResult;
@@ -77,6 +74,7 @@ import com.zhihu.matisse.MimeType;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> storagePermissionResultLauncher;
     ActivityResultLauncher<Intent> folderPickerResultLauncher;
     ActivityResultLauncher<Intent> batteryActivityResultLauncher;
+    ActivityResultLauncher<Intent> mutipleFilesActivityResultLauncher;
 
     int exit = 0;
     int currentTheme;
@@ -194,6 +193,32 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mutipleFilesActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if(result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                try {
+                    Intent data = result.getData();
+                    if (data.getClipData() != null) {
+                        int count = data.getClipData().getItemCount();
+                        for (int i = 0; i < count; i++) {
+                            Uri uri = data.getClipData().getItemAt(i).getUri();
+                            String decode = URLDecoder.decode(uri.toString(), "UTF-8");
+                            File f = new File(Environment.getExternalStorageDirectory(), decode.split(":")[2]);
+                            pmode_send_files.add(f.getAbsolutePath());
+                        }
+                        mergeAndUpdatePFilesList();
+                    }else if(data.getData() != null){
+                        Uri uri = data.getData();
+                        String decode = URLDecoder.decode(uri.toString(), "UTF-8");
+                        File f = new File(Environment.getExternalStorageDirectory(), decode.split(":")[2]);
+                        pmode_send_files.add(f.getAbsolutePath());
+                        mergeAndUpdatePFilesList();
+                    }
+                }catch (Exception e) {
+                    Log.d(Constants.LOG_TAG,"FilesErr: "+e);
+                }
+            }
+        });
+
         batteryActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             utils.saveSetting(Constants.ASKED_BATTERY_OPT,true);
         });
@@ -203,19 +228,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             initializeApp();
         }
-
-        // Initialise Root Setter Dialog
-        DialogProperties properties = new DialogProperties();
-        properties.selection_mode = DialogConfigs.SINGLE_MODE;
-        properties.selection_type = DialogConfigs.DIR_SELECT;
-        properties.root = Environment.getExternalStorageDirectory();
-        properties.error_dir = Environment.getExternalStorageDirectory();
-        if (serverRoot.length() > 0) {
-            properties.offset = new File(utils.getParent(serverRoot));
-        } else {
-            properties.offset = Environment.getExternalStorageDirectory();
-        }
-        properties.extensions = null;
 
         IntentFilter filter = new IntentFilter();
         filter.addAction("service.to.activity.transfer");
@@ -254,19 +266,23 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClickFilesSelect() {
-                DialogProperties properties = new DialogProperties();
-                properties.selection_mode = DialogConfigs.MULTI_MODE;
-                properties.selection_type = DialogConfigs.FILE_SELECT;
-                properties.root = new File(Environment.getExternalStorageDirectory().toString());
-                properties.error_dir = new File(DialogConfigs.DEFAULT_DIR);
-                properties.offset = new File(Environment.getExternalStorageDirectory().toString());
-                FilePickerDialog filesPicker = new FilePickerDialog(MainActivity.this, properties);
-                filesPicker.setTitle("Select files to send");
-                filesPicker.setDialogSelectionListener(files -> {
-                    pmode_send_files = Arrays.asList(files);
-                    mergeAndUpdatePFilesList();
-                });
-                filesPicker.show();
+                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                i.setType("*/*");
+                i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                // Set pre-selected files
+//                if (pmode_send_files != null && pmode_send_files.size() > 0) {
+//                    ArrayList<Parcelable> initialIntents = new ArrayList<>();
+//                    for (String path : pmode_send_files) {
+//                        Intent fileIntent = new Intent(Intent.ACTION_VIEW);
+//                        Uri uri = Uri.fromFile(new File(path));
+//                        fileIntent.setDataAndType(uri, getContentResolver().getType(uri));
+//                        fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                        initialIntents.add(fileIntent);
+//                    }
+//                    i.putExtra(Intent.EXTRA_INITIAL_INTENTS, initialIntents.toArray(new Parcelable[0]));
+//                }
+                mutipleFilesActivityResultLauncher.launch(i);
+                Toast.makeText(MainActivity.this, "Press and hold to select multiple files...", Toast.LENGTH_SHORT).show();
                 fabActionsHandler.hideFab();
             }
         });
