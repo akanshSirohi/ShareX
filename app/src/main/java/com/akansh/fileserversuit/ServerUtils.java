@@ -57,10 +57,8 @@ public class ServerUtils {
         try {
             if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
                 File f = new File(path);
-//                Log.d(Constants.LOG_TAG, "Files Path: " + f.getAbsolutePath());
                 if (f.exists()) {
                     File[] files = f.listFiles();
-//                    Log.d(Constants.LOG_TAG, "Files Length: " + files.length);
                     Collections.sort(Arrays.asList(files), new FilesComparator());
                     String name = "";
                     int len = 0;
