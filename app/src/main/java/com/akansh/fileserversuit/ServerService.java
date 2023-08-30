@@ -100,7 +100,7 @@ public class ServerService extends Service {
                     getApplicationContext(),
                     0,
                     showTaskIntent,
-                    PendingIntent.FLAG_CANCEL_CURRENT);
+                    PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         }
 
         // Stop Service Intent
