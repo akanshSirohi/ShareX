@@ -92,7 +92,7 @@ public class ServerUtils {
                         if (files[i].isDirectory()) {
                             code.append("<i class=\"fa-solid fa-folder-closed\"></i>");
                         } else if (utils.getMimeType(files[i]).startsWith("image")) {
-                            code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=").append(files[i].getAbsolutePath()).append("\"></img>");
+                            code.append("<img height=\"50\" loading=\"lazy\" src=\"ShareX?action=thumbImage&location=").append(files[i].getAbsolutePath()).append("\"></img>");
                         } else {
                             code.append(utils.getIconCode(files[i]));
                         }

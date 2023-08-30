@@ -46,7 +46,7 @@ public class WebInterfaceSetup {
                 File p=new File(String.format("/data/data/%s/%s",packageName,Constants.OLD_DIR));
                 if(p.exists()) {
                     Log.d(Constants.LOG_TAG,"Old Version Found!");
-                    deleteDirectory(pV);
+                    deleteDirectory(p);
                 }
             }catch (Exception e) {
                 status=false;

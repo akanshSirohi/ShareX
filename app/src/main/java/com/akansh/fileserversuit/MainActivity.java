@@ -266,18 +266,6 @@ public class MainActivity extends AppCompatActivity {
                 Intent i = new Intent(Intent.ACTION_GET_CONTENT);
                 i.setType("*/*");
                 i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                // Set pre-selected files
-//                if (pmode_send_files != null && pmode_send_files.size() > 0) {
-//                    ArrayList<Parcelable> initialIntents = new ArrayList<>();
-//                    for (String path : pmode_send_files) {
-//                        Intent fileIntent = new Intent(Intent.ACTION_VIEW);
-//                        Uri uri = Uri.fromFile(new File(path));
-//                        fileIntent.setDataAndType(uri, getContentResolver().getType(uri));
-//                        fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//                        initialIntents.add(fileIntent);
-//                    }
-//                    i.putExtra(Intent.EXTRA_INITIAL_INTENTS, initialIntents.toArray(new Parcelable[0]));
-//                }
                 mutipleFilesActivityResultLauncher.launch(i);
                 Toast.makeText(MainActivity.this, "Press and hold to select multiple files...", Toast.LENGTH_SHORT).show();
                 fabActionsHandler.hideFab();

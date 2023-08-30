@@ -37,7 +37,7 @@ public class Constants {
     public static final String PRIVACY_POLICY_URL = "http://akanshsirohi.github.io/sharexpro_privacy_policy.html";
 
     // WEB INTERFACE VERSION CONTROL
-    public static final String OLD_DIR = "sharex_v1_7";
-    public static final String NEW_DIR = "sharex_v2_0";
-    public static final String WEB_INTERFACE_DIR = "sharex_web_v2_0";
+    public static final String OLD_DIR = "sharex_v2_0";
+    public static final String NEW_DIR = "sharex_v2_1";
+    public static final String WEB_INTERFACE_DIR = "sharex_web_v2_1";
 }
