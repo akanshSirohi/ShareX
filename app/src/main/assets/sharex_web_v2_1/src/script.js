@@ -312,8 +312,13 @@ function openFolder(path) {
 }
 
 function viewFileModal(path) {
-  let img = "ShareX?action=viewImage&location=" + encodeURI(path);
-  $("#imgPreview").attr("src", img);
+  let src = "ShareX?action=viewImage&location=" + encodeURI(path);
+  $("#imgPreview").attr("src", "images/loader.gif");
+  let img = new Image();
+  img.src = src;
+  img.onload = function () {
+    $("#imgPreview").attr("src", src);
+  };
   $("#imgViewModel").modal("show");
 }
 

@@ -240,6 +240,25 @@ public class ServerUtils {
         return output;
     }
 
+    public long[] calculateRange(long fileLength, String rangeHeader) {
+        String rangeValue = rangeHeader.trim().substring("bytes=".length());
+        long start, end;
+        if (rangeValue.startsWith("-")) {
+            end = fileLength - 1;
+            start = fileLength - 1
+                    - Long.parseLong(rangeValue.substring("-".length()));
+        } else {
+            String[] range = rangeValue.split("-");
+            start = Long.parseLong(range[0]);
+            end = range.length > 1 ? Long.parseLong(range[1])
+                    : fileLength - 1;
+        }
+        if (end > fileLength - 1) {
+            end = fileLength - 1;
+        }
+        return new long[]{start,end};
+    }
+
     public Response serveThumbnail(String path, String rangeHeader) {
         Response response;
         try {
@@ -261,21 +280,9 @@ public class ServerUtils {
                 response = newFixedLengthResponse(Status.OK, "image/jpeg", pis, fileLength);
                 return response;
             }else{
-                String rangeValue = rangeHeader.trim().substring("bytes=".length());
-                long start, end;
-                if (rangeValue.startsWith("-")) {
-                    end = fileLength - 1;
-                    start = fileLength - 1
-                            - Long.parseLong(rangeValue.substring("-".length()));
-                } else {
-                    String[] range = rangeValue.split("-");
-                    start = Long.parseLong(range[0]);
-                    end = range.length > 1 ? Long.parseLong(range[1])
-                            : fileLength - 1;
-                }
-                if (end > fileLength - 1) {
-                    end = fileLength - 1;
-                }
+                long[] ranges = calculateRange(fileLength, rangeHeader);
+                long start = ranges[0];
+                long end = ranges[1];
                 if (start <= end) {
                     long contentLength = end - start + 1;
                     is.skip(start);
@@ -323,22 +330,10 @@ public class ServerUtils {
                     updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), m, new File(path).getAbsolutePath()));
                 }
             }else{
-                String rangeValue = rangeHeader.trim().substring("bytes=".length());
                 long fileLength = utils.getTotalBytes(path);
-                long start, end;
-                if (rangeValue.startsWith("-")) {
-                    end = fileLength - 1;
-                    start = fileLength - 1
-                            - Long.parseLong(rangeValue.substring("-".length()));
-                } else {
-                    String[] range = rangeValue.split("-");
-                    start = Long.parseLong(range[0]);
-                    end = range.length > 1 ? Long.parseLong(range[1])
-                            : fileLength - 1;
-                }
-                if (end > fileLength - 1) {
-                    end = fileLength - 1;
-                }
+                long[] ranges = calculateRange(fileLength, rangeHeader);
+                long start = ranges[0];
+                long end = ranges[1];
                 if (start <= end) {
                     long contentLength = end - start + 1;
                     fis.skip(start);
