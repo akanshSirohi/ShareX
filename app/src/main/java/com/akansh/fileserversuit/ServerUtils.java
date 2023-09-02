@@ -175,42 +175,50 @@ public class ServerUtils {
     }
 
     public String getAppsListCode() {
-        Comparator<ApplicationInfo> comparator= (obj1, obj2) -> packageManager.getApplicationLabel(obj1).toString().compareToIgnoreCase(packageManager.getApplicationLabel(obj2).toString());
-        Collections.sort(packages,comparator);
-        StringBuilder code=new StringBuilder();
-        IconUtils iconUtils=new IconUtils();
-        File base=new File(Environment.getExternalStorageDirectory(),"ShareX/.thumbs");
-        if(!base.exists()) {
-            base.mkdirs();
-        }
-        for (ApplicationInfo applicationInfo : packages) {
-            if(utils.isUserApp(applicationInfo)) {
-                String pkg = applicationInfo.packageName;
-                packageManager.getApplicationLogo(applicationInfo);
-                File dest = new File(base, pkg + ".png");
-                if (!dest.exists()) {
-                    Bitmap bm = iconUtils.drawableToBitmap(packageManager.getApplicationIcon(applicationInfo));
-                    iconUtils.writeBitmapToFile(bm, dest);
-                }
-                File apk = new File(applicationInfo.sourceDir);
-                String appName=packageManager.getApplicationLabel(applicationInfo).toString();
-                code.append("<tr>");
-                code.append("<td>");
-                code.append("<div class=\"d-flex\">");
-                code.append("<div class=\"ps-2 appInfo\">");
-                code.append("<img src=\"/ShareX/thumbnail/app/").append(pkg).append("\" class=\"app-icon\" />");
-                code.append("<div class=\"px-3\">");
-                code.append(appName);
-                code.append("<br><small>").append(pkg);
-                code.append("<br><b>Size: </b>");
-                code.append(fileSize(apk));
-                code.append("</small></div>");
-                code.append("</div>");
-                code.append("<div class=\"apk-dwl-btn pe-2\">");
-                code.append("<button class=\"btn btn-primary\" onclick=\"getApp('").append(pkg).append("');\"><i class=\"fas fa-download\"></i></button>");
-                code.append("</div></div>");
-                code.append("</tr>");
+        StringBuilder code = new StringBuilder();
+        if(utils.loadSetting(Constants.LOAD_APPS)) {
+            Comparator<ApplicationInfo> comparator = (obj1, obj2) -> packageManager.getApplicationLabel(obj1).toString().compareToIgnoreCase(packageManager.getApplicationLabel(obj2).toString());
+            Collections.sort(packages, comparator);
+            IconUtils iconUtils = new IconUtils();
+            File base = new File(Environment.getExternalStorageDirectory(), "ShareX/.thumbs");
+            if (!base.exists()) {
+                base.mkdirs();
             }
+            for (ApplicationInfo applicationInfo : packages) {
+                if (utils.isUserApp(applicationInfo)) {
+                    String pkg = applicationInfo.packageName;
+                    packageManager.getApplicationLogo(applicationInfo);
+                    File dest = new File(base, pkg + ".png");
+                    if (!dest.exists()) {
+                        Bitmap bm = iconUtils.drawableToBitmap(packageManager.getApplicationIcon(applicationInfo));
+                        iconUtils.writeBitmapToFile(bm, dest);
+                    }
+                    File apk = new File(applicationInfo.sourceDir);
+                    String appName = packageManager.getApplicationLabel(applicationInfo).toString();
+                    code.append("<tr>");
+                    code.append("<td>");
+                    code.append("<div class=\"d-flex\">");
+                    code.append("<div class=\"ps-2 appInfo\">");
+                    code.append("<img src=\"/ShareX/thumbnail/app/").append(pkg).append("\" class=\"app-icon\" />");
+                    code.append("<div class=\"px-3\">");
+                    code.append(appName);
+                    code.append("<br><small>").append(pkg);
+                    code.append("<br><b>Size: </b>");
+                    code.append(fileSize(apk));
+                    code.append("</small></div>");
+                    code.append("</div>");
+                    code.append("<div class=\"apk-dwl-btn pe-2\">");
+                    code.append("<button class=\"btn btn-primary\" onclick=\"getApp('").append(pkg).append("');\"><i class=\"fas fa-download\"></i></button>");
+                    code.append("</div></div>");
+                    code.append("</tr>");
+                }
+            }
+        }else{
+            code.append("<tr>");
+            code.append("<td>");
+            code.append("<div style=\"display: flex;\" class=\"mb-3 justify-content-center align-items-center\"><i class=\"fa-solid fa-ban\"></i>&nbsp;Apps Access Denied!</div>");
+            code.append("</td>");
+            code.append("</tr>");
         }
         return code.toString();
     }
@@ -438,6 +446,9 @@ public class ServerUtils {
     }
 
     public Response serveApp(String name,String path,String pkg) {
+        if(!utils.loadSetting(Constants.LOAD_APPS)) {
+            return newFixedLengthResponse("Access Denied!");
+        }
         Response response;
         try {
             FileInputStream str = new FileInputStream(path);

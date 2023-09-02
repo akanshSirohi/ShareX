@@ -58,6 +58,7 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.bumptech.glide.Glide;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
 import com.github.sumimakito.awesomeqr.AwesomeQrRenderer;
 import com.github.sumimakito.awesomeqr.RenderResult;
@@ -78,6 +79,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -322,6 +325,13 @@ public class MainActivity extends AppCompatActivity {
             // DO Nothing...
         }
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        // Clear Glide Cache
+        new Thread(() -> Glide.get(MainActivity.this).clearDiskCache()).start();
+        super.onStop();
     }
 
     @Override
@@ -668,6 +678,7 @@ public class MainActivity extends AppCompatActivity {
         CheckBox settRMCheck=findViewById(R.id.sett_resMod_checkBox);
         CheckBox settFDCheck=findViewById(R.id.sett_frceDwl_checkBox);
         CheckBox settPMCheck=findViewById(R.id.sett_pMode_checkBox);
+        CheckBox settAppsCheck=findViewById(R.id.sett_apps_checkBox);
         TextView settPort=findViewById(R.id.sett_subtitle8);
         ImageButton settResetRoot = findViewById(R.id.sett_reset_root);
         card1.setOnClickListener(view -> {
@@ -769,6 +780,11 @@ public class MainActivity extends AppCompatActivity {
             settDRoot.setText(serverRoot);
             restartServer();
         });
+        settAppsCheck.setChecked(utils.loadSetting(Constants.LOAD_APPS));
+        settAppsCheck.setOnCheckedChangeListener((compoundButton, b) -> {
+            utils.saveSetting(Constants.LOAD_APPS,b);
+            restartServer();
+        });
     }
 
     private void toggleSettings() {
@@ -806,8 +822,7 @@ public class MainActivity extends AppCompatActivity {
         url="";
         fabActionsHandler.setLabels("0 media selected","0 files selected");
         deviceManager.clearTmp();
-        JunkCleaner junkCleaner=new JunkCleaner();
-        junkCleaner.execute();
+        junkCleaner();
     }
 
     public void pushLog(String log,boolean b) {
@@ -950,8 +965,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         fabActionsHandler.setLabels(pmode_send_images.size()+" media selected",pmode_send_files.size()+" files selected");
-        PListWriter pListWriter=new PListWriter();
-        pListWriter.execute();
+        pListWriter();
     }
 
     private void changeUI(int code) {
@@ -999,9 +1013,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public class JunkCleaner extends AsyncTask<Void,Void,Void> {
-        @Override
-        protected Void doInBackground(Void... voids) {
+    private void junkCleaner() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
             File file=new File("/data/data/"+getPackageName()+"/","pFilesList.bin");
             File temp=new File(Environment.getExternalStorageDirectory()+"/ShareX/.temp");
             File cache = new File("/data/data/" + getPackageName() + "/cache");
@@ -1019,14 +1033,13 @@ public class MainActivity extends AppCompatActivity {
             }catch (Exception e) {
                 //Do Nothing...
             }
-            return null;
-        }
+        });
     }
 
-    public class PListWriter extends AsyncTask<Void,Void,Void> {
 
-        @Override
-        protected Void doInBackground(Void... voids) {
+    public void pListWriter() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
             File file=new File("/data/data/"+getPackageName()+"/","pFilesList.bin");
             StringBuffer data=new StringBuffer();
             for(String path : pmode_send_final_files) {
@@ -1040,11 +1053,10 @@ public class MainActivity extends AppCompatActivity {
             }catch (Exception e) {
                 //Do Nothing...
             }
-            return null;
-        }
+        });
     }
 
-    public class GenerateQR extends AsyncTask<Void,Void,Void> {
+    public class GenerateQR {
 
         ImageView qr_view;
 
@@ -1052,42 +1064,43 @@ public class MainActivity extends AppCompatActivity {
             this.qr_view = imageView;
         }
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            Logo logo = new Logo();
-            logo.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_logo));
-            logo.setBorderRadius(10);
-            logo.setBorderWidth(10);
-            logo.setScale(0.2f);
-            logo.setClippingRect(new RectF(0, 0, 200, 200));
-            com.github.sumimakito.awesomeqr.option.color.Color color=new com.github.sumimakito.awesomeqr.option.color.Color();
-            color.setLight(Color.parseColor("#ffffff"));
-            color.setDark(Color.parseColor("#000000"));
-            color.setBackground(Color.parseColor("#ffffff"));
-            color.setAuto(false);
-            RenderOption renderOption = new RenderOption();
-            renderOption.setContent(url);
-            renderOption.setSize(800);
-            renderOption.setBorderWidth(20);
-            renderOption.setEcl(ErrorCorrectionLevel.H);
-            renderOption.setPatternScale(1.0f);
-            renderOption.setClearBorder(true);
-            renderOption.setRoundedPatterns(true);
-            renderOption.setColor(color);
-            renderOption.setLogo(logo);
-            try {
-                RenderResult render = AwesomeQrRenderer.render(renderOption);
-                if (render.getBitmap() != null) {
-                    runOnUiThread(() -> {
-                        RoundedBitmapDrawable dr = RoundedBitmapDrawableFactory.create(getResources(),render.getBitmap());
-                        dr.setCornerRadius(15f);
-                        qr_view.setImageDrawable(dr);
-                    });
+        public void execute() {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.execute(() -> {
+                Logo logo = new Logo();
+                logo.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_logo));
+                logo.setBorderRadius(10);
+                logo.setBorderWidth(10);
+                logo.setScale(0.2f);
+                logo.setClippingRect(new RectF(0, 0, 200, 200));
+                com.github.sumimakito.awesomeqr.option.color.Color color=new com.github.sumimakito.awesomeqr.option.color.Color();
+                color.setLight(Color.parseColor("#ffffff"));
+                color.setDark(Color.parseColor("#000000"));
+                color.setBackground(Color.parseColor("#ffffff"));
+                color.setAuto(false);
+                RenderOption renderOption = new RenderOption();
+                renderOption.setContent(url);
+                renderOption.setSize(800);
+                renderOption.setBorderWidth(20);
+                renderOption.setEcl(ErrorCorrectionLevel.H);
+                renderOption.setPatternScale(1.0f);
+                renderOption.setClearBorder(true);
+                renderOption.setRoundedPatterns(true);
+                renderOption.setColor(color);
+                renderOption.setLogo(logo);
+                try {
+                    RenderResult render = AwesomeQrRenderer.render(renderOption);
+                    if (render.getBitmap() != null) {
+                        runOnUiThread(() -> {
+                            RoundedBitmapDrawable dr = RoundedBitmapDrawableFactory.create(getResources(),render.getBitmap());
+                            dr.setCornerRadius(15f);
+                            qr_view.setImageDrawable(dr);
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
+            });
         }
     }
 
@@ -1099,29 +1112,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showAuthDialog(final String device_id) {
-        DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
-            isAuthDialogOpened=false;
-            switch (which) {
-                case DialogInterface.BUTTON_POSITIVE:
-                    deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_TEMP);
-                    break;
-                case DialogInterface.BUTTON_NEGATIVE:
-                    deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_DENIED);
-                    break;
-                case DialogInterface.BUTTON_NEUTRAL:
-                    deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_PERMANENT);
-                    break;
-            }
-            Timer myTimer=new Timer();
-            myTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    String count = deviceManager.getRemDevices() + " devices remembered";
-                    MainActivity.this.runOnUiThread(() -> settRemDev.setText(count));
-                }
-            },500);
-        };
         if(!isAuthDialogOpened) {
+            DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
+                isAuthDialogOpened=false;
+                switch (which) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_TEMP);
+                        break;
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_DENIED);
+                        break;
+                    case DialogInterface.BUTTON_NEUTRAL:
+                        deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_PERMANENT);
+                        break;
+                }
+                Timer myTimer=new Timer();
+                myTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        String count = deviceManager.getRemDevices() + " devices remembered";
+                        MainActivity.this.runOnUiThread(() -> settRemDev.setText(count));
+                    }
+                },500);
+            };
+
             isAuthDialogOpened=true;
             try {
                 AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)

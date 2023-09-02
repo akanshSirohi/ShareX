@@ -8,6 +8,7 @@ public class Constants {
     public static final String RESTRICT_MODIFY = "restrict_modify";
     public static final String FORCE_DOWNLOAD = "force_download";
     public static final String PRIVATE_MODE = "private_mode";
+    public static final String LOAD_APPS = "load_apps";
     public static final String TEMP_URL = "temp_url";
     public static final String IS_LOGGER_VISIBLE = "is_logger_visible";
     public static final String ASKED_BATTERY_OPT = "asked_battery_opt";
