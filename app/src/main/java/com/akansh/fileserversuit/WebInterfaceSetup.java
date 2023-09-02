@@ -1,67 +1,60 @@
 package com.akansh.fileserversuit;
 
-import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class WebInterfaceSetup extends AsyncTask<Void, Void, Void> {
 
+public class WebInterfaceSetup {
     String packageName;
     Context ctx;
-
-    public WebInterfaceSetup(String packageName, Context ctx) {
-        this.packageName = packageName;
-        this.ctx = ctx;
-    }
+    Activity activity;
 
     SetupListeners setupListeners;
     boolean status=false;
 
-    @Override
-    @SuppressLint("SdCardPath")
-    protected void onPreExecute() {
-        File pV=new File(String.format("/data/data/%s/%s/index.html",packageName,Constants.OLD_DIR));
-        if(pV.exists()) {
-            setupListeners.onSetupStarted(true);
-        }else{
-            setupListeners.onSetupStarted(false);
-        }
+    public WebInterfaceSetup(String packageName, Context ctx, Activity activity) {
+        this.packageName = packageName;
+        this.ctx = ctx;
+        this.activity = activity;
     }
 
-    @Override
-    @SuppressLint("SdCardPath")
-    protected Void doInBackground(Void... voids) {
-        try {
-            status = copyDirFromAssetManager(Constants.WEB_INTERFACE_DIR, Constants.NEW_DIR);
-            if(!status) {
-                Log.d(Constants.LOG_TAG,"Failed To Unzip File!");
-                deleteDirectory(new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR)));
-            }
-            // Delete Prev-Ver Files
-            File pV=new File(String.format("/data/data/%s/%s",packageName,Constants.OLD_DIR));
+    public void setup() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            File pV=new File(String.format("/data/data/%s/%s/index.html",packageName,Constants.OLD_DIR));
             if(pV.exists()) {
-                Log.d(Constants.LOG_TAG,"Old Version Found!");
-                deleteDirectory(pV);
+                this.activity.runOnUiThread(() -> setupListeners.onSetupStarted(true));
+            }else {
+                this.activity.runOnUiThread(() -> setupListeners.onSetupStarted(false));
             }
-        }catch (Exception e) {
-            status=false;
-            Log.d(Constants.LOG_TAG,"Failed To Copy Dir!");
-        }
-        return null;
+            try {
+                status = copyDirFromAssetManager(Constants.WEB_INTERFACE_DIR, Constants.NEW_DIR);
+                if(!status) {
+                    Log.d(Constants.LOG_TAG,"Failed To Unzip File!");
+                    deleteDirectory(new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR)));
+                }
+                // Delete Prev-Ver Files
+                File p=new File(String.format("/data/data/%s/%s",packageName,Constants.OLD_DIR));
+                if(p.exists()) {
+                    Log.d(Constants.LOG_TAG,"Old Version Found!");
+                    deleteDirectory(p);
+                }
+            }catch (Exception e) {
+                status=false;
+                Log.d(Constants.LOG_TAG,"Failed To Copy Dir!");
+            }
+            this.activity.runOnUiThread(() -> setupListeners.onSetupCompeted(status));
+        });
     }
-
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        setupListeners.onSetupCompeted(status);
-    }
-
 
     public interface SetupListeners {
         void onSetupCompeted(boolean status);

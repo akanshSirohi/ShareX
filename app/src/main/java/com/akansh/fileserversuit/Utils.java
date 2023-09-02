@@ -161,7 +161,12 @@ public class Utils {
 
     public boolean loadSetting(String constant) {
         boolean def = false;
-        if (constant.equals(Constants.FORCE_DOWNLOAD) || constant.equals(Constants.IS_LOGGER_VISIBLE) || constant.equals(Constants.RESTRICT_MODIFY)) {
+        if (
+                constant.equals(Constants.FORCE_DOWNLOAD) ||
+                constant.equals(Constants.IS_LOGGER_VISIBLE) ||
+                constant.equals(Constants.RESTRICT_MODIFY) ||
+                constant.equals(Constants.LOAD_APPS)
+        ) {
             def = true;
         }
         SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);

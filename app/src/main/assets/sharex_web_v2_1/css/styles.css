@@ -250,3 +250,34 @@ input[type='checkbox'] {
   background-color: var(--bs-light);
   color: var(--bs-dark);
 }
+
+#imgPreview {
+  max-height: 90vh;
+}
+
+@media only screen and (min-width: 576px) {
+  #imgViewModel .modal-dialog {
+    max-width: 80vw !important;
+  }
+}
+
+.image_view_header {
+  z-index: 100;
+  right: 0;
+}
+
+.image_view_header button {
+  background-color: #00000070;
+  color: #fff;
+}
+
+.image_view_header button:hover {
+  background-color: black;
+}
+
+.image_view_header button.btn-col-info:hover {
+  color: var(--bs-info);
+}
+.image_view_header button.btn-col-danger:hover {
+  color: var(--bs-danger);
+}

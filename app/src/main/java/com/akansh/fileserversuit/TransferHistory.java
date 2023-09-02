@@ -19,8 +19,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -46,9 +44,6 @@ public class TransferHistory extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transfer_history);
-//        Toolbar toolbar=findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
-//        getSupportActionBar().setTitle("Transfer History");
         historyDBManager=new HistoryDBManager(this);
         history_list = findViewById(R.id.history_list);
         ArrayList<HistoryItem> historyItems=historyDBManager.getHistory();
@@ -218,11 +213,6 @@ public class TransferHistory extends AppCompatActivity {
             transferHistoryAdapter.notifyDataSetChanged();
         });
         snackbar.setBackgroundTint(Color.parseColor("#000a12"));
-//        TextView tv = (snackbar.getView()).findViewById(com.google.android.material.R.id.snackbar_text);
-//        TextView action = snackbar.getView().findViewById(com.google.android.material.R.id.snackbar_action);
-//        Typeface font = Typeface.createFromAsset(this.getAssets(), "fonts/product_sans.ttf");
-//        tv.setTypeface(font);
-//        action.setTypeface(font,Typeface.BOLD);
         snackbar.show();
     }
 

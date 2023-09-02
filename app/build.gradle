@@ -1,15 +1,17 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 33
+    defaultConfig {
+        compileSdk 33
+    }
     ndkVersion "24.0.8215888"
 
     defaultConfig {
         applicationId "com.akansh.fileserversuit"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 30
-        versionName "2.3.7"
+        versionCode 31
+        versionName "2.3.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -68,17 +70,16 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'org.nanohttpd:nanohttpd:2.3.1'
-    implementation 'org.nanohttpd:nanohttpd-apache-fileupload:2.3.1'
-//    implementation 'com.github.nanohttpd:nanohttpd:master-SNAPSHOT'
-//    implementation 'com.github.akanshsirohi:nanohttpd:master-SNAPSHOT'
+    implementation('com.github.nanohttpd:nanohttpd:master-SNAPSHOT') {
+        exclude group: 'org.parboiled'
+    }
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     implementation 'net.lingala.zip4j:zip4j:2.11.5'
     implementation 'com.zhihu.android:matisse:0.5.3-beta3'
     implementation 'com.github.clans:fab:1.6.4'
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
-    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'com.google.android.material:material:1.9.0'
     implementation 'com.dlazaro66.qrcodereaderview:qrcodereaderview:2.0.3'
     implementation 'com.github.SumiMakito:AwesomeQRCode:1.2.0'
 

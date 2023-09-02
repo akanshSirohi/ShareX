@@ -77,11 +77,6 @@
         </button>
         <div class="collapse navbar-collapse ps-2" id="navbarColor02">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item active show">
-              <a class="nav-link" href="#"
-                >File Manager <span class="sr-only">(current)</span></a
-              >
-            </li>
             <li class="nav-item">
               <a
                 class="nav-link"
@@ -268,7 +263,6 @@
                 overflow-x: hidden;
                 max-height: 600px;
               "
-              class="mt-3"
             >
               <table class="table table-striped">
                 <tbody id="appsList" class="noselect">
@@ -412,10 +406,9 @@
               </div>
             </div>
           </div>
-        </div>
-        <!-- About Model End  -->
-
-        <!-- File Rename Model Start -->
+          <!-- About Model End  -->
+          
+          <!-- File Rename Model Start -->
         <div class="modal fade" id="fRenameModel">
           <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -427,13 +420,14 @@
                 <div class="form-group">
                   <div class="input-group">
                     <input
-                      type="text"
-                      class="form-control"
-                      id="newFName"
-                      placeholder="New File/Folder Name..."
+                    type="text"
+                    class="form-control"
+                    id="newFName"
+                    placeholder="New File/Folder Name..."
                     />
                     <button class="btn btn-primary" id="renMBtn">
                       Rename
+                    </div>
                     </button>
                   </div>
                 </div>
@@ -474,26 +468,25 @@
         <!-- ImageView Model Start -->
         <div class="modal fade" id="imgViewModel">
           <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">View Image</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body text-center" style="padding: 0">
-                <img src="" alt="" class="img-fluid" id="imgPreview" />
-              </div>
-              <div class="modal-footer">
-                <div style="text-align: right">
-                  <button class="btn btn-primary" onclick="openImg();">
-                    Download
+            <div class="modal-content bg-transparent">
+              <div class="d-flex justify-content-around position-absolute image_view_header">
+                <div class="btn-group" role="group">
+                  <button class="btn btn-col-info" onclick="openImg();">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </button>
+                  <button class="btn btn-col-danger" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-xmark"></i>
                   </button>
                 </div>
+              </div>
+              <div class="modal-body text-center" style="padding: 0">
+                <img src="" alt="" id="imgPreview" class="img-fluid" />
               </div>
             </div>
           </div>
         </div>
         <!-- ImageView Model End  -->
-
+        
         <!-- Context Menu Start  -->
         <ul id="contextMenu" class="dropdown-menu" style="display: none">
           <li class="ctx-head">Options</li>

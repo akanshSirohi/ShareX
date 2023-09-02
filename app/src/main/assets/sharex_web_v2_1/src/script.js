@@ -16,6 +16,10 @@ $(document).ready(function () {
     $("#fileUploadModel").modal("show");
   });
 
+  $('#imgViewModel').on('hidden.bs.modal', function (e) {
+    $("#imgPreview").attr("src", "");
+  });
+
   var cmanager = new CookieManager();
   var fsx_auth_token = "";
   if (cmanager.exist("fsx_auth_token")) {
@@ -307,19 +311,25 @@ function openFolder(path) {
   }
 }
 
+function viewFileModal(path) {
+  let src = "ShareX?action=viewImage&location=" + encodeURI(path);
+  $("#imgPreview").attr("src", "images/loader.gif");
+  let img = new Image();
+  img.src = src;
+  img.onload = function () {
+    $("#imgPreview").attr("src", src);
+  };
+  $("#imgViewModel").modal("show");
+}
+
 function viewFile(path) {
   opened_img = parent + "/" + path;
-  let img =
-    "ShareX?action=viewImage&location=" + encodeURI(parent + "/" + path);
-  $("#imgPreview").attr("src", img);
-  $("#imgViewModel").modal("show");
+  viewFileModal(opened_img);
 }
 
 function viewFile_p(path) {
   opened_img = path;
-  let img = "ShareX?action=viewImage&location=" + encodeURI(path);
-  $("#imgPreview").attr("src", img);
-  $("#imgViewModel").modal("show");
+  viewFileModal(opened_img);
 }
 
 function openImg() {

@@ -8,6 +8,7 @@ public class Constants {
     public static final String RESTRICT_MODIFY = "restrict_modify";
     public static final String FORCE_DOWNLOAD = "force_download";
     public static final String PRIVATE_MODE = "private_mode";
+    public static final String LOAD_APPS = "load_apps";
     public static final String TEMP_URL = "temp_url";
     public static final String IS_LOGGER_VISIBLE = "is_logger_visible";
     public static final String ASKED_BATTERY_OPT = "asked_battery_opt";
@@ -37,7 +38,7 @@ public class Constants {
     public static final String PRIVACY_POLICY_URL = "http://akanshsirohi.github.io/sharexpro_privacy_policy.html";
 
     // WEB INTERFACE VERSION CONTROL
-    public static final String OLD_DIR = "sharex_v1_7";
-    public static final String NEW_DIR = "sharex_v2_0";
-    public static final String WEB_INTERFACE_DIR = "sharex_web_v2_0";
+    public static final String OLD_DIR = "sharex_v2_0";
+    public static final String NEW_DIR = "sharex_v2_1";
+    public static final String WEB_INTERFACE_DIR = "sharex_web_v2_1";
 }
