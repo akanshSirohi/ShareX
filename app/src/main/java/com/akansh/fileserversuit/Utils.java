@@ -325,7 +325,7 @@ public class Utils {
     public List<String> uriListResolve(List<Uri> uriList) {
         List<String> paths = new ArrayList<>();
         for (Uri uri : uriList) {
-            paths.add(UriResolver.getUriRealPath(uri, ctx));
+            paths.add(GalleryUriResolver.getUriRealPath(uri, ctx));
         }
         return paths;
     }

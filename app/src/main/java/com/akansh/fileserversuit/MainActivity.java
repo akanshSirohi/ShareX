@@ -207,12 +207,18 @@ public class MainActivity extends AppCompatActivity {
                     int count = data.getClipData().getItemCount();
                     for (int i = 0; i < count; i++) {
                         Uri uri = data.getClipData().getItemAt(i).getUri();
-                        processPrivateFileUri(uri);
+                        String path = utils.filePickerUriResolve(uri);
+                        if(path != null) {
+                            pmode_send_files.add(path);
+                        }
                     }
                     mergeAndUpdatePFilesList();
                 }else if(data.getData() != null){
                     Uri uri = data.getData();
-                    processPrivateFileUri(uri);
+                    String path = utils.filePickerUriResolve(uri);
+                    if(path != null) {
+                        pmode_send_files.add(path);
+                    }
                     mergeAndUpdatePFilesList();
                 }
             }
@@ -312,13 +318,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         fabActionsHandler.init();
-    }
-
-    private void processPrivateFileUri(Uri uri) {
-        String path = utils.filePickerUriResolve(uri);
-        if(path != null) {
-            pmode_send_files.add(path);
-        }
     }
 
     @Override

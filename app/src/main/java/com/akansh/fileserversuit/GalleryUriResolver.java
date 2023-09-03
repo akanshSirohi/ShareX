@@ -9,7 +9,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 
-public class UriResolver {
+public class GalleryUriResolver {
 
     public static String getUriRealPath(Uri uri,Context ctx)
     {
