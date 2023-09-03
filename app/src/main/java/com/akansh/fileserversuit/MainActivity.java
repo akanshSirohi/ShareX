@@ -30,6 +30,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
@@ -200,38 +202,18 @@ public class MainActivity extends AppCompatActivity {
 
         mutipleFilesActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if(result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                try {
-                    Intent data = result.getData();
-                    if (data.getClipData() != null) {
-                        int count = data.getClipData().getItemCount();
-                        for (int i = 0; i < count; i++) {
-                            Uri uri = data.getClipData().getItemAt(i).getUri();
-                            String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                            String storage;
-                            if(decode.split(":")[1].contains("primary")) {
-                                storage = Environment.getExternalStorageDirectory().getAbsolutePath();
-                            }else{
-                                storage = utils.getSDCardRoot();
-                            }
-                            File f = new File(storage, decode.split(":")[2]);
-                            pmode_send_files.add(f.getAbsolutePath());
-                        }
-                        mergeAndUpdatePFilesList();
-                    }else if(data.getData() != null){
-                        Uri uri = data.getData();
-                        String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                        String storage;
-                        if(decode.split(":")[1].contains("primary")) {
-                            storage = Environment.getExternalStorageDirectory().getAbsolutePath();
-                        }else{
-                            storage = utils.getSDCardRoot();
-                        }
-                        File f = new File(storage, decode.split(":")[2]);
-                        pmode_send_files.add(f.getAbsolutePath());
-                        mergeAndUpdatePFilesList();
+                Intent data = result.getData();
+                if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    for (int i = 0; i < count; i++) {
+                        Uri uri = data.getClipData().getItemAt(i).getUri();
+                        processPrivateFileUri(uri);
                     }
-                }catch (Exception e) {
-                    Log.d(Constants.LOG_TAG,"FilesErr: "+e);
+                    mergeAndUpdatePFilesList();
+                }else if(data.getData() != null){
+                    Uri uri = data.getData();
+                    processPrivateFileUri(uri);
+                    mergeAndUpdatePFilesList();
                 }
             }
         });
@@ -330,6 +312,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         fabActionsHandler.init();
+    }
+
+    private void processPrivateFileUri(Uri uri) {
+        String path = utils.filePickerUriResolve(uri);
+        if(path != null) {
+            pmode_send_files.add(path);
+        }
     }
 
     @Override
@@ -1074,6 +1063,9 @@ public class MainActivity extends AppCompatActivity {
             }catch (Exception e) {
                 //Do Nothing...
             }
+            pmode_send_files.clear();
+            pmode_send_images.clear();
+            pmode_send_final_files.clear();
         });
     }
 

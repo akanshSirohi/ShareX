@@ -24,6 +24,7 @@ import androidx.core.content.res.ResourcesCompat;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -382,6 +383,42 @@ public class Utils {
             }
         }
         return null;
+    }
+
+    public String filePickerUriResolve(Uri uri) {
+        try {
+            String decode = URLDecoder.decode(uri.toString(), "UTF-8");
+            if (decode.split(":").length < 3) {
+                if (decode.contains("/storage/") && decode.contains("raw/")) {
+                    String path = decode.split("raw/")[1];
+                    if(path != null && path.length() > 1) {
+                        return path;
+                    }
+                }
+            } else {
+                if (!decode.split(":")[2].matches("-?\\d+(\\.\\d+)?")) {
+                    String storage;
+                    if (decode.split(":")[1].contains("primary")) {
+                        storage = Environment.getExternalStorageDirectory().getAbsolutePath();
+                    } else {
+                        storage = getSDCardRoot();
+                    }
+                    File f = new File(storage, decode.split(":")[2]);
+                    return f.getAbsolutePath();
+                } else {
+                    String path = UriResolverUtil.getPath(ctx, uri);
+                    if(path == null) {
+                        Log.d(Constants.LOG_TAG, "Unresolved: " + decode);
+                    }
+                    if(path != null && path.length() > 1 && path.contains("storage")) {
+                        return path;
+                    }
+                }
+            }
+            return null;
+        }catch (Exception e) {
+            return null;
+        }
     }
 
 }

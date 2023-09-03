@@ -87,7 +87,6 @@ public class WebServer extends NanoHTTPD {
                 if(action.equals("listFiles")) {
                     String loc = Objects.requireNonNull(params.get("location")).get(0);
                     c_parent = loc;
-                    Log.d(Constants.LOG_TAG,"List Files Of Dir: "+root+loc);
                     return newFixedLengthResponse(serverUtils.getFilesListCode(root + loc, allowHiddenMedia));
                 }else if(action.equals("openFile")){
                     String loc;

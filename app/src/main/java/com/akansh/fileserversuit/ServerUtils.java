@@ -141,10 +141,10 @@ public class ServerUtils {
                                 code.append("<label class=\"custom-control-label\" for=\"").append(fTemp.getAbsolutePath()).append("\"></label>");
                                 code.append("</div>");
                                 if (utils.getMimeType(pth).startsWith("image")) {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"viewFile_p(this.dataset.ctxmap)\">");
+                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(fTemp.getAbsolutePath()).append("\" onclick=\"viewFile_p(this.dataset.ctxmap)\">");
                                     code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=").append(fTemp.getAbsolutePath()).append("\"></img>");
                                 } else {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(stripRoot(fTemp.getAbsolutePath())).append("\" onclick=\"openFile_p(this.dataset.ctxmap)\">");
+                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(fTemp.getAbsolutePath()).append("\" onclick=\"openFile_p(this.dataset.ctxmap)\">");
                                     code.append(utils.getIconCode(fTemp));
                                 }
                                 code.append("&nbsp;&nbsp;");
@@ -503,15 +503,6 @@ public class ServerUtils {
             //Do nothing
         }
         return "-;-;transparent";
-    }
-
-    private String stripRoot(String path) {
-        return path;
-//        String ext = utils.getSDCardRoot();
-//        if(ext != null) {
-//            path = path.replace(ext, "");
-//        }
-//        return path.replace(Environment.getExternalStorageDirectory().getAbsolutePath(),"");
     }
 
     @SuppressLint("SdCardPath")
