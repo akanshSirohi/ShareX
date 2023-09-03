@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> mutipleFilesActivityResultLauncher;
 
     int exit = 0;
-    int currentTheme;
+    int currentTheme, storageChoice = 0;
     boolean requestingStorage = false;
 
     @Override
@@ -181,7 +181,12 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Uri uri = result.getData().getData();
                     String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                    File f = new File(Environment.getExternalStorageDirectory(),decode.split(":")[2]);
+                    if(decode.split(":")[1].contains("primary")) {
+                        utils.saveStorage(Environment.getExternalStorageDirectory().getAbsolutePath());
+                    }else{
+                        utils.saveStorage(utils.getSDCardRoot());
+                    }
+                    File f = new File(utils.loadRoot(),decode.split(":")[2]);
                     serverRoot = f.getAbsolutePath();
                     utils.saveRoot(serverRoot);
                     pushLog("Server root changed to " + serverRoot, true);
@@ -202,14 +207,26 @@ public class MainActivity extends AppCompatActivity {
                         for (int i = 0; i < count; i++) {
                             Uri uri = data.getClipData().getItemAt(i).getUri();
                             String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                            File f = new File(Environment.getExternalStorageDirectory(), decode.split(":")[2]);
+                            String storage;
+                            if(decode.split(":")[1].contains("primary")) {
+                                storage = Environment.getExternalStorageDirectory().getAbsolutePath();
+                            }else{
+                                storage = utils.getSDCardRoot();
+                            }
+                            File f = new File(storage, decode.split(":")[2]);
                             pmode_send_files.add(f.getAbsolutePath());
                         }
                         mergeAndUpdatePFilesList();
                     }else if(data.getData() != null){
                         Uri uri = data.getData();
                         String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                        File f = new File(Environment.getExternalStorageDirectory(), decode.split(":")[2]);
+                        String storage;
+                        if(decode.split(":")[1].contains("primary")) {
+                            storage = Environment.getExternalStorageDirectory().getAbsolutePath();
+                        }else{
+                            storage = utils.getSDCardRoot();
+                        }
+                        File f = new File(storage, decode.split(":")[2]);
                         pmode_send_files.add(f.getAbsolutePath());
                         mergeAndUpdatePFilesList();
                     }
@@ -774,11 +791,35 @@ public class MainActivity extends AppCompatActivity {
             builder.show();
         });
         settResetRoot.setOnClickListener(view -> {
-            serverRoot = Environment.getExternalStorageDirectory().toString();
-            utils.saveRoot(serverRoot);
-            pushLog("Server root changed to " + serverRoot, true);
-            settDRoot.setText(serverRoot);
-            restartServer();
+            if(utils.isExternalStorageMounted()) {
+                String[] options = {"Internal Storage","SD Card"};
+                String[] storages = {Environment.getExternalStorageDirectory().getAbsolutePath(),utils.getSDCardRoot()};
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Choose Default Storage");
+                builder.setSingleChoiceItems(options, storageChoice, (dialog, which) -> {
+                    storageChoice = which;
+                });
+                builder.setPositiveButton("Set", (dialog, which) -> {
+                    dialog.dismiss();
+                    utils.saveStorage(storages[storageChoice]);
+                    serverRoot = storages[storageChoice];
+                    utils.saveRoot(serverRoot);
+                    pushLog("Server root changed to " + serverRoot, true);
+                    settDRoot.setText(serverRoot);
+                    restartServer();
+                });
+                builder.setNegativeButton("Cancel", (dialog, which) -> {
+                    dialog.dismiss();
+                });
+                builder.show();
+            }else{
+                utils.saveStorage(Environment.getExternalStorageDirectory().getAbsolutePath());
+                serverRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
+                utils.saveRoot(serverRoot);
+                pushLog("Server root changed to " + serverRoot, true);
+                settDRoot.setText(serverRoot);
+                restartServer();
+            }
         });
         settAppsCheck.setChecked(utils.loadSetting(Constants.LOAD_APPS));
         settAppsCheck.setOnCheckedChangeListener((compoundButton, b) -> {

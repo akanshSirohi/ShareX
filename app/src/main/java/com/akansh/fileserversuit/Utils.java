@@ -15,6 +15,7 @@ import android.provider.MediaStore;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.core.content.FileProvider;
@@ -173,6 +174,17 @@ public class Utils {
         return sharedPrefs.getBoolean(constant, def);
     }
 
+    public void saveStorage(String path) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putString("SERVER_STORAGE", path);
+        editor.apply();
+    }
+
+    public String loadStorage() {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getString("SERVER_STORAGE", Environment.getExternalStorageDirectory().getAbsolutePath());
+    }
+
     public void saveRoot(String path) {
         SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
         editor.putString("SERVER_ROOT", path);
@@ -243,7 +255,7 @@ public class Utils {
             } else {
                 uri = Uri.fromFile(f);
             }
-            String mimeType = null;
+            String mimeType;
             if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
                 ContentResolver cr = ctx.getContentResolver();
                 mimeType = cr.getType(uri);
@@ -253,7 +265,7 @@ public class Utils {
             }
             return mimeType;
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
@@ -349,6 +361,27 @@ public class Utils {
         values.put(MediaStore.Video.Media.DATA, file.getAbsolutePath());
         ContentResolver cr = ctx.getContentResolver();
         cr.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+    }
+
+    public boolean isExternalStorageMounted() {
+        return getSDCardRoot() != null;
+    }
+
+    public String getSDCardRoot() {
+        File[] filesDirs = ctx.getExternalFilesDirs(null);
+        for (File filesDir : filesDirs) {
+            if (filesDir != null) {
+                if(!filesDir.getAbsolutePath().contains("emulated")) {
+                    String path = filesDir.getAbsolutePath();
+                    int startIndex = path.indexOf("/storage/") + "/storage/".length();
+                    int endIndex = path.indexOf("/", startIndex);
+                    if (endIndex != -1) {
+                        return path.substring(0, endIndex);
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 }

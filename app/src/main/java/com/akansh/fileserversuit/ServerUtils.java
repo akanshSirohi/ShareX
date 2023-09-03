@@ -169,6 +169,7 @@ public class ServerUtils {
                 }
             }
         }catch (Exception e) {
+            Log.d(Constants.LOG_TAG,"Error in getFilesListCode: "+e);
             code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"fa-solid fa-triangle-exclamation\"></i>&nbsp;&nbsp;Can't read this location!</td></tr>");
         }
         return code.toString();
@@ -216,7 +217,7 @@ public class ServerUtils {
         }else{
             code.append("<tr>");
             code.append("<td>");
-            code.append("<div style=\"display: flex;\" class=\"mb-3 justify-content-center align-items-center\"><i class=\"fa-solid fa-ban\"></i>&nbsp;Apps Access Denied!</div>");
+            code.append("<div style=\"display: flex;\" class=\"my-3 justify-content-center align-items-center\"><i class=\"fa-solid fa-ban\"></i>&nbsp;Apps Access Denied!</div>");
             code.append("</td>");
             code.append("</tr>");
         }
@@ -505,7 +506,12 @@ public class ServerUtils {
     }
 
     private String stripRoot(String path) {
-        return path.replace(Environment.getExternalStorageDirectory().toString(),"");
+        return path;
+//        String ext = utils.getSDCardRoot();
+//        if(ext != null) {
+//            path = path.replace(ext, "");
+//        }
+//        return path.replace(Environment.getExternalStorageDirectory().getAbsolutePath(),"");
     }
 
     @SuppressLint("SdCardPath")

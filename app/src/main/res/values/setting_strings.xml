@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sett_title_1">Define Root Of ShareX</string>
+    <string name="sett_sub_title_1">Current Root: /</string>
+
+    <string name="sett_title_2">Clear Remembered Devices</string>
+    <string name="sett_sub_title_2">0 Devices Remembered</string>
+
+    <string name="sett_title_3">Web Interface Theme</string>
+    <string name="sett_sub_title_3">Cyborg (Default)</string>
+
+    <string name="sett_title_4">ShareX Port</string>
+    <string name="sett_sub_title_4">Port: 6060</string>
+
+    <string name="sett_title_5">Show Hidden Files</string>
+    <string name="sett_sub_title_5">Shows default hidden files/folders</string>
+
+    <string name="sett_title_6">Restrict Modification</string>
+    <string name="sett_sub_title_6">Files/folders cannot be deleted and renamed</string>
+
+    <string name="sett_title_7">Force Download</string>
+    <string name="sett_sub_title_7">Enables one click file download without viewing them</string>
+
+    <string name="sett_title_8">Private Mode</string>
+    <string name="sett_sub_title_8">Enables private mode and only selected files will be shared</string>
+
+    <string name="sett_title_9">Show Installed Apps</string>
+    <string name="sett_sub_title_9">Show installed apps on device to share</string>
+
+</resources>
