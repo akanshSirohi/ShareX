@@ -89,7 +89,12 @@ public class WebServer extends NanoHTTPD {
                     c_parent = loc;
                     return newFixedLengthResponse(serverUtils.getFilesListCode(root + loc, allowHiddenMedia));
                 }else if(action.equals("openFile")){
-                    String loc = root + Objects.requireNonNull(params.get("location")).get(0);
+                    String loc;
+                    if(!utils.loadSetting(Constants.PRIVATE_MODE)) {
+                        loc = root + Objects.requireNonNull(params.get("location")).get(0);
+                    }else{
+                        loc = Objects.requireNonNull(params.get("location")).get(0);
+                    }
                     File f=new File(loc);
                     sendLog("msg","msg","Sending file: "+f.getName());
                     if(utils.loadSetting(Constants.FORCE_DOWNLOAD)) {
@@ -98,7 +103,12 @@ public class WebServer extends NanoHTTPD {
                         return serverUtils.serveFile(loc,true,range);
                     }
                 }else if(action.equals("viewImage")) {
-                    String loc=root+ Objects.requireNonNull(params.get("location")).get(0);
+                    String loc;
+                    if(!utils.loadSetting(Constants.PRIVATE_MODE)) {
+                        loc = root + Objects.requireNonNull(params.get("location")).get(0);
+                    }else{
+                        loc = Objects.requireNonNull(params.get("location")).get(0);
+                    }
                     return serverUtils.serveFile(loc,false,range);
                 }else if(action.equals("thumbImage")) {
                     String loc = Objects.requireNonNull(params.get("location")).get(0);

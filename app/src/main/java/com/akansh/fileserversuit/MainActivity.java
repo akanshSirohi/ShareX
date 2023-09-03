@@ -30,6 +30,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
@@ -118,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> mutipleFilesActivityResultLauncher;
 
     int exit = 0;
-    int currentTheme;
+    int currentTheme, storageChoice = 0;
     boolean requestingStorage = false;
 
     @Override
@@ -181,7 +183,12 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     Uri uri = result.getData().getData();
                     String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                    File f = new File(Environment.getExternalStorageDirectory(),decode.split(":")[2]);
+                    if(decode.split(":")[1].contains("primary")) {
+                        utils.saveStorage(Environment.getExternalStorageDirectory().getAbsolutePath());
+                    }else{
+                        utils.saveStorage(utils.getSDCardRoot());
+                    }
+                    File f = new File(utils.loadRoot(),decode.split(":")[2]);
                     serverRoot = f.getAbsolutePath();
                     utils.saveRoot(serverRoot);
                     pushLog("Server root changed to " + serverRoot, true);
@@ -195,26 +202,24 @@ public class MainActivity extends AppCompatActivity {
 
         mutipleFilesActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if(result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                try {
-                    Intent data = result.getData();
-                    if (data.getClipData() != null) {
-                        int count = data.getClipData().getItemCount();
-                        for (int i = 0; i < count; i++) {
-                            Uri uri = data.getClipData().getItemAt(i).getUri();
-                            String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                            File f = new File(Environment.getExternalStorageDirectory(), decode.split(":")[2]);
-                            pmode_send_files.add(f.getAbsolutePath());
+                Intent data = result.getData();
+                if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    for (int i = 0; i < count; i++) {
+                        Uri uri = data.getClipData().getItemAt(i).getUri();
+                        String path = utils.filePickerUriResolve(uri);
+                        if(path != null) {
+                            pmode_send_files.add(path);
                         }
-                        mergeAndUpdatePFilesList();
-                    }else if(data.getData() != null){
-                        Uri uri = data.getData();
-                        String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                        File f = new File(Environment.getExternalStorageDirectory(), decode.split(":")[2]);
-                        pmode_send_files.add(f.getAbsolutePath());
-                        mergeAndUpdatePFilesList();
                     }
-                }catch (Exception e) {
-                    Log.d(Constants.LOG_TAG,"FilesErr: "+e);
+                    mergeAndUpdatePFilesList();
+                }else if(data.getData() != null){
+                    Uri uri = data.getData();
+                    String path = utils.filePickerUriResolve(uri);
+                    if(path != null) {
+                        pmode_send_files.add(path);
+                    }
+                    mergeAndUpdatePFilesList();
                 }
             }
         });
@@ -774,11 +779,35 @@ public class MainActivity extends AppCompatActivity {
             builder.show();
         });
         settResetRoot.setOnClickListener(view -> {
-            serverRoot = Environment.getExternalStorageDirectory().toString();
-            utils.saveRoot(serverRoot);
-            pushLog("Server root changed to " + serverRoot, true);
-            settDRoot.setText(serverRoot);
-            restartServer();
+            if(utils.isExternalStorageMounted()) {
+                String[] options = {"Internal Storage","SD Card"};
+                String[] storages = {Environment.getExternalStorageDirectory().getAbsolutePath(),utils.getSDCardRoot()};
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Choose Default Storage");
+                builder.setSingleChoiceItems(options, storageChoice, (dialog, which) -> {
+                    storageChoice = which;
+                });
+                builder.setPositiveButton("Set", (dialog, which) -> {
+                    dialog.dismiss();
+                    utils.saveStorage(storages[storageChoice]);
+                    serverRoot = storages[storageChoice];
+                    utils.saveRoot(serverRoot);
+                    pushLog("Server root changed to " + serverRoot, true);
+                    settDRoot.setText(serverRoot);
+                    restartServer();
+                });
+                builder.setNegativeButton("Cancel", (dialog, which) -> {
+                    dialog.dismiss();
+                });
+                builder.show();
+            }else{
+                utils.saveStorage(Environment.getExternalStorageDirectory().getAbsolutePath());
+                serverRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
+                utils.saveRoot(serverRoot);
+                pushLog("Server root changed to " + serverRoot, true);
+                settDRoot.setText(serverRoot);
+                restartServer();
+            }
         });
         settAppsCheck.setChecked(utils.loadSetting(Constants.LOAD_APPS));
         settAppsCheck.setOnCheckedChangeListener((compoundButton, b) -> {
@@ -1033,6 +1062,9 @@ public class MainActivity extends AppCompatActivity {
             }catch (Exception e) {
                 //Do Nothing...
             }
+            pmode_send_files.clear();
+            pmode_send_images.clear();
+            pmode_send_final_files.clear();
         });
     }
 

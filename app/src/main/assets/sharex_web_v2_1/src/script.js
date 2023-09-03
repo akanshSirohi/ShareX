@@ -20,6 +20,10 @@ $(document).ready(function () {
     $("#imgPreview").attr("src", "");
   });
 
+  $('#imgViewModel').on('show.bs.modal', function (e) {
+    $("#imgPreview").attr("src", "images/loader.gif");
+  });
+
   var cmanager = new CookieManager();
   var fsx_auth_token = "";
   if (cmanager.exist("fsx_auth_token")) {
@@ -313,7 +317,6 @@ function openFolder(path) {
 
 function viewFileModal(path) {
   let src = "ShareX?action=viewImage&location=" + encodeURI(path);
-  $("#imgPreview").attr("src", "images/loader.gif");
   let img = new Image();
   img.src = src;
   img.onload = function () {
