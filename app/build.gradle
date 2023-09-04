@@ -70,7 +70,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation('com.github.nanohttpd:nanohttpd:master-SNAPSHOT') {
+    implementation('com.github.nanohttpd:nanohttpd:2.0.0-Release') {
         exclude group: 'org.parboiled'
     }
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
