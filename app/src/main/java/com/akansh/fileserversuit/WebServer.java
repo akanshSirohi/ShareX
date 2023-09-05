@@ -96,7 +96,9 @@ public class WebServer extends NanoHTTPD {
                         loc = Objects.requireNonNull(params.get("location")).get(0);
                     }
                     File f=new File(loc);
-                    sendLog("msg","msg","Sending file: "+f.getName());
+                    if(range == null) {
+                        sendLog("msg", "msg", "Sending file: " + f.getName());
+                    }
                     if(utils.loadSetting(Constants.FORCE_DOWNLOAD)) {
                         return serverUtils.downloadFile(loc,true,true,range);
                     }else{
@@ -112,7 +114,7 @@ public class WebServer extends NanoHTTPD {
                     return serverUtils.serveFile(loc,false,range);
                 }else if(action.equals("thumbImage")) {
                     String loc = Objects.requireNonNull(params.get("location")).get(0);
-                    return serverUtils.serveThumbnail(loc, range);
+                    return serverUtils.serveThumbnail(loc);
                 }else if(action.equals("delFiles")) {
                     if(!utils.loadSetting(Constants.RESTRICT_MODIFY) && !utils.loadSetting(Constants.PRIVATE_MODE)) {
                         JSONArray jsonArray = new JSONArray(Objects.requireNonNull(params.get("data")).get(0));
