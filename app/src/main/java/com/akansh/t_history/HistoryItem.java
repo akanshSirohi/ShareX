@@ -8,6 +8,8 @@ public class HistoryItem {
             file_name, size,
             date, time,
             type, path;
+
+    private String timestamp;
     private int uid;
 
     // Constructor
@@ -55,5 +57,13 @@ public class HistoryItem {
 
     public void setUid(int uid) {
         this.uid = uid;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 }

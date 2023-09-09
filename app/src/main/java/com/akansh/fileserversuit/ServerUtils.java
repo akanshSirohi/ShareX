@@ -268,7 +268,7 @@ public class ServerUtils {
         return new long[]{start,end};
     }
 
-    public Response serveThumbnail(String path, String rangeHeader) {
+    public Response serveThumbnail(String path) {
         Response response;
         try {
             int thumbnailSize = 100;
@@ -285,24 +285,8 @@ public class ServerUtils {
             InputStream is = new ByteArrayInputStream(baos.toByteArray());
             int fileLength = is.available();
             ProgressInputStream pis = new ProgressInputStream(is, fileLength);
-            if(rangeHeader==null) {
-                response = newFixedLengthResponse(Status.OK, "image/jpeg", pis, fileLength);
-                return response;
-            }else{
-                long[] ranges = calculateRange(fileLength, rangeHeader);
-                long start = ranges[0];
-                long end = ranges[1];
-                if (start <= end) {
-                    long contentLength = end - start + 1;
-                    is.skip(start);
-                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT, "image/jpeg", pis, fileLength);
-                    response.addHeader("Content-Length", String.valueOf(contentLength));
-                    response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
-                } else {
-                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE, "image/jpeg", rangeHeader);
-                }
-                return response;
-            }
+            response = newFixedLengthResponse(Status.OK, "image/jpeg", pis, fileLength);
+            return response;
         }catch (Exception e) {
             return newFixedLengthResponse(e.getMessage());
         }
@@ -341,11 +325,9 @@ public class ServerUtils {
             }else{
                 long fileLength = utils.getTotalBytes(path);
                 long[] ranges = calculateRange(fileLength, rangeHeader);
-                long start = ranges[0];
-                long end = ranges[1];
-                if (start <= end) {
-                    long contentLength = end - start + 1;
-                    fis.skip(start);
+                if (ranges[0] <= ranges[1]) {
+                    long contentLength = ranges[1] - ranges[0] + 1;
+                    fis.skip(ranges[0]);
                     ProgressInputStream pis = new ProgressInputStream(fis, (int) fileLength);
                     pis.addListener(percent -> {
                         if (sendProgressListener != null) {
@@ -354,7 +336,8 @@ public class ServerUtils {
                     });
                     response = newFixedLengthResponse(Status.PARTIAL_CONTENT, m, pis,fileLength);
                     response.addHeader("Content-Length", contentLength + "");
-                    response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+                    response.addHeader("Content-Range", "bytes " + ranges[0] + "-" + ranges[1] + "/" + fileLength);
+
                 } else {
                     response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE, m, rangeHeader);
                 }
@@ -363,10 +346,11 @@ public class ServerUtils {
                 response.addHeader("Content-Disposition", "inline; filename=\"" + name + "\"");
                 response.addHeader("Content-Transfer-Encoding","binary");
                 response.addHeader("Accept-Ranges","bytes");
+                response.addHeader("Content-type", m);
             }else{
                 response.addHeader("Accept-Ranges","bytes");
                 response.addHeader("Content-type","application/octet-stream");
-                response.addHeader("Content-Disposition", "inline; filename=\"" + name + "\"");
+                response.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
             }
             return response;
         }catch (Exception e) {
@@ -403,41 +387,27 @@ public class ServerUtils {
                     updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), utils.getMimeType(new File(path)), new File(path).getAbsolutePath()));
                 }
             }else{
-                String rangeValue = rangeHeader.trim().substring("bytes=".length());
                 long fileLength = utils.getTotalBytes(path);
-                long start, end;
-                if (rangeValue.startsWith("-")) {
-                    end = fileLength - 1;
-                    start = fileLength - 1
-                            - Long.parseLong(rangeValue.substring("-".length()));
-                } else {
-                    String[] range = rangeValue.split("-");
-                    start = Long.parseLong(range[0]);
-                    end = range.length > 1 ? Long.parseLong(range[1])
-                            : fileLength - 1;
-                }
-                if (end > fileLength - 1) {
-                    end = fileLength - 1;
-                }
-                if (start <= end) {
-                    long contentLength = end - start + 1;
+                long[] ranges = calculateRange(fileLength, rangeHeader);
+                if (ranges[0] <= ranges[1]) {
+                    long contentLength = ranges[1] - ranges[0] + 1;
                     FileInputStream fis = new FileInputStream(path);
-                    fis.skip(start);
+                    fis.skip(ranges[0]);
                     ProgressInputStream pis = new ProgressInputStream(fis, (int) fileLength);
                     pis.addListener(percent -> {
                         if (sendProgressListener != null) {
                             sendProgressListener.onProgressUpdate((int) percent);
                         }
                     });
-                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT,"application/octet-stream", pis,fileLength);
+                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT, "application/octet-stream", pis,fileLength);
                     response.addHeader("Content-Length", contentLength + "");
-                    response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+                    response.addHeader("Content-Range", "bytes " + ranges[0] + "-" + ranges[1] + "/" + fileLength);
                 } else {
-                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE,"application/octet-stream", rangeHeader);
+                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE, "application/octet-stream", rangeHeader);
                 }
             }
-            response.addHeader("Content-type","application/octet-stream");
-            response.addHeader("Content-Disposition", "inline; filename=\"" + name + "\"");
+            response.addHeader("Content-type", "application/octet-stream");
+            response.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
             response.addHeader("Content-Transfer-Encoding","binary");
             response.addHeader("Accept-Ranges","bytes");
             return response;

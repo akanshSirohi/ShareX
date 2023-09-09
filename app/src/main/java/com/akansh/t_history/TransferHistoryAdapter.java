@@ -2,6 +2,7 @@ package com.akansh.t_history;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -114,7 +115,8 @@ public class TransferHistoryAdapter extends RecyclerView.Adapter<TransferHistory
     }
 
     public void updateDataset(ArrayList<HistoryItem> hItems) {
-        historyItems = hItems;
+        historyItems.clear();
+        historyItems.addAll(hItems);
         notifyDataSetChanged();
     }
 

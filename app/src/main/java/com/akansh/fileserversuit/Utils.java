@@ -264,9 +264,12 @@ public class Utils {
                 String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
                 mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
             }
+            if(mimeType == null || mimeType.equals("")) {
+                return "application/octet-stream";
+            }
             return mimeType;
         } catch (Exception e) {
-            return "";
+            return "application/octet-stream";
         }
     }
 

@@ -7,7 +7,10 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 public class HistoryDBHelper extends SQLiteOpenHelper {
 
@@ -21,19 +24,23 @@ public class HistoryDBHelper extends SQLiteOpenHelper {
     public static final String TIME="TIME_";
     public static final String TYPE="TYPE";
     public static final String PATH="PATH";
+    public static final String TIMESTAMP="TSTAMP";
+    private static final int DATABASE_VERSION = 4;
+
 
     public HistoryDBHelper(Context context) {
-        super(context,DATABASE_NAME,null,1);
+        super(context,DATABASE_NAME,null,DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE "+TABLE_NAME+" (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,FILE_NAME TEXT NOT NULL,ITEM_TYPE TEXT NOT NULL,SIZE TEXT NOT NULL,DATE_ TEXT NOT NULL,TIME_ TEXT NOT NULL,TYPE TEXT NOT NULL,PATH TEXT NOT NULL)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_NAME+" (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,FILE_NAME TEXT NOT NULL,ITEM_TYPE TEXT NOT NULL,SIZE TEXT NOT NULL,DATE_ TEXT NOT NULL,TIME_ TEXT NOT NULL,TYPE TEXT NOT NULL,PATH TEXT NOT NULL,TSTAMP TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_NAME+" (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,FILE_NAME TEXT NOT NULL,ITEM_TYPE TEXT NOT NULL,SIZE TEXT NOT NULL,DATE_ TEXT NOT NULL,TIME_ TEXT NOT NULL,TYPE TEXT NOT NULL,PATH TEXT NOT NULL,TSTAMP TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
     }
 
     public boolean insertData(HashMap<String,String> values) {
@@ -46,7 +53,15 @@ public class HistoryDBHelper extends SQLiteOpenHelper {
         contentValues.put(TIME,values.get("time"));
         contentValues.put(TYPE,values.get("type"));
         contentValues.put(PATH,values.get("path"));
-        long result=db.insert(TABLE_NAME,null,contentValues);
+        long result;
+        if(!checkHistoryExistByPath(values.get("path"))) {
+            result = db.insert(TABLE_NAME, null, contentValues);
+        }else{
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            String newTimeStamp = dateFormat.format(new Date());
+            contentValues.put(TIMESTAMP, newTimeStamp);
+            result = db.update(TABLE_NAME, contentValues, "PATH=?", new String[] { values.get("path") });
+        }
         if(result == -1) {
             return false;
         }else{
@@ -65,6 +80,7 @@ public class HistoryDBHelper extends SQLiteOpenHelper {
         contentValues.put(TIME,values.get("time"));
         contentValues.put(TYPE,values.get("type"));
         contentValues.put(PATH,values.get("path"));
+        contentValues.put(TIMESTAMP,values.get("timestamp"));
         long result=db.insert(TABLE_NAME,null,contentValues);
         if(result == -1) {
             return false;
@@ -75,8 +91,14 @@ public class HistoryDBHelper extends SQLiteOpenHelper {
 
     public Cursor getData() {
         SQLiteDatabase db=this.getReadableDatabase();
-        Cursor res=db.rawQuery("SELECT * FROM "+TABLE_NAME+" ORDER BY ID DESC", null);
+        Cursor res=db.rawQuery("SELECT * FROM "+TABLE_NAME+" ORDER BY TSTAMP DESC", null);
         return res;
+    }
+
+    private boolean checkHistoryExistByPath(String file_path) {
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor res=db.rawQuery("SELECT ID FROM "+TABLE_NAME+" WHERE PATH='"+file_path+"'", null);
+        return res.getCount() > 0;
     }
 
     public long getItemCount() {
@@ -94,14 +116,4 @@ public class HistoryDBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("DELETE FROM "+TABLE_NAME+" WHERE PATH='"+path+"'");
     }
-
-//    public boolean isFavExist(String url) {
-//        SQLiteDatabase db=this.getReadableDatabase();
-//        Cursor res=db.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE URL='"+url+"'", null);
-//        if(res.getCount()>0) {
-//            return true;
-//        }else{
-//            return false;
-//        }
-//    }
 }
