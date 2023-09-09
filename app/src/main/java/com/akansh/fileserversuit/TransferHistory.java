@@ -3,7 +3,6 @@ package com.akansh.fileserversuit;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -49,7 +48,7 @@ public class TransferHistory extends AppCompatActivity {
         ArrayList<HistoryItem> historyItems=historyDBManager.getHistory();
         datasetLenth = historyItems.size();
         if(datasetLenth>0) {
-            showSnackbar("Swipe right to delete item...");
+            showSnackbar("Swipe right to remove item from history...");
         }
         transferHistoryAdapter=new TransferHistoryAdapter(this,historyItems);
         history_list.setLayoutManager(new LinearLayoutManager(this));
@@ -62,7 +61,7 @@ public class TransferHistory extends AppCompatActivity {
                 String path=historyItem.getPath();
                 transferHistoryAdapter.removeItem(pos);
                 historyDBManager.deleteHistory(path);
-                showUndoSnackbar(historyItem,pos);
+                showUndoSnackbar(historyItem);
                 checkEmptyList();
             }
         };
@@ -196,21 +195,16 @@ public class TransferHistory extends AppCompatActivity {
         ConstraintLayout constraintLayout=findViewById(R.id.transfer_root);
         Snackbar snackbar = Snackbar.make(constraintLayout, msg, Snackbar.LENGTH_LONG);
         snackbar.setBackgroundTint(Color.parseColor("#000a12"));
-//        TextView tv = (snackbar.getView()).findViewById(com.google.android.material.R.id.snackbar_text);
-//        Typeface font = Typeface.createFromAsset(this.getAssets(), "fonts/product_sans.ttf");
-//        tv.setTypeface(font);
         snackbar.show();
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    public void showUndoSnackbar(final HistoryItem historyItem, final int position) {
+    public void showUndoSnackbar(final HistoryItem historyItem) {
         ConstraintLayout constraintLayout=findViewById(R.id.transfer_root);
         Snackbar snackbar = Snackbar.make(constraintLayout, "Item removed from history!", Snackbar.LENGTH_LONG);
         snackbar.setAction("Undo", v -> {
             historyDBManager.restoreHistory(historyItem);
             transferHistoryAdapter.updateDataset(historyDBManager.getHistory());
-            history_list.scrollToPosition(position);
-            transferHistoryAdapter.notifyDataSetChanged();
         });
         snackbar.setBackgroundTint(Color.parseColor("#000a12"));
         snackbar.show();
