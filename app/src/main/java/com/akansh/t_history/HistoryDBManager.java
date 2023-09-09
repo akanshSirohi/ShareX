@@ -31,6 +31,7 @@ public class HistoryDBManager {
         while(cursor.moveToNext()) {
             HistoryItem item=new HistoryItem(Integer.parseInt(cursor.getString(2)),cursor.getString(1),cursor.getString(3),cursor.getString(4),cursor.getString(5),cursor.getString(6),cursor.getString(7));
             item.setUid(cursor.getInt(0));
+            item.setTimestamp(cursor.getString(8));
             historyItems.add(item);
         }
         return historyItems;
@@ -46,6 +47,7 @@ public class HistoryDBManager {
         values.put("time",historyItem.getTime());
         values.put("type",historyItem.getType());
         values.put("path",historyItem.getPath());
+        values.put("timestamp",historyItem.getTimestamp());
         historyDBHelper.restoreData(values);
     }
 

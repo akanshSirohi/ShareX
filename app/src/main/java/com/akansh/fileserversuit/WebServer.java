@@ -230,7 +230,7 @@ public class WebServer extends NanoHTTPD {
                         return newFixedLengthResponse("true");
                     }else if(deviceManager.isDeviceDenied(device_id)){
                         return newFixedLengthResponse("denied");
-                    }else {
+                    }else{
                         sendLog(Constants.ACTION_AUTH, "device_id", device_id);
                         return newFixedLengthResponse("false");
                     }
