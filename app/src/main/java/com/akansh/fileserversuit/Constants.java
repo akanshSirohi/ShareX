@@ -34,6 +34,8 @@ public class Constants {
     public static final String ACTION_AUTH = "auth";
     public static final String ACTION_UPDATE_UI_STOP = "update_ui_stop";
 
+    public static final String BROADCAST_SERVICE_TO_ACTIVITY = "service.to.activity.transfer";
+
     public static final String FEEDBACK_MAIL = "akanshsirohi18@gmail.com";
     public static final String PRIVACY_POLICY_URL = "http://akanshsirohi.github.io/sharexpro_privacy_policy.html";
 

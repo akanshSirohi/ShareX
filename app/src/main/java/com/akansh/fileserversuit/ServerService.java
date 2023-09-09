@@ -74,7 +74,7 @@ public class ServerService extends Service {
 
     public void sendLog(String action,String key,String value) {
         Intent local = new Intent();
-        local.setAction("service.to.activity.transfer");
+        local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
         local.putExtra("action",action);
         local.putExtra(key,value);
         context.sendBroadcast(local);

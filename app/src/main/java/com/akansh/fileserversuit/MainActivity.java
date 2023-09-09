@@ -30,8 +30,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
@@ -235,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction("service.to.activity.transfer");
+        filter.addAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
         updateUIReciver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, final Intent intent) {
@@ -380,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         try {
             IntentFilter filter = new IntentFilter();
-            filter.addAction("service.to.activity.transfer");
+            filter.addAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
             registerReceiver(updateUIReciver, filter);
         }catch (Exception e) {
             //Do Nothing!
@@ -458,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     try {
                         IntentFilter filter = new IntentFilter();
-                        filter.addAction("service.to.activity.transfer");
+                        filter.addAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
                         registerReceiver(updateUIReciver, filter);
                     }catch (Exception e) {
                         //Do Nothing!

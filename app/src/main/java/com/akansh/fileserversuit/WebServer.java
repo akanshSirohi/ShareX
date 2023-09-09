@@ -54,7 +54,7 @@ public class WebServer extends NanoHTTPD {
 
         serverUtils.setSendProgressListener(progress -> {
             Intent local = new Intent();
-            local.setAction("service.to.activity.transfer");
+            local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
             local.putExtra("action",Constants.ACTION_PROGRESS);
             local.putExtra("value",progress);
             ctx.sendBroadcast(local);
@@ -326,7 +326,7 @@ public class WebServer extends NanoHTTPD {
 
     public void sendLog(String action,String key,String value) {
         Intent local = new Intent();
-        local.setAction("service.to.activity.transfer");
+        local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
         local.putExtra("action",action);
         local.putExtra(key,value);
         ctx.sendBroadcast(local);
