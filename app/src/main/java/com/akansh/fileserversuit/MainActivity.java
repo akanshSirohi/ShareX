@@ -13,7 +13,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -24,12 +23,12 @@ import android.net.Uri;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
@@ -53,6 +52,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.view.GravityCompat;
@@ -69,8 +69,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import com.zhihu.matisse.Matisse;
-import com.zhihu.matisse.MimeType;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -116,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> folderPickerResultLauncher;
     ActivityResultLauncher<Intent> batteryActivityResultLauncher;
     ActivityResultLauncher<Intent> mutipleFilesActivityResultLauncher;
+    ActivityResultLauncher<Intent> gallerySelectorActivityResultLauncher;
 
     int exit = 0;
     int currentTheme, storageChoice = 0;
@@ -222,6 +221,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        gallerySelectorActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                Intent data = result.getData();
+
+                if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    for (int i = 0; i < count; i++) {
+                        Uri uri = data.getClipData().getItemAt(i).getUri();
+                        String path = utils.filePickerUriResolve(uri);
+                        if(path != null && !pmode_send_images.contains(path)) {
+                            pmode_send_images.add(path);
+                        }
+                    }
+                    mergeAndUpdatePFilesList();
+                }else if(data.getData() != null){
+                    Uri uri = data.getData();
+                    String path = utils.filePickerUriResolve(uri);
+                    if(path != null && !pmode_send_images.contains(path)) {
+                        pmode_send_images.add(path);
+                    }
+                    mergeAndUpdatePFilesList();
+                }
+            }
+        });
+
         batteryActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             utils.saveSetting(Constants.ASKED_BATTERY_OPT,true);
         });
@@ -242,7 +266,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        registerReceiver(updateUIReciver, filter);
+//        registerReceiver(updateUIReciver, filter);
+        ContextCompat.registerReceiver(this, updateUIReciver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
         FloatingActionButton qrBtn = findViewById(R.id.qrBtn);
         qrBtn.setOnClickListener(v -> toggleQRView());
         hide_logger_btn.setOnClickListener(v -> {
@@ -253,14 +278,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClickImageSelect() {
                 try {
-                    Matisse.from(MainActivity.this)
-                            .choose(MimeType.ofAll(), false)
-                            .countable(true)
-                            .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
-                            .maxSelectable(200)
-                            .theme(R.style.Matisse_Dracula)
-                            .imageEngine(new Glide4Engine())
-                            .forResult(Constants.MATISSE_REQ_CODE);
+                    Intent intent = new Intent(Intent.ACTION_PICK);
+                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                    intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/* video/*");
+                    gallerySelectorActivityResultLauncher.launch(intent);
                 } catch (Exception e) {
                     pushLog(e.toString(), true);
                 }
@@ -385,21 +406,6 @@ public class MainActivity extends AppCompatActivity {
         }
         privateMode();
         super.onResume();
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, final int resultCode, Intent intent) {
-        switch (requestCode) {
-            case Constants.MATISSE_REQ_CODE:
-                if(resultCode == RESULT_OK) {
-                    pmode_send_images=new ArrayList<>();
-                    List<Uri> mSelected = Matisse.obtainResult(intent);
-                    pmode_send_images=utils.uriListResolve(mSelected);
-                    mergeAndUpdatePFilesList();
-                }
-                break;
-        }
-        super.onActivityResult(requestCode, resultCode, intent);
     }
 
     @Override

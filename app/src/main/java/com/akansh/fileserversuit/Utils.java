@@ -325,14 +325,6 @@ public class Utils {
         return path;
     }
 
-    public List<String> uriListResolve(List<Uri> uriList) {
-        List<String> paths = new ArrayList<>();
-        for (Uri uri : uriList) {
-            paths.add(GalleryUriResolver.getUriRealPath(uri, ctx));
-        }
-        return paths;
-    }
-
     public void verifyImage(File file) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;

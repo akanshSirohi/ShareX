@@ -18,7 +18,6 @@ public class Constants {
     public static final int SERVER_PORT_DEFAULT = 6060;
     public static final int SERVER_ON = 1;
     public static final int SERVER_OFF = 0;
-    public static final int MATISSE_REQ_CODE = 101;
     public static final int STORAGE_REQ_CODE = 1;
     public static final int CAMERA_REQ_CODE = 2;
     public static final int ITEM_TYPE_SENT = 0;

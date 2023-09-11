@@ -10,7 +10,7 @@ android {
         applicationId "com.akansh.fileserversuit"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 31
+        versionCode 32
         versionName "2.3.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -44,22 +44,22 @@ android {
         }
     }
 
-    task fixLineEndings(type: Copy) {
-        from('src/main/assets') {
-            include '**/*.html', '**/*.css', '**/*.js'
-            filter {
-                String line = it.toString()
-                line.replaceAll("(?<!\\r)\\n", "\\r\\n")
-            }
-        }
-        into('build/intermediates/assets/release')
-    }
+//    task fixLineEndings(type: Copy) {
+//        from('src/main/assets') {
+//            include '**/*.html', '**/*.css', '**/*.js'
+//            filter {
+//                String line = it.toString()
+//                line.replaceAll("(?<!\\r)\\n", "\\r\\n")
+//            }
+//        }
+//        into('build/intermediates/assets/release')
+//    }
 
-    tasks.whenTaskAdded { task ->
-        if (task.name.startsWith('assemble')) {
-            task.dependsOn fixLineEndings
-        }
-    }
+//    tasks.configureEach { task ->
+//        if (task.name.startsWith('assemble')) {
+//            task.dependsOn fixLineEndings
+//        }
+//    }
 
 
     namespace 'com.akansh.fileserversuit'
@@ -75,7 +75,6 @@ dependencies {
     }
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     implementation 'net.lingala.zip4j:zip4j:2.11.5'
-    implementation 'com.zhihu.android:matisse:0.5.3-beta3'
     implementation 'com.github.clans:fab:1.6.4'
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
