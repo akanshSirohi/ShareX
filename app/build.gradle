@@ -54,13 +54,12 @@ android {
 //        }
 //        into('build/intermediates/assets/release')
 //    }
-
+//
 //    tasks.configureEach { task ->
 //        if (task.name.startsWith('assemble')) {
 //            task.dependsOn fixLineEndings
 //        }
 //    }
-
 
     namespace 'com.akansh.fileserversuit'
 

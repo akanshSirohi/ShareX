@@ -266,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-//        registerReceiver(updateUIReciver, filter);
+        
         ContextCompat.registerReceiver(this, updateUIReciver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
         FloatingActionButton qrBtn = findViewById(R.id.qrBtn);
         qrBtn.setOnClickListener(v -> toggleQRView());
