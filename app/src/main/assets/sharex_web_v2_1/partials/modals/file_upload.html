@@ -1,0 +1,94 @@
+<div class="modal fade" id="fileUploadModel">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Send Files</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <div id="drop-area" class="text-center">
+            <div class="mb-3" style="word-wrap: break-word">
+              Select Files Or Drop Files Here To Upload...
+              <div id="fUpLbl" style="margin-top: 5px"></div>
+            </div>
+            <input
+              type="file"
+              name="uploadFile"
+              id="uploadFile"
+              accept="*.*"
+              multiple
+            />
+            <label
+              class="btn btn-primary mt-2"
+              for="uploadFile"
+              style="margin-bottom: 0; cursor: pointer"
+              ><i class="fas fa-inbox"></i>&nbsp;Select Files</label
+            >&nbsp;&nbsp;
+            <button class="btn btn-primary mt-2" id="fileUploadBtn">
+              <i class="fas fa-upload"></i>&nbsp;Upload
+            </button>
+          </div>
+          <div
+            id="upload_pBar_container"
+            style="display: none; margin-top: 15px"
+          >
+            <div class="progress">
+              <div
+                class="progress-bar progress-bar-striped progress-bar-animated"
+                id="upload_pBar"
+                role="progressbar"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="width: 0%"
+              ></div>
+              <span id="upload_pBar_lbl"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between">
+              <label class="mt-2" id="up_speed">Speed: 0 kbps</label>
+              <label class="mt-2" id="upload_pBar_lbl_time"
+                >Elapsed Time: 00:00:00</label
+              >
+            </div>
+
+            <div style="display: flex; justify-content: space-between">
+              <label id="upload_pBar_lbl2">Transferred: 0 KB</label>
+              <label id="upload_pBar_lbl_time2"
+                >Estimated Time: 0 seconds</label
+              >
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-3" id="upload_location_lbl">
+          Upload Location: ...
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between">
+        <label
+          id="fCount"
+          class="mr-auto"
+          style="margin-top: auto; margin-bottom: auto"
+          >Files Selected: 0<br />Total Size: 0 KB</label
+        >
+        <div>
+          <button
+            type="button"
+            class="btn btn-danger"
+            id="c_upload"
+            style="display: none"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-warning"
+            data-bs-dismiss="modal"
+            id="closeFUM"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -14,6 +14,8 @@ import org.json.JSONArray;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,10 +31,14 @@ import org.nanohttpd.protocols.http.response.Response;
 import org.nanohttpd.protocols.http.response.Status;
 import static org.nanohttpd.protocols.http.response.Response.newFixedLengthResponse;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+
 
 public class WebServer extends NanoHTTPD {
 
     private Utils utils;
+    private TemplateEngine templateEngine;
     private String root=Environment.getExternalStorageDirectory().getAbsolutePath();
     private boolean allowHiddenMedia=true;
     private HistoryDBManager historyDBManager;
@@ -47,11 +53,11 @@ public class WebServer extends NanoHTTPD {
 
     void setContext(Context context) {
         utils=new Utils(context);
+        templateEngine=new TemplateEngine(context);
         historyDBManager=new HistoryDBManager(context);
         ctx=context;
         themesData = new ThemesData();
         serverUtils = new ServerUtils(ctx);
-
         serverUtils.setSendProgressListener(progress -> {
             Intent local = new Intent();
             local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
@@ -59,6 +65,21 @@ public class WebServer extends NanoHTTPD {
             local.putExtra("value",progress);
             ctx.sendBroadcast(local);
         });
+
+        // Init SSL
+        try {
+            if(utils.loadSetting(Constants.SSL)) {
+                KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                InputStream keyStoreStream = context.getAssets().open("keystore.bks");
+                keyStore.load(keyStoreStream, "sharex_akansh".toCharArray());
+                KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                keyManagerFactory.init(keyStore, "sharex_akansh".toCharArray());
+                makeSecure(NanoHTTPD.makeSSLSocketFactory(keyStore, keyManagerFactory), null);
+            }
+        }catch (Exception e) {
+            Log.d(Constants.LOG_TAG,"SSL Error: "+e.getMessage());
+        }
+
         serverUtils.setUpdateTransferHistoryListener(historyItem -> historyDBManager.addTransferHistory(historyItem.getItem_type(),historyItem.getFile_name(),historyItem.getSize(),historyItem.getDate(),historyItem.getTime(),historyItem.getType(),historyItem.getPath()));
     }
 
@@ -307,7 +328,9 @@ public class WebServer extends NanoHTTPD {
                 }
             }else{
                 if(uri.equals("/")) {
-                    path= utils.getFileProperPath("index.html");
+                    path = utils.getFileProperPath("index.html");
+                    String html = templateEngine.renderHtml(path);
+                    return newFixedLengthResponse(Status.OK,"text/html",html);
                 }else if(uri.equals("/libs/bootstrap/css/theme_bootstrap.min.css")) {
                     uri = uri.replace("theme", themesData.getPrefix(utils.loadInt(Constants.WEB_INTERFACE_THEME,0)));
                     path=utils.getFileProperPath(uri);

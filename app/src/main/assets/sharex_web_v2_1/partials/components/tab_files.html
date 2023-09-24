@@ -1,0 +1,27 @@
+<div class="input-group mt-3">
+  <button class="btn btn-primary" id="back_btn">
+    <i class="fas fa-reply"></i>&nbsp;
+  </button>
+  <div class="addrBar" id="addrBar"></div>
+</div>
+<div style="display: block; overflow-y: auto; max-height: 600px" class="mt-2">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th class="align-middle icon-col text-center px-3">
+          <div class="form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              id="chkAll"
+              onchange="checkAll(this.checked);"
+            /><label class="form-check-label" for="chkAll"></label>
+          </div>
+        </th>
+        <th>File</th>
+        <th>Size</th>
+      </tr>
+    </thead>
+    <tbody id="filesList" class="noselect"></tbody>
+  </table>
+</div>

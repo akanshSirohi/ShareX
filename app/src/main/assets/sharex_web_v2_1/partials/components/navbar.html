@@ -1,0 +1,72 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+  <a class="navbar-brand ms-3" href="#"
+    ><img
+      src="images/logo.png"
+      alt=""
+      width="45"
+      draggable="false"
+      dragstart="false;"
+    />
+    ShareX</a
+  >
+  <button
+    class="navbar-toggler me-2"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#navbarColor02"
+    aria-controls="navbarColor02"
+    aria-expanded="false"
+    aria-label="Toggle navigation"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse ps-2" id="navbarColor02">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          href="#"
+          data-bs-toggle="modal"
+          data-bs-target="#fileUploadModel"
+          id="fileUploadModelBtn"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
+          >Send Files</a
+        >
+      </li>
+      <li class="nav-item dropdown" id="info">
+        <a
+          class="nav-link dropdown-toggle"
+          data-bs-toggle="dropdown"
+          href="#"
+          id="info"
+          aria-expanded="false"
+          >Info &nbsp;<i class="fas fa-caret-down"></i
+        ></a>
+        <div class="dropdown-menu" aria-labelledby="info">
+          <h4
+            class="dropdown-header text-muted"
+            style="color: var(--bs-secondary); font-size: 15px"
+          >
+            Battery Info
+          </h4>
+          <a class="dropdown-item show" href="#" id="bat_p">Percentage: 58%</a>
+          <a class="dropdown-item show" href="#" id="bat_plg"
+            >Plugged: AC Charger</a
+          >
+        </div>
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          href="#"
+          data-bs-toggle="modal"
+          data-bs-target="#aboutModal"
+          data-bs-backdrop="static"
+          data-bs-keyboard="false"
+          >About</a
+        >
+      </li>
+    </ul>
+  </div>
+</nav>

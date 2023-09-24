@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout settings_view, main_view, qr_view, logger_wrapper;
     private TextView settDRoot, settRemDev, settTheme;
     private TextView logger;
-    private TextView scan_url;
+    private TextView scan_url, ssl_note;
 
     private ImageView main_bg,second_bg;
     BroadcastReceiver updateUIReciver;
@@ -142,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
         main_bg = findViewById(R.id.main_bg);
         second_bg = findViewById(R.id.second_bg);
         scan_url = findViewById(R.id.scan_url);
+        ssl_note = findViewById(R.id.ssl_note);
         drawerLayout = findViewById(R.id.root_container);
 
         ImageButton nav_btn = findViewById(R.id.nav_btn);
@@ -266,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-//        registerReceiver(updateUIReciver, filter);
         ContextCompat.registerReceiver(this, updateUIReciver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
         FloatingActionButton qrBtn = findViewById(R.id.qrBtn);
         qrBtn.setOnClickListener(v -> toggleQRView());
@@ -683,11 +683,14 @@ public class MainActivity extends AppCompatActivity {
         CardView card6=findViewById(R.id.sett_card6);
         CardView card7=findViewById(R.id.sett_card7);
         CardView card8=findViewById(R.id.sett_card8);
+        CardView card9=findViewById(R.id.sett_card9);
+        CardView card10=findViewById(R.id.sett_card10);
         CheckBox settHFCheck=findViewById(R.id.sett_hideF_checkBox);
         CheckBox settRMCheck=findViewById(R.id.sett_resMod_checkBox);
         CheckBox settFDCheck=findViewById(R.id.sett_frceDwl_checkBox);
         CheckBox settPMCheck=findViewById(R.id.sett_pMode_checkBox);
         CheckBox settAppsCheck=findViewById(R.id.sett_apps_checkBox);
+        CheckBox settSslCheck=findViewById(R.id.sett_ssl_checkBox);
         TextView settPort=findViewById(R.id.sett_subtitle8);
         ImageButton settResetRoot = findViewById(R.id.sett_reset_root);
         card1.setOnClickListener(view -> {
@@ -813,9 +816,16 @@ public class MainActivity extends AppCompatActivity {
                 restartServer();
             }
         });
+        card9.setOnClickListener(v -> settAppsCheck.setChecked(!settAppsCheck.isChecked()));
         settAppsCheck.setChecked(utils.loadSetting(Constants.LOAD_APPS));
         settAppsCheck.setOnCheckedChangeListener((compoundButton, b) -> {
             utils.saveSetting(Constants.LOAD_APPS,b);
+            restartServer();
+        });
+        card10.setOnClickListener(v -> settSslCheck.setChecked(!settSslCheck.isChecked()));
+        settSslCheck.setChecked(utils.loadSetting(Constants.SSL));
+        settSslCheck.setOnCheckedChangeListener((compoundButton, b) -> {
+            utils.saveSetting(Constants.SSL,b);
             restartServer();
         });
     }
@@ -924,6 +934,7 @@ public class MainActivity extends AppCompatActivity {
             qr_view.setImageResource(R.drawable.ic_logo);
             scan_url.setText("Start ShareX First!");
         }
+        ssl_note.setVisibility(utils.loadSetting(Constants.SSL) ? View.VISIBLE : View.GONE);
     }
 
     public void showAbout() {

@@ -1,0 +1,48 @@
+<div class="input-group mt-2">
+  <span class="input-group-text"><i class="fas fa-search"></i></span>
+  <input
+    type="text"
+    class="form-control"
+    placeholder="Search for file or folder..."
+    aria-label="Search..."
+    aria-describedby="basic-addon2"
+    id="search"
+  />
+  <div class="btn-group float-right" role="group">
+    <div class="btn-group" role="group">
+      <button
+        id="btnGroupDrop1"
+        class="btn btn-outline-dark dropdown-toggle"
+        data-bs-toggle="dropdown"
+      >
+        &nbsp;<i class="fas fa-bars"></i>&nbsp;
+      </button>
+      <div
+        class="dropdown-menu"
+        aria-labelledby="btnGroupDrop1"
+        data-popper-placement="bottom-start"
+      >
+        <a class="dropdown-item" href="#" id="more_home" name="moreOpts"
+          ><i class="fas fa-home"></i>&nbsp;&nbsp;Home</a
+        >
+        <a class="dropdown-item" href="#" id="more_refresh" name="moreOpts"
+          ><i class="fas fa-redo-alt" style="transform: rotateY(180deg)"></i
+          >&nbsp;&nbsp;Refresh</a
+        >
+        <a class="dropdown-item" href="#" id="more_createFolder" name="moreOpts"
+          ><i class="fas fa-folder-plus"></i>&nbsp;&nbsp;New Folder</a
+        >
+        <a class="dropdown-item" href="#" id="more_download" name="moreOpts"
+          ><i class="fas fa-download"></i>&nbsp;&nbsp;Download</a
+        >
+        <a
+          class="dropdown-item ctx-item-danger"
+          href="#"
+          id="delBtn"
+          name="moreOpts"
+          ><i class="fas fa-trash"></i>&nbsp;&nbsp;Delete</a
+        >
+      </div>
+    </div>
+  </div>
+</div>

@@ -27,4 +27,7 @@
     <string name="sett_title_9">Show Installed Apps</string>
     <string name="sett_sub_title_9">Show installed apps on device to share</string>
 
+    <string name="sett_title_10">Enable SSL</string>
+    <string name="sett_sub_title_10">Uses https url for ShareX</string>
+
 </resources>

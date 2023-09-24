@@ -40,7 +40,8 @@ public class ServerService extends Service {
                 webServer.setRoot(utils.loadRoot());
                 webServer.setAllowHiddenMedia(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
                 webServer.start();
-                String url = "http://" + webServer.getHostname() + ":" + webServer.getListeningPort();
+                String prefix = utils.loadSetting(Constants.SSL) ? "https://" : "http://";
+                String url = prefix + webServer.getHostname() + ":" + webServer.getListeningPort();
                 sendLog(Constants.ACTION_URL, "url", url);
                 utils.saveString(Constants.TEMP_URL, url);
                 showForegroundNotification("Running At: " + url);
