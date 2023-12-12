@@ -15,6 +15,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import org.nanohttpd.protocols.http.NanoHTTPD;
+
 import java.io.IOException;
 
 public class ServerService extends Service {
@@ -45,6 +47,9 @@ public class ServerService extends Service {
                 sendLog(Constants.ACTION_URL, "url", url);
                 utils.saveString(Constants.TEMP_URL, url);
                 showForegroundNotification("Running At: " + url);
+
+                WebServerSocket webServerSocket = new WebServerSocket(Constants.SERVER_PORT_DEFAULT + 1);
+                webServerSocket.start(-1);
             } catch (IOException e) {
                 Toast.makeText(this, "Server Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 sendLog(Constants.ACTION_UPDATE_UI_STOP,"","");
