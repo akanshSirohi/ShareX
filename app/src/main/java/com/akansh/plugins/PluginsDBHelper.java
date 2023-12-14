@@ -10,6 +10,7 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
     public static final String TABLE_NAME="PLUGINS";
     public static final String UID = "UID";
     public static final String NAME = "NAME";
+    public static final String PACKAGE_NAME = "PACKAGE_NAME";
     public static final String DESCRIPTION = "DESCRIPTION";
     public static final String AUTHOR = "AUTHOR";
     public static final String VERSION = "VERSION";
@@ -27,6 +28,7 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
                 "ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "UID TEXT NOT NULL," +
                 "NAME TEXT NOT NULL," +
+                "PACKAGE_NAME TEXT NOT NULL," +
                 "DESCRIPTION TEXT NOT NULL," +
                 "AUTHOR TEXT NOT NULL," +
                 "VERSION TEXT NOT NULL," +
@@ -40,6 +42,7 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
         contentValues.put(UID, plugin.getPlugin_uid());
         contentValues.put(NAME, plugin.getPlugin_name());
+        contentValues.put(PACKAGE_NAME, plugin.getPlugin_package_name());
         contentValues.put(DESCRIPTION, plugin.getPlugin_description());
         contentValues.put(AUTHOR, plugin.getPlugin_author());
         contentValues.put(VERSION, plugin.getPlugin_version());
@@ -56,6 +59,7 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
                 "ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                 "UID TEXT NOT NULL," +
                 "NAME TEXT NOT NULL," +
+                "PACKAGE_NAME TEXT NOT NULL," +
                 "DESCRIPTION TEXT NOT NULL," +
                 "AUTHOR TEXT NOT NULL," +
                 "VERSION TEXT NOT NULL," +

@@ -542,7 +542,8 @@ public class MainActivity extends AppCompatActivity {
         // Setup Plugins
         PluginsManager pluginsManager = new PluginsManager(this, this, utils);
         pluginsManager.init();
-        pluginsManager.installPlugin("test_plugin.zip");
+        // Install Once
+        // pluginsManager.installPlugin("test_plugin.zip");
     }
 
     public void askIgnoreBatteryOptimizations() {
