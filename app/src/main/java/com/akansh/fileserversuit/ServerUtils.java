@@ -11,7 +11,7 @@ import android.os.BatteryManager;
 import android.os.Environment;
 import android.util.Log;
 
-import com.akansh.t_history.HistoryItem;
+import com.akansh.transfer_history.HistoryItem;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.target.Target;

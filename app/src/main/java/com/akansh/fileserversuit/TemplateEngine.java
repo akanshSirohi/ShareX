@@ -18,18 +18,28 @@ import java.util.regex.Pattern;
 
 public class TemplateEngine {
 
+    enum RENDER_TYPE {
+        NORMAL, PLUGIN
+    }
+
     Context ctx;
+
+    private String plugin_uid;
 
     public TemplateEngine(Context ctx) {
         this.ctx = ctx;
     }
 
-    public String renderHtml(String file) {
-        String html = readFile(file);
-        return compileHtml(html);
+    public void setPlugin_uid(String plugin_uid) {
+        this.plugin_uid = plugin_uid;
     }
 
-    public String compileHtml(String html) {
+    public String renderHtml(String file, RENDER_TYPE type) {
+        String html = readFile(file);
+        return compileHtml(html, type);
+    }
+
+    public String compileHtml(String html, RENDER_TYPE type) {
         if(html != null && html.length() > 0) {
             Pattern pattern = Pattern.compile("\\{%\\s*(.*?)\\s*%\\}");
             Matcher matcher = pattern.matcher(html);
@@ -42,7 +52,7 @@ public class TemplateEngine {
                 String command = matcher.group(1).trim();
                 if (command.startsWith(">>")) {
                     String path = command.replace(">>", "").trim();
-                    String fileContent = compileHtml(readFile(getFileProperPath(path)));
+                    String fileContent = compileHtml(readFile(getFileProperPath(path, type)), type);
                     if (fileContent == null) {
                         fileContent = "404:File Not Found";
                     }
@@ -69,10 +79,20 @@ public class TemplateEngine {
         }
     }
 
-    private String getFileProperPath(String path) {
+    private String getFileProperPath(String path, RENDER_TYPE type) {
+        String base = "";
+        if(type == RENDER_TYPE.NORMAL) {
+            base = Constants.NEW_DIR;
+        }else{
+            base = "plugins";
+        }
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
-        return "/data/data/" + ctx.getPackageName() + "/" + Constants.NEW_DIR + "/" + path;
+        if(type == RENDER_TYPE.NORMAL) {
+            return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + path;
+        }else{
+            return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + plugin_uid + "/" + path;
+        }
     }
 }

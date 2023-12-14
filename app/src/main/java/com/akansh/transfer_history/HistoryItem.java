@@ -1,4 +1,4 @@
-package com.akansh.t_history;
+package com.akansh.transfer_history;
 
 public class HistoryItem {
 

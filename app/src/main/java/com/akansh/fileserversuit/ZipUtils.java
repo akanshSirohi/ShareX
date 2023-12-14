@@ -12,11 +12,9 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class ZipUtils {
-    File f=new File(Environment.getExternalStorageDirectory()+"/ShareX/.temp");
-    public ZipUtils() {
-        f.mkdirs();
-    }
     public String zip(ArrayList<File> files,String output) {
+        File f=new File(Environment.getExternalStorageDirectory()+"/ShareX/.temp");
+        f.mkdirs();
         File zipFile=new File(f,output);
         try {
             ZipParameters zipParameters=new ZipParameters();
@@ -26,16 +24,24 @@ public class ZipUtils {
             zipParameters.setReadHiddenFiles(true);
             zipParameters.setReadHiddenFolders(true);
             ZipFile zip=new ZipFile(zipFile);
-            for(File f:files) {
-                if(f.isDirectory()) {
-                    zip.addFolder(f,zipParameters);
+            for(File file:files) {
+                if(file.isDirectory()) {
+                    zip.addFolder(file,zipParameters);
                 }else{
-                    zip.addFile(f,zipParameters);
+                    zip.addFile(file,zipParameters);
                 }
             }
         }catch (Exception e) {
             Log.d(Constants.LOG_TAG,"Zip Error: "+e);
         }
         return zipFile.getAbsolutePath();
+    }
+
+    public void extractZip(String src, String dest) {
+        try(ZipFile zipFile = new ZipFile(src)) {
+            zipFile.extractAll(dest);
+        }catch (Exception e) {
+            Log.d(Constants.LOG_TAG, "Extract Error!");
+        }
     }
 }

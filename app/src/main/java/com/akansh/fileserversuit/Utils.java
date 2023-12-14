@@ -22,6 +22,9 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URLDecoder;
@@ -30,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -131,6 +136,13 @@ public class Utils {
             file = file.substring(1);
         }
         return "/data/data/" + ctx.getPackageName() + "/" + Constants.NEW_DIR + "/" + file;
+    }
+
+    public String getPluginFileProperPath(String path, String pluginUID) {
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        return "/data/data/" + ctx.getPackageName() + "/plugins/" + pluginUID + "/" + path;
     }
 
     public void saveString(String constant, String str) {
@@ -417,4 +429,14 @@ public class Utils {
         }
     }
 
+    public static String extractPluginUID(String url) {
+        String pattern = "/SharexApp/([\\w-]+)(?:/[^/]+)*/?";
+        Pattern regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = regex.matcher(url);
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return null;
+        }
+    }
 }

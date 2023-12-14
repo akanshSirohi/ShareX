@@ -22,9 +22,9 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.akansh.t_history.HistoryDBManager;
-import com.akansh.t_history.HistoryItem;
-import com.akansh.t_history.TransferHistoryAdapter;
+import com.akansh.transfer_history.HistoryDBManager;
+import com.akansh.transfer_history.HistoryItem;
+import com.akansh.transfer_history.TransferHistoryAdapter;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;

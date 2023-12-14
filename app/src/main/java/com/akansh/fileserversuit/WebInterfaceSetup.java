@@ -66,7 +66,6 @@ public class WebInterfaceSetup {
             String dest_dir_path = "/data/data/" + packageName + addLeadingSlash(arg_destinationDir);
             File dest_dir = new File(dest_dir_path);
             if (!dest_dir.exists()) {
-
                 dest_dir.mkdirs();
             }
             AssetManager asset_manager = ctx.getAssets();

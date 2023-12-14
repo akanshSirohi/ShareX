@@ -58,6 +58,7 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.akansh.plugins.PluginsManager;
 import com.bumptech.glide.Glide;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
 import com.github.sumimakito.awesomeqr.AwesomeQrRenderer;
@@ -440,6 +441,7 @@ public class MainActivity extends AppCompatActivity {
         }
         });
 
+        // Copy WebApp from app assets to Internal Storage
         File f=new File(String.format("/data/data/%s/%s/index.html",getPackageName(),Constants.NEW_DIR));
         if(!f.exists() || Constants.DEBUG) {
             WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this, this);
@@ -498,6 +500,8 @@ public class MainActivity extends AppCompatActivity {
         }else{
             askIgnoreBatteryOptimizations();
         }
+
+        // Setup Side Bar Drawer Navigation
         NavigationView navigationView=findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
@@ -534,6 +538,11 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
         setUp_settingsListener();
+
+        // Setup Plugins
+        PluginsManager pluginsManager = new PluginsManager(this, this, utils);
+        pluginsManager.init();
+        pluginsManager.installPlugin("test_plugin.zip");
     }
 
     public void askIgnoreBatteryOptimizations() {
