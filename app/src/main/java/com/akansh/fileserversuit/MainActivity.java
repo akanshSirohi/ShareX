@@ -58,6 +58,7 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.akansh.plugins.PluginInstallStatus;
 import com.akansh.plugins.PluginsManager;
 import com.bumptech.glide.Glide;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
@@ -444,7 +445,7 @@ public class MainActivity extends AppCompatActivity {
         // Copy WebApp from app assets to Internal Storage
         File f=new File(String.format("/data/data/%s/%s/index.html",getPackageName(),Constants.NEW_DIR));
         if(!f.exists() || Constants.DEBUG) {
-            WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this, this);
+            WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this, this, utils);
             webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {
                 @Override
                 public void onSetupCompeted(boolean status) {
@@ -542,8 +543,8 @@ public class MainActivity extends AppCompatActivity {
         // Setup Plugins
         PluginsManager pluginsManager = new PluginsManager(this, this, utils);
         pluginsManager.init();
-        // Install Once
-        // pluginsManager.installPlugin("test_plugin.zip");
+        PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin("test_plugin.zip");
+        Log.d(Constants.LOG_TAG,"Plugin Message: "+pluginInstallStatus.message);
     }
 
     public void askIgnoreBatteryOptimizations() {

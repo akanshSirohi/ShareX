@@ -17,14 +17,16 @@ public class WebInterfaceSetup {
     String packageName;
     Context ctx;
     Activity activity;
+    Utils utils;
 
     SetupListeners setupListeners;
     boolean status=false;
 
-    public WebInterfaceSetup(String packageName, Context ctx, Activity activity) {
+    public WebInterfaceSetup(String packageName, Context ctx, Activity activity, Utils utils) {
         this.packageName = packageName;
         this.ctx = ctx;
         this.activity = activity;
+        this.utils = utils;
     }
 
     public void setup() {
@@ -40,13 +42,13 @@ public class WebInterfaceSetup {
                 status = copyDirFromAssetManager(Constants.WEB_INTERFACE_DIR, Constants.NEW_DIR);
                 if(!status) {
                     Log.d(Constants.LOG_TAG,"Failed To Unzip File!");
-                    deleteDirectory(new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR)));
+                    utils.deleteDirectory(new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR)));
                 }
                 // Delete Prev-Ver Files
                 File p=new File(String.format("/data/data/%s/%s",packageName,Constants.OLD_DIR));
                 if(p.exists()) {
                     Log.d(Constants.LOG_TAG,"Old Version Found!");
-                    deleteDirectory(p);
+                    utils.deleteDirectory(p);
                 }
             }catch (Exception e) {
                 status=false;
@@ -116,26 +118,5 @@ public class WebInterfaceSetup {
             path = "/" + path;
         }
         return path;
-    }
-
-    public void deleteDirectory(File fileOrDirectory) {
-        try {
-            if (fileOrDirectory.isDirectory()) {
-                File[] files = fileOrDirectory.listFiles();
-                if (files != null) {
-                    for (File child : files) {
-                        deleteDirectory(child);
-                    }
-                    if (files.length == 0) {
-                        fileOrDirectory.delete();
-                    }
-                }
-            } else {
-                fileOrDirectory.delete();
-            }
-            fileOrDirectory.delete();
-        }catch (Exception e) {
-            // Do Nothing!
-        }
     }
 }

@@ -4,11 +4,15 @@ import android.os.Environment;
 import android.util.Log;
 
 import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.CompressionMethod;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 public class ZipUtils {
@@ -37,11 +41,39 @@ public class ZipUtils {
         return zipFile.getAbsolutePath();
     }
 
-    public void extractZip(String src, String dest) {
+    public boolean extractZip(String src, String dest, boolean deleteZipAfterExtract) {
         try(ZipFile zipFile = new ZipFile(src)) {
             zipFile.extractAll(dest);
+            return true;
         }catch (Exception e) {
             Log.d(Constants.LOG_TAG, "Extract Error!");
         }
+        if(deleteZipAfterExtract) {
+            File f = new File(src);
+            f.delete();
+        }
+        return false;
+    }
+
+    public String readFileFromZip(String filename, String zipPath) {
+        try(ZipFile zipFile = new ZipFile(zipPath)) {
+            FileHeader fileHeader = zipFile.getFileHeader(filename);
+            if (fileHeader != null) {
+                InputStream inputStream = zipFile.getInputStream(fileHeader);
+                BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                StringBuilder result = new StringBuilder();
+                while ((line = br.readLine()) != null) {
+                    result.append(line);
+                }
+                inputStream.close();
+                return result.toString();
+            }else{
+
+            }
+        }catch (Exception e) {
+            Log.d(Constants.LOG_TAG, "Read Error!");
+        }
+        return null;
     }
 }

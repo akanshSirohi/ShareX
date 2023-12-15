@@ -9,10 +9,10 @@ public class Plugin {
     private final String plugin_version;
     private final int plugin_version_code;
 
-    public Plugin(String plugin_uid, String plugin_name, String plugin_description, String plugin_author, String plugin_version, int plugin_version_code) {
+    public Plugin(String plugin_uid, String plugin_name, String plugin_package_name, String plugin_description, String plugin_author, String plugin_version, int plugin_version_code) {
         this.plugin_uid = plugin_uid;
         this.plugin_name = plugin_name;
-        this.plugin_package_name = plugin_name;
+        this.plugin_package_name = plugin_package_name;
         this.plugin_description = plugin_description;
         this.plugin_author = plugin_author;
         this.plugin_version = plugin_version;

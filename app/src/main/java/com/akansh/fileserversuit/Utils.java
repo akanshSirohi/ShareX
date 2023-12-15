@@ -429,6 +429,7 @@ public class Utils {
         }
     }
 
+    // Extract Plugin UID From URL
     public static String extractPluginUID(String url) {
         String pattern = "/SharexApp/([\\w-]+)(?:/[^/]+)*/?";
         Pattern regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
@@ -437,6 +438,28 @@ public class Utils {
             return matcher.group(1);
         } else {
             return null;
+        }
+    }
+
+    // Remove Directory
+    public void deleteDirectory(File fileOrDirectory) {
+        try {
+            if (fileOrDirectory.isDirectory()) {
+                File[] files = fileOrDirectory.listFiles();
+                if (files != null) {
+                    for (File child : files) {
+                        deleteDirectory(child);
+                    }
+                    if (files.length == 0) {
+                        fileOrDirectory.delete();
+                    }
+                }
+            } else {
+                fileOrDirectory.delete();
+            }
+            fileOrDirectory.delete();
+        }catch (Exception e) {
+            // Do Nothing!
         }
     }
 }

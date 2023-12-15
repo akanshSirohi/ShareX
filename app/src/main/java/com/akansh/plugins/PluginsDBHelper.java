@@ -1,7 +1,9 @@
 package com.akansh.plugins;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -37,6 +39,34 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
         );
     }
 
+    public String getPluginUIDByPackageName(String packageNAme) {
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor cursor=db.rawQuery("SELECT UID FROM "+TABLE_NAME+" WHERE PACKAGE_NAME='"+packageNAme+"'", null);
+        if(cursor.getCount() > 0) {
+            if (cursor.moveToFirst()) {
+                @SuppressLint("Range")
+                String uid = cursor.getString(cursor.getColumnIndex(UID));
+                cursor.close();
+                return uid;
+            }
+        }
+        return null;
+    }
+
+    public int getPluginVersionCodeByPackageName(String packageNAme) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT VERSION_CODE FROM "+TABLE_NAME+" WHERE PACKAGE_NAME='"+packageNAme+"'", null);
+        if(cursor.getCount() > 0) {
+            if (cursor.moveToFirst()) {
+                @SuppressLint("Range")
+                int version_code = cursor.getInt(cursor.getColumnIndex(VERSION_CODE));
+                cursor.close();
+                return version_code;
+            }
+        }
+        return -1;
+    }
+
     public boolean insertPlugin(Plugin plugin) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -48,6 +78,18 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
         contentValues.put(VERSION, plugin.getPlugin_version());
         contentValues.put(VERSION_CODE, plugin.getPlugin_version_code());
         long result = db.insert(TABLE_NAME, null, contentValues);
+        return result != -1;
+    }
+
+    public boolean updatePlugin(Plugin plugin) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(NAME, plugin.getPlugin_name());
+        contentValues.put(DESCRIPTION, plugin.getPlugin_description());
+        contentValues.put(AUTHOR, plugin.getPlugin_author());
+        contentValues.put(VERSION, plugin.getPlugin_version());
+        contentValues.put(VERSION_CODE, plugin.getPlugin_version_code());
+        int result = db.update(TABLE_NAME, contentValues, "UID=?", new String[] { plugin.getPlugin_uid() });
         return result != -1;
     }
 
