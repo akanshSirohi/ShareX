@@ -54,14 +54,14 @@ public class IntroActivity extends AppCompatActivity {
                 viewPager.setCurrentItem(currentPage);
             }
         });
+
+        // For Initial Slidera
         layouts = new int[]{R.layout.slider1,R.layout.slider2,R.layout.slider3,R.layout.slider4,R.layout.slider5,R.layout.slider6};
         myPagerAdapter=new MyPagerAdapter(layouts,getApplicationContext());
         viewPager.setAdapter(myPagerAdapter);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-            }
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
 
             @Override
             public void onPageSelected(int position) {
@@ -74,9 +74,7 @@ public class IntroActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onPageScrollStateChanged(int state) {
-
-            }
+            public void onPageScrollStateChanged(int state) {}
         });
         setDotStatus(0);
 

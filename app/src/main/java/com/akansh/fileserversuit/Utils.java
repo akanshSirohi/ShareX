@@ -442,7 +442,7 @@ public class Utils {
     }
 
     // Remove Directory
-    public void deleteDirectory(File fileOrDirectory) {
+    public boolean deleteDirectory(File fileOrDirectory) {
         try {
             if (fileOrDirectory.isDirectory()) {
                 File[] files = fileOrDirectory.listFiles();
@@ -458,8 +458,9 @@ public class Utils {
                 fileOrDirectory.delete();
             }
             fileOrDirectory.delete();
+            return true;
         }catch (Exception e) {
-            // Do Nothing!
+            return false;
         }
     }
 }

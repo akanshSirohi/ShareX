@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/bg_color"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        card_view:cardCornerRadius="3dp"
+        card_view:cardElevation="2dp"
+        card_view:cardUseCompatPadding="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/ripple_bg">
+
+            <TextView
+                android:id="@+id/plugin_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:fontFamily="@font/product_sans"
+                android:text="Plugin Title"
+                android:textColor="@color/txt_color"
+                android:textSize="16sp"
+                app:layout_constraintStart_toEndOf="@+id/imageView"
+                app:layout_constraintTop_toTopOf="@+id/imageView" />
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:src="@drawable/ic_plugin"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/txt_color" />
+
+            <TextView
+                android:id="@+id/plugin_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:fontFamily="@font/product_sans"
+                android:text="v1.0"
+                android:textColor="@color/txt_color_secondary"
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="@+id/plugin_title"
+                app:layout_constraintStart_toEndOf="@+id/plugin_title" />
+
+            <TextView
+                android:id="@+id/plugin_author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/product_sans"
+                android:text="Akansh Sirohi"
+                android:textColor="@color/txt_color_secondary"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="@+id/plugin_title"
+                app:layout_constraintTop_toBottomOf="@+id/plugin_title" />
+
+            <TextView
+                android:id="@+id/plugin_description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/product_sans"
+                android:text="Plugin long description..."
+                android:textColor="@color/txt_color_secondary"
+                android:justificationMode="inter_word"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="@+id/plugin_author"
+                app:layout_constraintTop_toBottomOf="@+id/plugin_author" />
+
+            <Button
+                android:id="@+id/plugin_uninstall_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/ripple_bg_"
+                android:drawableLeft="@drawable/ic_delete"
+                android:drawableTint="@color/colorAccent"
+                android:fontFamily="@font/product_sans"
+                android:text="Uninstall"
+                android:textColor="@color/txt_color"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/plugin_description"
+                app:layout_constraintTop_toBottomOf="@+id/plugin_description" />
+
+            <Button
+                android:id="@+id/plugin_update_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/ripple_bg"
+                android:drawableLeft="@drawable/ic_update"
+                android:drawableTint="#00C853"
+                android:fontFamily="@font/product_sans"
+                android:text="Update"
+                android:textColor="@color/txt_color"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/plugin_uninstall_btn"
+                app:layout_constraintTop_toBottomOf="@+id/plugin_description"
+                app:layout_constraintVertical_bias="0.0" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

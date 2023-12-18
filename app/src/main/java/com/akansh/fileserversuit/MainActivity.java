@@ -60,6 +60,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.akansh.plugins.PluginInstallStatus;
 import com.akansh.plugins.PluginsManager;
+import com.akansh.plugins.ui.PluginsActivity;
 import com.bumptech.glide.Glide;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
 import com.github.sumimakito.awesomeqr.AwesomeQrRenderer;
@@ -506,45 +507,52 @@ public class MainActivity extends AppCompatActivity {
         NavigationView navigationView=findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
-            if(itemId == R.id.settings) {
-                toggleSettings();
-            }else if(itemId == R.id.scan_qr) {
-                if(checkCameraPermission()) {
-                    initQrScanner();
-                }else{
-                    requestCameraPermission();
-                }
-            }else if(itemId == R.id.trans_hist) {
-                Intent intent=new Intent(MainActivity.this,TransferHistory.class);
-                startActivity(intent);
-            }else if(itemId == R.id.clear_log) {
-                clearLog();
-            }else if(itemId == R.id.privacy_policy) {
-                try {
-                    Intent i = new Intent(Intent.ACTION_VIEW);
-                    i.setData(Uri.parse(Constants.PRIVACY_POLICY_URL));
-                    startActivity(i);
-                }catch (Exception e) {
-                    //Do Nothing
-                }
-            }else if(itemId == R.id.feedback) {
-                Intent email = new Intent(Intent.ACTION_SENDTO,Uri.fromParts("mailto",Constants.FEEDBACK_MAIL,null));
-                email.putExtra(Intent.EXTRA_SUBJECT, "ShareX Feedback");
-                email.putExtra(Intent.EXTRA_TEXT, "Any feedback, query or suggestion...");
-                startActivity(Intent.createChooser(email, "Send Feedback"));
-            }else if(itemId == R.id.about) {
-                showAbout();
+
+            switch (itemId) {
+                case R.id.plugins:
+                    Intent plugins_intent=new Intent(MainActivity.this, PluginsActivity.class);
+                    startActivity(plugins_intent);
+                    break;
+                case R.id.settings:
+                    toggleSettings();
+                    break;
+                case R.id.scan_qr:
+                    if(checkCameraPermission()) {
+                        initQrScanner();
+                    }else{
+                        requestCameraPermission();
+                    }
+                    break;
+                case R.id.trans_hist:
+                    Intent tranferHistoryIntent=new Intent(MainActivity.this,TransferHistory.class);
+                    startActivity(tranferHistoryIntent);
+                    break;
+                case R.id.clear_log:
+                    clearLog();
+                    break;
+                case R.id.privacy_policy:
+                    try {
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setData(Uri.parse(Constants.PRIVACY_POLICY_URL));
+                        startActivity(i);
+                    }catch (Exception e) {
+                        //Do Nothing
+                    }
+                    break;
+                case R.id.feedback:
+                    Intent email = new Intent(Intent.ACTION_SENDTO,Uri.fromParts("mailto",Constants.FEEDBACK_MAIL,null));
+                    email.putExtra(Intent.EXTRA_SUBJECT, "ShareX Feedback");
+                    email.putExtra(Intent.EXTRA_TEXT, "Any feedback, query or suggestion...");
+                    startActivity(Intent.createChooser(email, "Send Feedback"));
+                    break;
+                case R.id.about:
+                    showAbout();
+                    break;
             }
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         });
         setUp_settingsListener();
-
-        // Setup Plugins
-        PluginsManager pluginsManager = new PluginsManager(this, this, utils);
-        pluginsManager.init();
-        PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin("test_plugin.zip");
-        Log.d(Constants.LOG_TAG,"Plugin Message: "+pluginInstallStatus.message);
     }
 
     public void askIgnoreBatteryOptimizations() {

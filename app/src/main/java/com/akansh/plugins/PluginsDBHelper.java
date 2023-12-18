@@ -7,6 +7,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.akansh.transfer_history.HistoryItem;
+
+import java.util.ArrayList;
+
 public class PluginsDBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME="SharexPlugins.db";
     public static final String TABLE_NAME="PLUGINS";
@@ -108,5 +112,29 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
                 "VERSION_CODE INT NOT NULL" +
             ")",TABLE_NAME)
         );
+    }
+
+    public ArrayList<Plugin> getInstalledPlugins() {
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor cursor=db.rawQuery("SELECT * FROM "+TABLE_NAME+" ORDER BY ID DESC", null);
+        ArrayList<Plugin> installedPluginsList = new ArrayList<>();
+        while(cursor.moveToNext()) {
+            @SuppressLint("Range")
+            Plugin plugin = new Plugin(cursor.getString(cursor.getColumnIndex(UID)),
+                    cursor.getString(cursor.getColumnIndex(NAME)),
+                    cursor.getString(cursor.getColumnIndex(PACKAGE_NAME)),
+                    cursor.getString(cursor.getColumnIndex(DESCRIPTION)),
+                    cursor.getString(cursor.getColumnIndex(AUTHOR)),
+                    cursor.getString(cursor.getColumnIndex(VERSION)),
+                    cursor.getInt(cursor.getColumnIndex(VERSION_CODE))
+            );
+            installedPluginsList.add(plugin);
+        }
+        return installedPluginsList;
+    }
+
+    public void deletePluginEntry(String uid) {
+        SQLiteDatabase db=this.getWritableDatabase();
+        db.delete(TABLE_NAME,UID + " = ?",new String[] {String.valueOf(uid)});
     }
 }

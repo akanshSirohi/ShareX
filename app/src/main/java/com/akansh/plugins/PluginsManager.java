@@ -114,8 +114,22 @@ public class PluginsManager {
                 Log.d(Constants.LOG_TAG,"Error: PluginsDBHelper: Copy Error!");
             }
         }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,"Error: PluginsDBHelper");
+            Log.d(Constants.LOG_TAG,"Error: PluginsDBHelper (Install)");
         }
         return new PluginInstallStatus("Unable To Parse Plugin!",true, PluginInstallStatus.Status.UNKNOWN);
+    }
+
+
+    public boolean uninstallPlugin(String uid) {
+        try (PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx)) {
+            boolean res = utils.deleteDirectory(new File(plugins_dir, uid));
+            if(res) {
+                pluginsDBHelper.deletePluginEntry(uid);
+            }
+            return res;
+        }catch (Exception e) {
+            Log.d(Constants.LOG_TAG,"Error: PluginsDBHelper (Uninstall)");
+        }
+        return false;
     }
 }

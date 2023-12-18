@@ -24,6 +24,7 @@ public class ServerService extends Service {
     public Context context = this;
     private static final int NOTIFICATION_ID = 2;
     private WebServer webServer;
+    private WebServerSocket webServerSocket;
     Utils utils=new Utils(context);
 
     @Nullable
@@ -48,7 +49,7 @@ public class ServerService extends Service {
                 utils.saveString(Constants.TEMP_URL, url);
                 showForegroundNotification("Running At: " + url);
 
-                WebServerSocket webServerSocket = new WebServerSocket(Constants.SERVER_PORT_DEFAULT + 1);
+                webServerSocket = new WebServerSocket(Constants.SERVER_PORT_DEFAULT + 1);
                 webServerSocket.start(-1);
             } catch (IOException e) {
                 Toast.makeText(this, "Server Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -71,6 +72,10 @@ public class ServerService extends Service {
         if(webServer!=null) {
             webServer.closeAllConnections();
             webServer.stop();
+        }
+        if(webServerSocket!= null) {
+            webServerSocket.closeAllConnections();
+            webServerSocket.stop();
         }
         sendLog(Constants.ACTION_MSG,"msg","Server Stopped!");
         utils.clearCache();
