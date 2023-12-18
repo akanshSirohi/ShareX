@@ -327,7 +327,6 @@ public class WebServer extends NanoHTTPD {
                     return newFixedLengthResponse("");
                 }
             } else if (uri.startsWith("/SharexApp/")) {
-                // Pugins Path Handle
                 String plugin_uid = Utils.extractPluginUID(uri);
                 String[] plugin_uri_parts = uri.split(plugin_uid);
                 String plugin_uri = plugin_uri_parts.length == 1 ? "/" : plugin_uri_parts[1];

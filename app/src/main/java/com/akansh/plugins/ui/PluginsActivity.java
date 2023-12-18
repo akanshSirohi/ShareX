@@ -51,12 +51,12 @@ public class PluginsActivity extends AppCompatActivity {
             }
         });
 
-//        Utils utils = new Utils(this);
+        Utils utils = new Utils(this);
 
         // Setup Plugins
 //        PluginsManager pluginsManager = new PluginsManager(this, this, utils);
 //        pluginsManager.init();
-//        PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin("test_plugin.zip");
+//        PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin("sharex.test.plugin.zip");
 //        Log.d(Constants.LOG_TAG,"Plugin Message: "+pluginInstallStatus.message);
     }
 
