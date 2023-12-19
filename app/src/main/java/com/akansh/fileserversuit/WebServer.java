@@ -255,6 +255,8 @@ public class WebServer extends NanoHTTPD {
                         sendLog(Constants.ACTION_AUTH, "device_id", device_id);
                         return newFixedLengthResponse("false");
                     }
+                } else if (action.equals("getInstalledPlugins")) {
+                    return newFixedLengthResponse(serverUtils.getPluginsList());
                 }
                 return newFixedLengthResponse("");
             } else if (uri.equals("/ShareX/uploadFile")) {

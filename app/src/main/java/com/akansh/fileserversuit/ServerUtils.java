@@ -11,11 +11,14 @@ import android.os.BatteryManager;
 import android.os.Environment;
 import android.util.Log;
 
+import com.akansh.plugins.Plugin;
+import com.akansh.plugins.PluginsDBHelper;
 import com.akansh.transfer_history.HistoryItem;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.target.Target;
 
+import org.json.JSONObject;
 import org.nanohttpd.protocols.http.response.Response;
 import org.nanohttpd.protocols.http.response.Status;
 import static org.nanohttpd.protocols.http.response.Response.newFixedLengthResponse;
@@ -29,12 +32,15 @@ import java.io.FileReader;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+
+import org.json.JSONArray;
 
 public class ServerUtils {
     private final List<ApplicationInfo> packages;
@@ -222,6 +228,26 @@ public class ServerUtils {
             code.append("</tr>");
         }
         return code.toString();
+    }
+
+    public String getPluginsList() {
+        PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx);
+        ArrayList<Plugin> plugins = pluginsDBHelper.getInstalledPlugins();
+        JSONArray jsonArray = new JSONArray();
+        try {
+            // Iterate through the ArrayList and convert each object to JSON
+            for (Plugin plugin : plugins) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("uid", plugin.getPlugin_uid());
+                jsonObject.put("name", plugin.getPlugin_name());
+                jsonObject.put("version", plugin.getPlugin_version());
+                jsonObject.put("description", plugin.getPlugin_description());
+                jsonObject.put("author", plugin.getPlugin_author());
+                jsonArray.put(jsonObject);
+            }
+            /// Script file solution, custom code mst be added, replaced by specific base code
+        } catch (Exception e) {}
+        return jsonArray.toString();
     }
 
     public String fileSize(File file) {

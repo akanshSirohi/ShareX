@@ -65,6 +65,7 @@ function initApp() {
   loadFiles(parent);
   loadApps();
   notifyChkBoxUI();
+  loadPluginsList();
   $("#back_btn").click(function () {
     back();
   });
@@ -505,4 +506,31 @@ function toast(heading, msg, hideAfter = 0) {
     type: 'info',
     message: `<b>${heading}</b><br>${msg}`
   });
+}
+
+function loadPluginsList() {
+  $.get(
+    "ShareX",
+    {
+      action: "getInstalledPlugins",
+    },
+    function (response) {
+      let plugins = JSON.parse(response);
+      let html = "";
+      plugins.forEach(plugin => {
+        html += `
+          <div class="card mt-2">
+              <div class="card-body">
+                  <h4 class="card-title">${plugin.name}</h4>
+                  <h6 class="card-subtitle mb-2 text-muted">${plugin.author} | ${plugin.version}</h6>
+                  <p class="card-text">${plugin.description}</p>
+                  <a href="/SharexApp/${plugin.uid}/" class="btn btn-primary" target="_blank">Open App&nbsp;&nbsp;<i class="fa-solid fa-up-right-from-square"></i></a>
+              </div>
+          </div>
+        `;
+      });
+
+      $("#pluginsList").html(html);
+    }
+  );
 }

@@ -33,6 +33,11 @@
               ><i class="fab fa-android"></i>&nbsp;&nbsp;Apps</a
             >
           </li>
+          <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#fxPlugins"
+              ><i class="fa-solid fa-cubes"></i>&nbsp;&nbsp;Plugins</a
+            >
+          </li>
         </ul>
 
         <div class="tab-content">
@@ -41,6 +46,9 @@
           </div>
           <div class="tab-pane fade" id="fxApps">
             {%>> partials/components/tab_apps.html %}
+          </div>
+          <div class="tab-pane fade" id="fxPlugins">
+            {%>> partials/components/tab_plugins.html %}
           </div>
         </div>
 
