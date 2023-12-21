@@ -331,6 +331,7 @@ public class WebServer extends NanoHTTPD {
             } else if (uri.startsWith("/SharexApp/")) {
                 String plugin_uid = Utils.extractPluginUID(uri);
                 String[] plugin_uri_parts = uri.split(plugin_uid);
+                String replace_base = plugin_uri_parts.length == 1 ? plugin_uid : ".";
                 String plugin_uri = plugin_uri_parts.length == 1 ? "/" : plugin_uri_parts[1];
                 path = utils.getPluginFileProperPath(plugin_uri,plugin_uid);
                 if(path.endsWith("/")) {
@@ -346,6 +347,7 @@ public class WebServer extends NanoHTTPD {
                 }
                 if(path.endsWith(".html")) {
                     templateEngine.setPlugin_uid(plugin_uid);
+                    templateEngine.setBase_url(replace_base);
                     String html = templateEngine.renderHtml(path, TemplateEngine.RENDER_TYPE.PLUGIN);
                     return newFixedLengthResponse(Status.OK, "text/html", html);
                 }

@@ -24,7 +24,8 @@ public class TemplateEngine {
 
     Context ctx;
 
-    private String plugin_uid;
+    // Special Variables
+    private String plugin_uid, base_url;
 
     public TemplateEngine(Context ctx) {
         this.ctx = ctx;
@@ -32,6 +33,10 @@ public class TemplateEngine {
 
     public void setPlugin_uid(String plugin_uid) {
         this.plugin_uid = plugin_uid;
+    }
+
+    public void setBase_url(String base_url) {
+        this.base_url = base_url;
     }
 
     public String renderHtml(String file, RENDER_TYPE type) {
@@ -57,6 +62,8 @@ public class TemplateEngine {
                         fileContent = "404:File Not Found";
                     }
                     result.append(fileContent);
+                }else if(command.startsWith("BASE_URL")) {
+                    result.append(base_url);
                 }
                 lastIndex = matcher.end();
             }

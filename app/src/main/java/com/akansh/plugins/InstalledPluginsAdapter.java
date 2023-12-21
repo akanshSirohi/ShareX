@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.text.LineBreaker;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,10 +16,12 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.akansh.fileserversuit.Constants;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPluginsAdapter.ItemViewHolder> {
@@ -29,10 +32,16 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
 
     InstalledPluginsActionListener listener;
 
+    HashMap<String, Integer> apps_config =  new HashMap<>();
+
     public interface InstalledPluginsActionListener {
         void onUninstallPlugin(Plugin plugin);
+        void onUpdatePlugin(Plugin plugin);
     }
 
+    public void setApps_config(HashMap<String, Integer> apps_config) {
+        this.apps_config = apps_config;
+    }
 
     public InstalledPluginsAdapter(Context ctx, ArrayList<Plugin> pluginArrayList) {
         inflater = LayoutInflater.from(ctx);
@@ -59,8 +68,9 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
             }
 
             plugin_update_btn.setOnClickListener(v -> {
-                Plugin plugin = pluginArrayList.get(getAdapterPosition());
-                Toast.makeText(ctx, plugin.getPlugin_name(), Toast.LENGTH_LONG).show();
+                if(listener != null) {
+                    listener.onUpdatePlugin(pluginArrayList.get(getAdapterPosition()));
+                }
             });
 
             plugin_uninstall_btn.setOnClickListener(v -> {
@@ -103,6 +113,10 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
         if(plugin.getPlugin_description().length() > 300) {
             holder.plugin_description.setEllipsize(TextUtils.TruncateAt.END);
             holder.plugin_description.setMaxLines(3);
+        }
+
+        if(apps_config.containsKey(plugin.getPlugin_package_name()) && apps_config.get(plugin.getPlugin_package_name()) != plugin.getPlugin_version_code()) {
+            holder.plugin_update_btn.setVisibility(View.VISIBLE);
         }
     }
 

@@ -11,6 +11,8 @@ import androidx.viewpager2.widget.ViewPager2;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
 
 import com.akansh.fileserversuit.Constants;
 import com.akansh.fileserversuit.R;
@@ -39,25 +41,31 @@ public class PluginsActivity extends AppCompatActivity {
         viewPager.setAdapter(new ViewPagerFragmentStateAdapter(this));
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> tab.setText(titles[position])).attach();
 
-        installedPlugins = new InstalledPlugins(getApplicationContext(), this);
-        pluginsStore = new PluginsStore();
+        // Setup Plugins
+        Utils utils = new Utils(this);
+        PluginsManager pluginsManager = new PluginsManager(this, this, utils);
+
+
+        installedPlugins = new InstalledPlugins(getApplicationContext(), this, pluginsManager);
+        pluginsStore = new PluginsStore(getApplicationContext(), this, pluginsManager);
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                if(position == 0) {
-                    installedPlugins.checkPluginsEmpty();
-                }
-                super.onPageSelected(position);
+            if(position == 0) {
+                installedPlugins.checkPluginsEmpty();
+            }
+            super.onPageSelected(position);
             }
         });
 
-        Utils utils = new Utils(this);
+        ImageButton check_updates_btn = findViewById(R.id.check_updates_btn);
 
-        // Setup Plugins
-        PluginsManager pluginsManager = new PluginsManager(this, this, utils);
-        pluginsManager.init();
-        PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin("sharex.test.plugin.zip");
-        Log.d(Constants.LOG_TAG,"Plugin Message: "+pluginInstallStatus.message);
+        pluginsManager.setPluginsManagerListener((res, path) -> {
+            if(res) {
+                installedPlugins.checkPluginsUpdates(path);
+            }
+        });
+        check_updates_btn.setOnClickListener(v -> pluginsManager.fetchPluginsFile());
     }
 
     public class ViewPagerFragmentStateAdapter extends FragmentStateAdapter {
