@@ -237,17 +237,24 @@ public class ServerUtils {
         try {
             // Iterate through the ArrayList and convert each object to JSON
             for (Plugin plugin : plugins) {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("uid", plugin.getPlugin_uid());
-                jsonObject.put("name", plugin.getPlugin_name());
-                jsonObject.put("version", plugin.getPlugin_version());
-                jsonObject.put("description", plugin.getPlugin_description());
-                jsonObject.put("author", plugin.getPlugin_author());
-                jsonArray.put(jsonObject);
+                if(plugin.isPlugin_enabled()) {
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("uid", plugin.getPlugin_uid());
+                    jsonObject.put("name", plugin.getPlugin_name());
+                    jsonObject.put("version", plugin.getPlugin_version());
+                    jsonObject.put("description", plugin.getPlugin_description());
+                    jsonObject.put("author", plugin.getPlugin_author());
+                    jsonArray.put(jsonObject);
+                }
             }
             /// Script file solution, custom code mst be added, replaced by specific base code
         } catch (Exception e) {}
         return jsonArray.toString();
+    }
+
+    public boolean getPluginStatus(String uid) {
+        PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx);
+        return pluginsDBHelper.getStatus(uid);
     }
 
     public String fileSize(File file) {

@@ -8,6 +8,7 @@ public class Plugin {
     private final String plugin_author;
     private final String plugin_version;
     private final int plugin_version_code;
+    private boolean plugin_enabled = true; // Default enabled
 
     public Plugin(String plugin_uid, String plugin_name, String plugin_package_name, String plugin_description, String plugin_author, String plugin_version, int plugin_version_code) {
         this.plugin_uid = plugin_uid;
@@ -17,6 +18,14 @@ public class Plugin {
         this.plugin_author = plugin_author;
         this.plugin_version = plugin_version;
         this.plugin_version_code = plugin_version_code;
+    }
+
+    public boolean isPlugin_enabled() {
+        return plugin_enabled;
+    }
+
+    public void setPlugin_enabled(boolean plugin_enabled) {
+        this.plugin_enabled = plugin_enabled;
     }
 
     public String getPlugin_uid() {

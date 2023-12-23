@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.akansh.fileserversuit.Constants;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.Utils;
 import com.akansh.plugins.InstalledPluginsAdapter;
@@ -39,6 +40,8 @@ public class InstalledPlugins extends Fragment {
     PluginsManager pluginsManager;
 
     HashMap<String, Integer> apps_config =  new HashMap<>();
+    ArrayList<Plugin> installedPluginsList;
+    PluginsDBHelper pluginsDBHelper;
 
     public InstalledPlugins(Context ctx, Activity activity, PluginsManager pluginsManager) {
         this.ctx = ctx;
@@ -58,10 +61,9 @@ public class InstalledPlugins extends Fragment {
         RecyclerView pluginsListView = view.findViewById(R.id.installedPluginsList);
         empty_plugins_list = view.findViewById(R.id.empty_plugins_list);
         pluginsListView.setLayoutManager(new LinearLayoutManager(ctx));
-        PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx);
-        ArrayList<Plugin> installedPluginsList = pluginsDBHelper.getInstalledPlugins();
+        pluginsDBHelper = new PluginsDBHelper(ctx);
+        installedPluginsList = pluginsDBHelper.getInstalledPlugins();
         installedPluginsAdapter = new InstalledPluginsAdapter(ctx, installedPluginsList);
-        installedPluginsAdapter.setApps_config(apps_config);
         installedPluginsAdapter.setListener(new InstalledPluginsAdapter.InstalledPluginsActionListener() {
             @Override
             public void onUninstallPlugin(Plugin plugin) {
@@ -77,12 +79,22 @@ public class InstalledPlugins extends Fragment {
 
             @Override
             public void onUpdatePlugin(Plugin plugin) {
-                // Update Plugin Code...
+                pluginsManager.downloadPlugin(plugin.getPlugin_package_name());
+            }
+
+            @Override
+            public void onPluginStatusChange(String uid, boolean status) {
+                pluginsDBHelper.changeStatus(uid, status);
             }
         });
         pluginsListView.setAdapter(installedPluginsAdapter);
         if(installedPluginsList.size() == 0) {
             empty_plugins_list.setVisibility(View.VISIBLE);
+        }else{
+            File app_config_file = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
+            if(app_config_file.exists()) {
+                checkPluginsUpdates(app_config_file);
+            }
         }
         return view;
     }
@@ -114,5 +126,14 @@ public class InstalledPlugins extends Fragment {
             installedPluginsAdapter.setApps_config(apps_config);
             installedPluginsAdapter.notifyDataSetChanged();
         }catch (Exception e) {}
+    }
+
+    public void updatePluginsList() {
+        installedPluginsList = pluginsDBHelper.getInstalledPlugins();
+        installedPluginsAdapter.updateInstalledPluginsList(installedPluginsList);
+    }
+
+    public boolean isPluginsEmpty() {
+        return installedPluginsList.isEmpty();
     }
 }

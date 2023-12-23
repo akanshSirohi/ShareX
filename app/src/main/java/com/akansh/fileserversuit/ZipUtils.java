@@ -35,6 +35,7 @@ public class ZipUtils {
                     zip.addFile(file,zipParameters);
                 }
             }
+            zip.close();
         }catch (Exception e) {
             Log.d(Constants.LOG_TAG,"Zip Error: "+e);
         }
@@ -44,15 +45,15 @@ public class ZipUtils {
     public boolean extractZip(String src, String dest, boolean deleteZipAfterExtract) {
         try(ZipFile zipFile = new ZipFile(src)) {
             zipFile.extractAll(dest);
+            zipFile.close();
+            if(deleteZipAfterExtract) {
+                File f = new File(src);
+                f.delete();
+            }
             return true;
         }catch (Exception e) {
-            Log.d(Constants.LOG_TAG, "Extract Error!");
+            return false;
         }
-        if(deleteZipAfterExtract) {
-            File f = new File(src);
-            f.delete();
-        }
-        return false;
     }
 
     public String readFileFromZip(String filename, String zipPath) {

@@ -5,6 +5,8 @@ import android.content.Context;
 import android.util.Base64;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.akansh.fileserversuit.Constants;
 import com.akansh.fileserversuit.Utils;
 import com.akansh.fileserversuit.ZipUtils;
@@ -74,8 +76,7 @@ public class PluginsManager {
         ZipUtils zipUtils = new ZipUtils();
         try (PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx)) {
             File tmp_plugin_zip_dest = new File(plugins_dir, plugin_file);
-            boolean res = copyAssetFile(plugin_file, tmp_plugin_zip_dest.getAbsolutePath());
-            if(res) {
+            if(tmp_plugin_zip_dest.exists()) {
                 String config_string = zipUtils.readFileFromZip("config.json",tmp_plugin_zip_dest.getAbsolutePath());
                 if(config_string != null) {
                     try {
@@ -101,7 +102,7 @@ public class PluginsManager {
                                     // Update Plugin In DB
                                     Plugin plugin = new Plugin(installed_plugin_uid, new_plugin_name, package_name, new_plugin_description, new_plugin_author, new_plugin_version, new_plugin_version_code);
                                     pluginsDBHelper.updatePlugin(plugin);
-                                    return new PluginInstallStatus("Plugin Updated", false, PluginInstallStatus.Status.UPDATE);
+                                    return new PluginInstallStatus("Plugin Updated Successfully!", false, PluginInstallStatus.Status.UPDATE);
                                 }
                             } else {
                                 // Plugin Not Exist And Install New
@@ -113,7 +114,7 @@ public class PluginsManager {
                                     // Register Plugin In DB
                                     Plugin plugin = new Plugin(plugin_uid, new_plugin_name, package_name, new_plugin_description, new_plugin_author, new_plugin_version, new_plugin_version_code);
                                     pluginsDBHelper.insertPlugin(plugin);
-                                    return new PluginInstallStatus("Plugin Installed", false, PluginInstallStatus.Status.INSTALL);
+                                    return new PluginInstallStatus("Plugin Installed Successfully!", false, PluginInstallStatus.Status.INSTALL);
                                 }
                             }
                         }else{
@@ -151,62 +152,99 @@ public class PluginsManager {
     }
 
     public void fetchPluginsFile() {
-        new Thread(new Runnable() {
-            String appListJsonUrl = "https://api.github.com/repos/akanshSirohi/ShareX-Plugins/contents/apps.json";
-            @Override
-            public void run() {
-                OkHttpClient client = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url(appListJsonUrl)
-                        .build();
-                client.newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
+        new Thread(() -> {
+            String appListJsonUrl = "https://api.github.com/repos/akanshSirohi/ShareX-Plugins/contents/" + Constants.APPS_CONFIG;
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(appListJsonUrl)
+                    .build();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    if(pluginsManagerListener != null) {
+                        activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(false, null));
+                    }
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) {
+                    try {
+                        String resp = response.body().string();
+                        JSONObject pluginConfigObject = new JSONObject(resp);
+                        String encoded_resp = pluginConfigObject.getString("content");
+                        encoded_resp = encoded_resp.replace("\n","");
+                        byte[] decodedBytes = Base64.decode(encoded_resp, Base64.DEFAULT);
+
+                        // decodedString contains the contents of the apps.json file
+                        String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
+                        File appsConfig = new File(plugins_dir, Constants.APPS_CONFIG);
+
+                        // Delete if exists to update to new version
+                        if(appsConfig.exists()) {
+                            appsConfig.delete();
+                        }
+                        // Save or update file to local storage
+                        appsConfig.createNewFile();
+                        FileOutputStream fOut = new FileOutputStream(appsConfig);
+                        OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+                        myOutWriter.append(decodedString);
+                        myOutWriter.close();
+                        fOut.flush();
+                        fOut.close();
+                        if(pluginsManagerListener != null) {
+                            activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(true, appsConfig));
+                        }
+                    }catch (Exception e) {
                         if(pluginsManagerListener != null) {
                             activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(false, null));
                         }
                     }
+                }
+            });
+        }).start();
+    }
 
-                    @Override
-                    public void onResponse(Call call, Response response) {
-                        try {
-                            String resp = response.body().string();
-                            JSONObject pluginConfigObject = new JSONObject(resp);
-                            String encoded_resp = pluginConfigObject.getString("content");
-                            encoded_resp = encoded_resp.replace("\n","");
-                            byte[] decodedBytes = Base64.decode(encoded_resp, Base64.DEFAULT);
+    public void downloadPlugin(String packageName) {
+        new Thread(() -> {
+            String base_url = String.format("https://github.com/akanshSirohi/ShareX-Plugins/raw/master/%s/dist/%s.zip", packageName, packageName);
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(base_url)
+                    .build();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    Log.d(Constants.LOG_TAG, "Plugin Download Failed!");
+                }
 
-                            // decodedString contains the contents of the apps.json file
-                            String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
-                            File appsConfig = new File(plugins_dir, "apps.json");
-
-                            // Delete if exists to update to new version
-                            if(appsConfig.exists()) {
-                                appsConfig.delete();
-                            }
-                            // Save or update file to local storage
-                            appsConfig.createNewFile();
-                            FileOutputStream fOut = new FileOutputStream(appsConfig);
-                            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-                            myOutWriter.append(decodedString);
-                            myOutWriter.close();
-                            fOut.flush();
-                            fOut.close();
-                            if(pluginsManagerListener != null) {
-                                activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(true, appsConfig));
-                            }
-                        }catch (Exception e) {
-                            if(pluginsManagerListener != null) {
-                                activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(false, null));
-                            }
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    try {
+                        File outputFile = new File(plugins_dir, packageName + ".zip");
+                        if(outputFile.exists()) {
+                            outputFile.delete();
+                        }
+                        FileOutputStream outputStream = new FileOutputStream(outputFile);
+                        if (response.body() != null) {
+                            outputStream.write(response.body().bytes());
+                            outputStream.close();
+                            activity.runOnUiThread(() -> pluginsManagerListener.onPluginUpdateDownload(true, packageName));
+                        }else{
+                            activity.runOnUiThread(() -> pluginsManagerListener.onPluginUpdateDownload(false, packageName));
+                        }
+                    }catch (Exception e){
+                        Log.d(Constants.LOG_TAG, "Plugin Download Failed!");
+                        if(pluginsManagerListener != null) {
+                            activity.runOnUiThread(() -> pluginsManagerListener.onPluginUpdateDownload(false, packageName));
                         }
                     }
-                });
-            }
+                }
+            });
         }).start();
     }
 
     public interface PluginsManagerListener {
         void onServerPluginsFetchUpdate(boolean res, File path);
+        void onPluginUpdateDownload(boolean res, String packageName);
     }
 }

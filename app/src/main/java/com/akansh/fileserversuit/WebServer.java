@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.util.Log;
 
-import com.akansh.plugins.PluginsManager;
 import com.akansh.transfer_history.HistoryDBManager;
 
 import org.apache.commons.fileupload.FileItem;
@@ -330,7 +329,10 @@ public class WebServer extends NanoHTTPD {
                 }
             } else if (uri.startsWith("/SharexApp/")) {
                 String plugin_uid = Utils.extractPluginUID(uri);
-                String[] plugin_uri_parts = uri.split(plugin_uid);
+                if(!serverUtils.getPluginStatus(plugin_uid)) {
+                    return newFixedLengthResponse(Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "403 Access Denied!");
+                }
+                String[] plugin_uri_parts = uri.split(plugin_uid, 2);
                 String replace_base = plugin_uri_parts.length == 1 ? plugin_uid : ".";
                 String plugin_uri = plugin_uri_parts.length == 1 ? "/" : plugin_uri_parts[1];
                 path = utils.getPluginFileProperPath(plugin_uri,plugin_uid);
@@ -344,6 +346,9 @@ public class WebServer extends NanoHTTPD {
                         path = path.endsWith("/") ? path : path + "/";
                         path = utils.getPluginFileProperPath( path + "index.html", plugin_uid);
                     }
+                }
+                if(!(new File(path).exists())) {
+                    return newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "404 Not Found");
                 }
                 if(path.endsWith(".html")) {
                     templateEngine.setPlugin_uid(plugin_uid);

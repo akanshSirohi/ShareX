@@ -10,6 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +39,7 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
     public interface InstalledPluginsActionListener {
         void onUninstallPlugin(Plugin plugin);
         void onUpdatePlugin(Plugin plugin);
+        void onPluginStatusChange(String uid, boolean status);
     }
 
     public void setApps_config(HashMap<String, Integer> apps_config) {
@@ -53,6 +56,7 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
 
         public TextView plugin_title, plugin_version, plugin_author, plugin_description;
         public Button plugin_uninstall_btn, plugin_update_btn;
+        private Switch plugin_enabled;
 
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -62,10 +66,17 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
             plugin_description = itemView.findViewById(R.id.plugin_description);
             plugin_update_btn = itemView.findViewById(R.id.plugin_update_btn);
             plugin_uninstall_btn = itemView.findViewById(R.id.plugin_uninstall_btn);
+            plugin_enabled = itemView.findViewById(R.id.plugin_enabled);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 plugin_description.setJustificationMode(LineBreaker.JUSTIFICATION_MODE_INTER_WORD);
             }
+
+            plugin_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if(listener != null) {
+                    listener.onPluginStatusChange(pluginArrayList.get(getAdapterPosition()).getPlugin_uid(),isChecked);
+                }
+            });
 
             plugin_update_btn.setOnClickListener(v -> {
                 if(listener != null) {
@@ -109,6 +120,7 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
         holder.plugin_version.setText(plugin.getPlugin_version());
         holder.plugin_description.setText(plugin.getPlugin_description());
         holder.plugin_description.setText(plugin.getPlugin_description());
+        holder.plugin_enabled.setChecked(plugin.isPlugin_enabled());
 
         if(plugin.getPlugin_description().length() > 300) {
             holder.plugin_description.setEllipsize(TextUtils.TruncateAt.END);
@@ -117,6 +129,8 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
 
         if(apps_config.containsKey(plugin.getPlugin_package_name()) && apps_config.get(plugin.getPlugin_package_name()) != plugin.getPlugin_version_code()) {
             holder.plugin_update_btn.setVisibility(View.VISIBLE);
+        }else{
+            holder.plugin_update_btn.setVisibility(View.GONE);
         }
     }
 
@@ -128,6 +142,11 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
                 iterator.remove();
             }
         }
+        notifyDataSetChanged();
+    }
+
+    public void updateInstalledPluginsList(ArrayList<Plugin> updatedPluginsList) {
+        this.pluginArrayList = updatedPluginsList;
         notifyDataSetChanged();
     }
 

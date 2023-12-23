@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.akansh.fileserversuit.Constants;
 import com.akansh.fileserversuit.R;
@@ -21,6 +22,8 @@ import com.akansh.plugins.PluginInstallStatus;
 import com.akansh.plugins.PluginsManager;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+
+import java.io.File;
 
 public class PluginsActivity extends AppCompatActivity {
 
@@ -44,8 +47,6 @@ public class PluginsActivity extends AppCompatActivity {
         // Setup Plugins
         Utils utils = new Utils(this);
         PluginsManager pluginsManager = new PluginsManager(this, this, utils);
-
-
         installedPlugins = new InstalledPlugins(getApplicationContext(), this, pluginsManager);
         pluginsStore = new PluginsStore(getApplicationContext(), this, pluginsManager);
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
@@ -60,12 +61,35 @@ public class PluginsActivity extends AppCompatActivity {
 
         ImageButton check_updates_btn = findViewById(R.id.check_updates_btn);
 
-        pluginsManager.setPluginsManagerListener((res, path) -> {
-            if(res) {
-                installedPlugins.checkPluginsUpdates(path);
+        pluginsManager.setPluginsManagerListener(new PluginsManager.PluginsManagerListener() {
+            @Override
+            public void onServerPluginsFetchUpdate(boolean res, File path) {
+                if(res) {
+                    if(!installedPlugins.isPluginsEmpty()) {
+                        installedPlugins.checkPluginsUpdates(path);
+                    }
+                }
+            }
+
+            @Override
+            public void onPluginUpdateDownload(boolean res, String packageName) {
+                if(res) {
+                    PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin(packageName + ".zip");
+                    Toast.makeText(PluginsActivity.this, pluginInstallStatus.message, Toast.LENGTH_LONG).show();
+                    if(!pluginInstallStatus.error) {
+                        installedPlugins.updatePluginsList();
+                    }
+                }
             }
         });
-        check_updates_btn.setOnClickListener(v -> pluginsManager.fetchPluginsFile());
+
+        check_updates_btn.setOnClickListener(v -> {
+            if(!installedPlugins.isPluginsEmpty()) {
+                pluginsManager.fetchPluginsFile();
+            }else{
+                Toast.makeText(PluginsActivity.this, "No installed plugins found!", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     public class ViewPagerFragmentStateAdapter extends FragmentStateAdapter {

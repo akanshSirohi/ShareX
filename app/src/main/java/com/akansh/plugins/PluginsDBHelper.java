@@ -21,6 +21,7 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
     public static final String AUTHOR = "AUTHOR";
     public static final String VERSION = "VERSION";
     public static final String VERSION_CODE = "VERSION_CODE";
+    public static final String ENABLED = "ENABLED";
     private static final int DATABASE_VERSION = 1;
 
     public PluginsDBHelper(Context context) {
@@ -38,7 +39,8 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
                 "DESCRIPTION TEXT NOT NULL," +
                 "AUTHOR TEXT NOT NULL," +
                 "VERSION TEXT NOT NULL," +
-                "VERSION_CODE INT NOT NULL" +
+                "VERSION_CODE INT NOT NULL," +
+                "ENABLED INT NOT NULL DEFAULT 1" +
             ")",TABLE_NAME)
         );
     }
@@ -97,6 +99,29 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
         return result != -1;
     }
 
+    public boolean changeStatus(String uid,boolean status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int val = status ? 1 : 0;
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ENABLED, val);
+        int result = db.update(TABLE_NAME, contentValues, "UID=?", new String[] { uid });
+        return result != -1;
+    }
+
+    public boolean getStatus(String uid) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT ENABLED FROM "+TABLE_NAME+" WHERE UID='"+uid+"'", null);
+        if(cursor.getCount() > 0) {
+            if (cursor.moveToFirst()) {
+                @SuppressLint("Range")
+                int enabled = cursor.getInt(cursor.getColumnIndex(ENABLED));
+                cursor.close();
+                return enabled == 1;
+            }
+        }
+        return true;
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS "+TABLE_NAME);
@@ -109,17 +134,18 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
                 "DESCRIPTION TEXT NOT NULL," +
                 "AUTHOR TEXT NOT NULL," +
                 "VERSION TEXT NOT NULL," +
-                "VERSION_CODE INT NOT NULL" +
+                "VERSION_CODE INT NOT NULL," +
+                "ENABLED INT NOT NULL DEFAULT 1" +
             ")",TABLE_NAME)
         );
     }
 
+    @SuppressLint("Range")
     public ArrayList<Plugin> getInstalledPlugins() {
         SQLiteDatabase db=this.getReadableDatabase();
         Cursor cursor=db.rawQuery("SELECT * FROM "+TABLE_NAME+" ORDER BY ID DESC", null);
         ArrayList<Plugin> installedPluginsList = new ArrayList<>();
         while(cursor.moveToNext()) {
-            @SuppressLint("Range")
             Plugin plugin = new Plugin(cursor.getString(cursor.getColumnIndex(UID)),
                     cursor.getString(cursor.getColumnIndex(NAME)),
                     cursor.getString(cursor.getColumnIndex(PACKAGE_NAME)),
@@ -128,6 +154,7 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
                     cursor.getString(cursor.getColumnIndex(VERSION)),
                     cursor.getInt(cursor.getColumnIndex(VERSION_CODE))
             );
+            plugin.setPlugin_enabled(cursor.getInt(cursor.getColumnIndex(ENABLED)) == 1);
             installedPluginsList.add(plugin);
         }
         return installedPluginsList;
