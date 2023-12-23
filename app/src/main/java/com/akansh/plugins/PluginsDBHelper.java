@@ -160,6 +160,17 @@ public class PluginsDBHelper extends SQLiteOpenHelper {
         return installedPluginsList;
     }
 
+    @SuppressLint("Range")
+    public ArrayList<String> getInstalledPluginsPackages() {
+        SQLiteDatabase db=this.getReadableDatabase();
+        Cursor cursor=db.rawQuery("SELECT PACKAGE_NAME FROM "+TABLE_NAME+" ORDER BY ID DESC", null);
+        ArrayList<String> installedList = new ArrayList<>();
+        while(cursor.moveToNext()) {
+            installedList.add(cursor.getString(cursor.getColumnIndex(PACKAGE_NAME)));
+        }
+        return installedList;
+    }
+
     public void deletePluginEntry(String uid) {
         SQLiteDatabase db=this.getWritableDatabase();
         db.delete(TABLE_NAME,UID + " = ?",new String[] {String.valueOf(uid)});

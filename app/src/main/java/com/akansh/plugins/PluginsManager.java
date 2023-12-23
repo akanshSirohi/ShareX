@@ -162,7 +162,7 @@ public class PluginsManager {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     if(pluginsManagerListener != null) {
-                        activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(false, null));
+                        activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(false));
                     }
                 }
 
@@ -192,11 +192,11 @@ public class PluginsManager {
                         fOut.flush();
                         fOut.close();
                         if(pluginsManagerListener != null) {
-                            activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(true, appsConfig));
+                            activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(true));
                         }
                     }catch (Exception e) {
                         if(pluginsManagerListener != null) {
-                            activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(false, null));
+                            activity.runOnUiThread(() -> pluginsManagerListener.onServerPluginsFetchUpdate(false));
                         }
                     }
                 }
@@ -244,7 +244,7 @@ public class PluginsManager {
     }
 
     public interface PluginsManagerListener {
-        void onServerPluginsFetchUpdate(boolean res, File path);
+        void onServerPluginsFetchUpdate(boolean res);
         void onPluginUpdateDownload(boolean res, String packageName);
     }
 }

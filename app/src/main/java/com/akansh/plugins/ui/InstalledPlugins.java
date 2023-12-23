@@ -91,10 +91,7 @@ public class InstalledPlugins extends Fragment {
         if(installedPluginsList.size() == 0) {
             empty_plugins_list.setVisibility(View.VISIBLE);
         }else{
-            File app_config_file = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
-            if(app_config_file.exists()) {
-                checkPluginsUpdates(app_config_file);
-            }
+            checkPluginsUpdates();
         }
         return view;
     }
@@ -107,25 +104,29 @@ public class InstalledPlugins extends Fragment {
         }
     }
 
-    public void checkPluginsUpdates(File filePath) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        BufferedReader in;
-        try {
-            apps_config.clear();
-            in = new BufferedReader(new FileReader(filePath));
-            while ((line = in.readLine()) != null) stringBuilder.append(line);
-            String apps_json = stringBuilder.toString();
-            JSONArray jsonArray = new JSONArray(apps_json);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                String package_name = jsonObject.getString("package");
-                int version_code = jsonObject.getInt("versionCode");
-                apps_config.put(package_name, version_code);
+    public void checkPluginsUpdates() {
+        File filePath = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
+        if(filePath.exists()) {
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            BufferedReader in;
+            try {
+                apps_config.clear();
+                in = new BufferedReader(new FileReader(filePath));
+                while ((line = in.readLine()) != null) stringBuilder.append(line);
+                String apps_json = stringBuilder.toString();
+                JSONArray jsonArray = new JSONArray(apps_json);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    String package_name = jsonObject.getString("package");
+                    int version_code = jsonObject.getInt("versionCode");
+                    apps_config.put(package_name, version_code);
+                }
+                installedPluginsAdapter.setApps_config(apps_config);
+                installedPluginsAdapter.notifyDataSetChanged();
+            } catch (Exception e) {
             }
-            installedPluginsAdapter.setApps_config(apps_config);
-            installedPluginsAdapter.notifyDataSetChanged();
-        }catch (Exception e) {}
+        }
     }
 
     public void updatePluginsList() {

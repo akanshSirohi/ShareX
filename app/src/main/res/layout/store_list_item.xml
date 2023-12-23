@@ -24,7 +24,7 @@
             android:background="@drawable/ripple_bg">
 
             <TextView
-                android:id="@+id/plugin_title"
+                android:id="@+id/store_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
@@ -47,7 +47,7 @@
                 app:tint="@color/txt_color" />
 
             <TextView
-                android:id="@+id/plugin_version"
+                android:id="@+id/store_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
@@ -55,11 +55,11 @@
                 android:text="v1.0"
                 android:textColor="@color/txt_color_secondary"
                 android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="@+id/plugin_title"
-                app:layout_constraintStart_toEndOf="@+id/plugin_title" />
+                app:layout_constraintBottom_toBottomOf="@+id/store_title"
+                app:layout_constraintStart_toEndOf="@+id/store_title" />
 
             <TextView
-                android:id="@+id/plugin_author"
+                android:id="@+id/store_author"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -67,11 +67,11 @@
                 android:text="Plugin Author"
                 android:textColor="@color/txt_color_secondary"
                 android:textSize="14sp"
-                app:layout_constraintStart_toStartOf="@+id/plugin_title"
-                app:layout_constraintTop_toBottomOf="@+id/plugin_title" />
+                app:layout_constraintStart_toStartOf="@+id/store_title"
+                app:layout_constraintTop_toBottomOf="@+id/store_title" />
 
             <TextView
-                android:id="@+id/plugin_description"
+                android:id="@+id/store_description"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -83,57 +83,26 @@
                 android:justificationMode="inter_word"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/plugin_author"
-                app:layout_constraintTop_toBottomOf="@+id/plugin_author" />
+                app:layout_constraintStart_toStartOf="@+id/store_author"
+                app:layout_constraintTop_toBottomOf="@+id/store_author" />
 
             <Button
-                android:id="@+id/plugin_uninstall_btn"
+                android:id="@+id/store_install_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/ripple_bg_"
-                android:drawableLeft="@drawable/ic_delete"
-                android:drawableTint="@color/colorAccent"
-                android:fontFamily="@font/product_sans"
-                android:text="Uninstall"
-                android:textColor="@color/txt_color"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/plugin_description"
-                app:layout_constraintTop_toBottomOf="@+id/plugin_description" />
-
-            <Button
-                android:id="@+id/plugin_update_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/ripple_bg_"
-                android:drawableLeft="@drawable/ic_update"
+                android:drawableLeft="@drawable/ic_install"
                 android:drawableTint="#00C853"
                 android:fontFamily="@font/product_sans"
-                android:text="Update"
+                android:text="Install"
                 android:textColor="@color/txt_color"
                 android:visibility="visible"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/plugin_uninstall_btn"
-                app:layout_constraintTop_toBottomOf="@+id/plugin_description"
+                app:layout_constraintEnd_toEndOf="@+id/store_description"
+                app:layout_constraintTop_toBottomOf="@+id/store_description"
                 app:layout_constraintVertical_bias="0.0" />
-
-            <Switch
-                android:id="@+id/plugin_enabled"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:fontFamily="@font/product_sans"
-                android:text="Enabled:"
-                android:textColor="@color/txt_color"
-                android:thumbTint="@color/colorAccent"
-                android:trackTint="@drawable/switch_track"
-                app:layout_constraintBottom_toBottomOf="@+id/plugin_uninstall_btn"
-                app:layout_constraintStart_toStartOf="@+id/imageView"
-                app:layout_constraintTop_toTopOf="@+id/plugin_uninstall_btn" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

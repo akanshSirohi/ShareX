@@ -63,10 +63,10 @@ public class PluginsActivity extends AppCompatActivity {
 
         pluginsManager.setPluginsManagerListener(new PluginsManager.PluginsManagerListener() {
             @Override
-            public void onServerPluginsFetchUpdate(boolean res, File path) {
+            public void onServerPluginsFetchUpdate(boolean res) {
                 if(res) {
                     if(!installedPlugins.isPluginsEmpty()) {
-                        installedPlugins.checkPluginsUpdates(path);
+                        installedPlugins.checkPluginsUpdates();
                     }
                 }
             }

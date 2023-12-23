@@ -36,12 +36,6 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
 
     HashMap<String, Integer> apps_config =  new HashMap<>();
 
-    public interface InstalledPluginsActionListener {
-        void onUninstallPlugin(Plugin plugin);
-        void onUpdatePlugin(Plugin plugin);
-        void onPluginStatusChange(String uid, boolean status);
-    }
-
     public void setApps_config(HashMap<String, Integer> apps_config) {
         this.apps_config = apps_config;
     }
@@ -157,5 +151,11 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
 
     public void setListener(InstalledPluginsActionListener listener) {
         this.listener = listener;
+    }
+
+    public interface InstalledPluginsActionListener {
+        void onUninstallPlugin(Plugin plugin);
+        void onUpdatePlugin(Plugin plugin);
+        void onPluginStatusChange(String uid, boolean status);
     }
 }
