@@ -9,6 +9,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,10 +17,12 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.akansh.fileserversuit.Constants;
+import com.akansh.fileserversuit.MainActivity;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.Utils;
 import com.akansh.plugins.PluginInstallStatus;
 import com.akansh.plugins.PluginsManager;
+import com.akansh.plugins.PluginsManagerPluginStatusListener;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -34,6 +37,7 @@ public class PluginsActivity extends AppCompatActivity {
 
     InstalledPlugins installedPlugins;
     PluginsStore pluginsStore;
+    ProgressDialog progress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +52,19 @@ public class PluginsActivity extends AppCompatActivity {
         Utils utils = new Utils(this);
         PluginsManager pluginsManager = new PluginsManager(this, this, utils);
         installedPlugins = new InstalledPlugins(getApplicationContext(), this, pluginsManager);
+        installedPlugins.setInstalledPluginsActionListener(new InstalledPlugins.InstalledPluginsActionListener() {
+            @Override
+            public void onPluginUpdateStarted() {
+                showLoading("Updating plugin\nPlease Wait...", utils);
+            }
+        });
         pluginsStore = new PluginsStore(getApplicationContext(), this, pluginsManager);
+        pluginsStore.setPluginsStoreActionListener(new PluginsStore.PluginsStoreActionListener() {
+            @Override
+            public void onPluginInstallStarted() {
+                showLoading("Installing plugin\nPlease Wait...", utils);
+            }
+        });
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -59,35 +75,29 @@ public class PluginsActivity extends AppCompatActivity {
             }
         });
 
-        ImageButton check_updates_btn = findViewById(R.id.check_updates_btn);
-
-        pluginsManager.setPluginsManagerListener(new PluginsManager.PluginsManagerListener() {
-            @Override
-            public void onServerPluginsFetchUpdate(boolean res) {
-                if(res) {
-                    if(!installedPlugins.isPluginsEmpty()) {
-                        installedPlugins.checkPluginsUpdates();
-                    }
-                }
-            }
-
+        pluginsManager.setPluginsManagerPluginStatusListener(new PluginsManagerPluginStatusListener() {
             @Override
             public void onPluginUpdateDownload(boolean res, String packageName) {
                 if(res) {
-                    PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin(packageName + ".zip");
+                    PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin(packageName);
                     Toast.makeText(PluginsActivity.this, pluginInstallStatus.message, Toast.LENGTH_LONG).show();
                     if(!pluginInstallStatus.error) {
                         installedPlugins.updatePluginsList();
                     }
                 }
+                hideLoading();
             }
-        });
 
-        check_updates_btn.setOnClickListener(v -> {
-            if(!installedPlugins.isPluginsEmpty()) {
-                pluginsManager.fetchPluginsFile();
-            }else{
-                Toast.makeText(PluginsActivity.this, "No installed plugins found!", Toast.LENGTH_LONG).show();
+            @Override
+            public void onNewPluginDownload(boolean res, String packageName) {
+                if(res) {
+                    PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin(packageName);
+                    Toast.makeText(PluginsActivity.this, pluginInstallStatus.message, Toast.LENGTH_LONG).show();
+                    if(!pluginInstallStatus.error) {
+                        pluginsStore.updatePluginStore();
+                    }
+                }
+                hideLoading();
             }
         });
     }
@@ -113,6 +123,28 @@ public class PluginsActivity extends AppCompatActivity {
         @Override
         public int getItemCount() {
             return titles.length;
+        }
+    }
+
+    void showLoading(String msg, Utils utils) {
+        progress=new ProgressDialog( PluginsActivity.this);
+        try {
+            progress.setTitle(utils.getSpannableFont(getResources().getString(R.string.app_name)));
+            progress.setMessage(utils.getSpannableFont(msg));
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setIndeterminate(true);
+            progress.setProgress(0);
+            progress.setCancelable(false);
+            progress.setCanceledOnTouchOutside(false);
+            progress.show();
+        }catch (Exception e) {
+            Log.d(Constants.LOG_TAG,e.toString());
+        }
+    }
+
+    void hideLoading() {
+        if(progress.isShowing()) {
+            progress.cancel();
         }
     }
 }

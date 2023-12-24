@@ -3,6 +3,7 @@ package com.akansh.plugins.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +18,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.akansh.fileserversuit.Constants;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.Utils;
+import com.akansh.plugins.InstallStatus;
 import com.akansh.plugins.InstalledPluginsAdapter;
 import com.akansh.plugins.Plugin;
+import com.akansh.plugins.PluginInstallStatus;
 import com.akansh.plugins.PluginsDBHelper;
 import com.akansh.plugins.PluginsManager;
 
@@ -42,6 +45,7 @@ public class InstalledPlugins extends Fragment {
     HashMap<String, Integer> apps_config =  new HashMap<>();
     ArrayList<Plugin> installedPluginsList;
     PluginsDBHelper pluginsDBHelper;
+    InstalledPluginsActionListener installedPluginsActionListener;
 
     public InstalledPlugins(Context ctx, Activity activity, PluginsManager pluginsManager) {
         this.ctx = ctx;
@@ -79,7 +83,10 @@ public class InstalledPlugins extends Fragment {
 
             @Override
             public void onUpdatePlugin(Plugin plugin) {
-                pluginsManager.downloadPlugin(plugin.getPlugin_package_name());
+                pluginsManager.downloadPlugin(plugin.getPlugin_package_name(), InstallStatus.UPDATE);
+                if(installedPluginsActionListener != null) {
+                    installedPluginsActionListener.onPluginUpdateStarted();
+                }
             }
 
             @Override
@@ -91,7 +98,8 @@ public class InstalledPlugins extends Fragment {
         if(installedPluginsList.size() == 0) {
             empty_plugins_list.setVisibility(View.VISIBLE);
         }else{
-            checkPluginsUpdates();
+            final Handler handler = new Handler();
+            handler.postDelayed(() -> activity.runOnUiThread(this::checkPluginsUpdates), 3000);
         }
         return view;
     }
@@ -136,5 +144,13 @@ public class InstalledPlugins extends Fragment {
 
     public boolean isPluginsEmpty() {
         return installedPluginsList.isEmpty();
+    }
+
+    public void setInstalledPluginsActionListener(InstalledPluginsActionListener installedPluginsActionListener) {
+        this.installedPluginsActionListener = installedPluginsActionListener;
+    }
+
+    public interface InstalledPluginsActionListener {
+        void onPluginUpdateStarted();
     }
 }

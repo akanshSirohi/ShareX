@@ -553,6 +553,9 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
         setUp_settingsListener();
+
+        PluginsManager pluginsManager = new PluginsManager(this, this, utils);
+        pluginsManager.fetchPluginAppsFile();
     }
 
     public void askIgnoreBatteryOptimizations() {

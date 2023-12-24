@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.akansh.fileserversuit.Constants;
 import com.akansh.fileserversuit.R;
+import com.akansh.plugins.InstallStatus;
 import com.akansh.plugins.Plugin;
 import com.akansh.plugins.PluginsDBHelper;
 import com.akansh.plugins.PluginsManager;
@@ -35,6 +36,7 @@ public class PluginsStore extends Fragment {
     PluginsManager pluginsManager;
     StorePluginsAdapter storePluginsAdapter;
     ArrayList<Plugin> storePluginsListItems = new ArrayList<>();
+    PluginsStoreActionListener pluginsStoreActionListener;
 
     public PluginsStore(Context ctx, Activity activity, PluginsManager pluginsManager) {
         this.ctx = ctx;
@@ -45,6 +47,10 @@ public class PluginsStore extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
+
+    public void setPluginsStoreActionListener(PluginsStoreActionListener pluginsStoreActionListener) {
+        this.pluginsStoreActionListener = pluginsStoreActionListener;
     }
 
     @Nullable
@@ -59,7 +65,10 @@ public class PluginsStore extends Fragment {
         }
         storePluginsAdapter = new StorePluginsAdapter(ctx, storePluginsListItems);
         storePluginsAdapter.setStorePluginsActionListener(package_name -> {
-            //////////////////////
+            pluginsManager.downloadPlugin(package_name, InstallStatus.INSTALL);
+            if(pluginsStoreActionListener != null) {
+                pluginsStoreActionListener.onPluginInstallStarted();
+            }
         });
         storePluginsList.setAdapter(storePluginsAdapter);
         return view;
@@ -97,5 +106,15 @@ public class PluginsStore extends Fragment {
         }else{
             return null;
         }
+    }
+
+    public void updatePluginStore() {
+        File filePath = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
+        storePluginsListItems = getPluginsListFromJson(filePath);
+        storePluginsAdapter.updateStorePluginsList(storePluginsListItems);
+    }
+
+    public interface PluginsStoreActionListener {
+        void onPluginInstallStarted();
     }
 }
