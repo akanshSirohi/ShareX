@@ -55,34 +55,8 @@ public class PluginsManager {
         return plugins_dir;
     }
 
-//    public void setPluginsManagerPluginUpdateListener(PluginsManagerPluginUpdateListener pluginsManagerListener) {
-//        this.pluginsManagerPluginUpdateListener = pluginsManagerListener;
-//    }
-//
-//    public void setPluginsManagerPluginInstallListener(PluginsManagerPluginInstallListener pluginsManagerPluginInstallListener) {
-//        this.pluginsManagerPluginInstallListener = pluginsManagerPluginInstallListener;
-//    }
-
-
     public void setPluginsManagerPluginStatusListener(PluginsManagerPluginStatusListener pluginsManagerPluginStatusListener) {
         this.pluginsManagerPluginStatusListener = pluginsManagerPluginStatusListener;
-    }
-
-    // Temp Function, Will Remove Later
-    public boolean copyAssetFile(String assetFilePath, String destinationFilePath) {
-        try {
-            InputStream in = ctx.getAssets().open(assetFilePath);
-            OutputStream out = new FileOutputStream(destinationFilePath);
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = in.read(buf)) > 0)
-                out.write(buf, 0, len);
-            in.close();
-            out.close();
-            return true;
-        }catch (Exception e) {
-            return false;
-        }
     }
 
     public PluginInstallStatus installPlugin(String install_package) {
@@ -241,7 +215,7 @@ public class PluginsManager {
 
     public void downloadPlugin(String packageName, InstallStatus status) {
         new Thread(() -> {
-            String base_url = String.format("https://github.com/akanshSirohi/ShareX-Plugins/raw/master/%s/dist/%s.zip", packageName, packageName);
+            String base_url = String.format("https://github.com/akanshSirohi/ShareX-Plugins/raw/master/%s/sharex_dist/%s.zip", packageName, packageName);
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
                     .url(base_url)

@@ -55,14 +55,25 @@ public class PluginsActivity extends AppCompatActivity {
         installedPlugins.setInstalledPluginsActionListener(new InstalledPlugins.InstalledPluginsActionListener() {
             @Override
             public void onPluginUpdateStarted() {
-                showLoading("Updating plugin\nPlease Wait...", utils);
+                showLoading("Updating plugin, please wait...", utils);
+            }
+
+            @Override
+            public void onPluginUninstallStarted() {
+                showLoading("Uninstalling plugin, please wait...", utils);
+            }
+
+            @Override
+            public void onPluginUninstalled() {
+                pluginsStore.updatePluginStore();
+                hideLoading();
             }
         });
         pluginsStore = new PluginsStore(getApplicationContext(), this, pluginsManager);
         pluginsStore.setPluginsStoreActionListener(new PluginsStore.PluginsStoreActionListener() {
             @Override
             public void onPluginInstallStarted() {
-                showLoading("Installing plugin\nPlease Wait...", utils);
+                showLoading("Installing plugin, please wait...", utils);
             }
         });
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
@@ -83,6 +94,7 @@ public class PluginsActivity extends AppCompatActivity {
                     Toast.makeText(PluginsActivity.this, pluginInstallStatus.message, Toast.LENGTH_LONG).show();
                     if(!pluginInstallStatus.error) {
                         installedPlugins.updatePluginsList();
+                        pluginsStore.updatePluginStore();
                     }
                 }
                 hideLoading();
@@ -94,6 +106,7 @@ public class PluginsActivity extends AppCompatActivity {
                     PluginInstallStatus pluginInstallStatus = pluginsManager.installPlugin(packageName);
                     Toast.makeText(PluginsActivity.this, pluginInstallStatus.message, Toast.LENGTH_LONG).show();
                     if(!pluginInstallStatus.error) {
+                        installedPlugins.updatePluginsList();
                         pluginsStore.updatePluginStore();
                     }
                 }

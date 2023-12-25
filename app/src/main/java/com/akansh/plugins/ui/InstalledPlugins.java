@@ -71,12 +71,18 @@ public class InstalledPlugins extends Fragment {
         installedPluginsAdapter.setListener(new InstalledPluginsAdapter.InstalledPluginsActionListener() {
             @Override
             public void onUninstallPlugin(Plugin plugin) {
+                if(installedPluginsActionListener != null) {
+                    installedPluginsActionListener.onPluginUninstallStarted();
+                }
                 PluginsManager pluginsManager = new PluginsManager(activity, ctx, new Utils(ctx));
                 boolean res = pluginsManager.uninstallPlugin(plugin.getPlugin_uid());
                 if(res) {
                     installedPluginsAdapter.removeItem(plugin.getPlugin_uid());
                     if(installedPluginsAdapter.getItemCount() == 0) {
                         empty_plugins_list.setVisibility(View.VISIBLE);
+                        if(installedPluginsActionListener != null) {
+                            installedPluginsActionListener.onPluginUninstalled();
+                        }
                     }
                 }
             }
@@ -152,5 +158,7 @@ public class InstalledPlugins extends Fragment {
 
     public interface InstalledPluginsActionListener {
         void onPluginUpdateStarted();
+        void onPluginUninstalled();
+        void onPluginUninstallStarted();
     }
 }
