@@ -13,7 +13,7 @@ import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.common.Utils;
-import com.akansh.plugins.Plugin;
+import com.akansh.plugins.common.Plugin;
 import com.akansh.plugins.PluginsDBHelper;
 import com.akansh.fileserversuit.transfer_history.HistoryItem;
 import com.bumptech.glide.Glide;

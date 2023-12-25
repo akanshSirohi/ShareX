@@ -16,9 +16,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.R;
 import com.akansh.plugins.common.InstallStatus;
-import com.akansh.plugins.Plugin;
+import com.akansh.plugins.common.Plugin;
 import com.akansh.plugins.PluginsDBHelper;
-import com.akansh.plugins.common.PluginsManager;
+import com.akansh.plugins.PluginsManager;
 import com.akansh.plugins.StorePluginsAdapter;
 
 import org.json.JSONArray;

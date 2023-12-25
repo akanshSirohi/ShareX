@@ -67,7 +67,7 @@ import com.akansh.fileserversuit.server.DeviceManager;
 import com.akansh.fileserversuit.server.ServerService;
 import com.akansh.fileserversuit.server.ThemesData;
 import com.akansh.fileserversuit.server.WebInterfaceSetup;
-import com.akansh.plugins.common.PluginsManager;
+import com.akansh.plugins.PluginsManager;
 import com.akansh.plugins.ui.PluginsActivity;
 import com.bumptech.glide.Glide;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;

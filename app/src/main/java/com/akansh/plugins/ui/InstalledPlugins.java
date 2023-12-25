@@ -20,9 +20,9 @@ import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.common.Utils;
 import com.akansh.plugins.common.InstallStatus;
 import com.akansh.plugins.InstalledPluginsAdapter;
-import com.akansh.plugins.Plugin;
+import com.akansh.plugins.common.Plugin;
 import com.akansh.plugins.PluginsDBHelper;
-import com.akansh.plugins.common.PluginsManager;
+import com.akansh.plugins.PluginsManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

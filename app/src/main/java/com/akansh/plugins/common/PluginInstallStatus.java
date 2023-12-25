@@ -1,4 +1,4 @@
-package com.akansh.plugins;
+package com.akansh.plugins.common;
 
 import com.akansh.plugins.common.InstallStatus;
 

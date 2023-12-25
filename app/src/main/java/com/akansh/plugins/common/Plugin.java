@@ -1,4 +1,4 @@
-package com.akansh.plugins;
+package com.akansh.plugins.common;
 
 public class Plugin {
     private final String plugin_uid;

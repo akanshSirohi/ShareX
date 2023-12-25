@@ -95,22 +95,19 @@ public class TransferHistoryActivity extends AppCompatActivity {
             public void onDeleteItem(View v, int position) {
                 final File f = new File(transferHistoryAdapter.getItem(position).getPath());
                 if(f.isFile() && f.exists()) {
-                    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            switch (which) {
-                                case DialogInterface.BUTTON_POSITIVE:
-                                    String path = transferHistoryAdapter.getItem(position).getPath();
-                                    transferHistoryAdapter.removeItem(position);
-                                    historyDBManager.deleteHistory(path);
-                                    f.delete();
-                                    checkEmptyList();
-                                    break;
+                    DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
+                        switch (which) {
+                            case DialogInterface.BUTTON_POSITIVE:
+                                String path = transferHistoryAdapter.getItem(position).getPath();
+                                transferHistoryAdapter.removeItem(position);
+                                historyDBManager.deleteHistory(path);
+                                f.delete();
+                                checkEmptyList();
+                                break;
 
-                                case DialogInterface.BUTTON_NEGATIVE:
-                                    //No button clicked
-                                    break;
-                            }
+                            case DialogInterface.BUTTON_NEGATIVE:
+                                //No button clicked
+                                break;
                         }
                     };
                     try {

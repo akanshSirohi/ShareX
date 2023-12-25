@@ -1,4 +1,4 @@
-package com.akansh.plugins.common;
+package com.akansh.plugins;
 
 import android.app.Activity;
 import android.content.Context;
@@ -10,10 +10,10 @@ import androidx.annotation.NonNull;
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.common.Utils;
 import com.akansh.fileserversuit.common.ZipUtils;
-import com.akansh.plugins.Plugin;
-import com.akansh.plugins.PluginInstallStatus;
-import com.akansh.plugins.PluginsDBHelper;
-import com.akansh.plugins.PluginsManagerPluginStatusListener;
+import com.akansh.plugins.common.Plugin;
+import com.akansh.plugins.common.PluginInstallStatus;
+import com.akansh.plugins.common.PluginsManagerPluginStatusListener;
+import com.akansh.plugins.common.InstallStatus;
 
 import java.io.File;
 import java.io.FileOutputStream;

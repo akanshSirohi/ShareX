@@ -1,4 +1,4 @@
-package com.akansh.plugins;
+package com.akansh.plugins.common;
 
 public interface PluginsManagerPluginStatusListener {
     void onPluginUpdateDownload(boolean res, String packageName);

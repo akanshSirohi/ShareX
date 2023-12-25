@@ -15,9 +15,9 @@ import android.widget.Toast;
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.common.Utils;
-import com.akansh.plugins.PluginInstallStatus;
-import com.akansh.plugins.common.PluginsManager;
-import com.akansh.plugins.PluginsManagerPluginStatusListener;
+import com.akansh.plugins.common.PluginInstallStatus;
+import com.akansh.plugins.PluginsManager;
+import com.akansh.plugins.common.PluginsManagerPluginStatusListener;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
