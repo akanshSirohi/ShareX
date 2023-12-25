@@ -2,31 +2,24 @@ package com.akansh.plugins.ui;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
-import com.akansh.fileserversuit.Constants;
-import com.akansh.fileserversuit.MainActivity;
+import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.R;
-import com.akansh.fileserversuit.Utils;
+import com.akansh.fileserversuit.common.Utils;
 import com.akansh.plugins.PluginInstallStatus;
-import com.akansh.plugins.PluginsManager;
+import com.akansh.plugins.common.PluginsManager;
 import com.akansh.plugins.PluginsManagerPluginStatusListener;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-
-import java.io.File;
 
 public class PluginsActivity extends AppCompatActivity {
 
@@ -109,6 +102,8 @@ public class PluginsActivity extends AppCompatActivity {
                         installedPlugins.updatePluginsList();
                         pluginsStore.updatePluginStore();
                     }
+                }else{
+                    Toast.makeText(PluginsActivity.this, "Plugin download failed!", Toast.LENGTH_LONG).show();
                 }
                 hideLoading();
             }
@@ -140,7 +135,10 @@ public class PluginsActivity extends AppCompatActivity {
     }
 
     void showLoading(String msg, Utils utils) {
-        progress=new ProgressDialog( PluginsActivity.this);
+        if(progress != null && progress.isShowing()) {
+            return;
+        }
+        progress = new ProgressDialog(PluginsActivity.this);
         try {
             progress.setTitle(utils.getSpannableFont(getResources().getString(R.string.app_name)));
             progress.setMessage(utils.getSpannableFont(msg));
@@ -150,13 +148,13 @@ public class PluginsActivity extends AppCompatActivity {
             progress.setCancelable(false);
             progress.setCanceledOnTouchOutside(false);
             progress.show();
-        }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,e.toString());
+        } catch (Exception e) {
+            Log.d(Constants.LOG_TAG, e.toString());
         }
     }
 
     void hideLoading() {
-        if(progress.isShowing()) {
+        if(progress != null && progress.isShowing()) {
             progress.cancel();
         }
     }

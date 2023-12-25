@@ -1,5 +1,7 @@
 package com.akansh.plugins;
 
+import com.akansh.plugins.common.InstallStatus;
+
 public class PluginInstallStatus {
 
     public String message;

@@ -37,10 +37,10 @@
         <activity
             android:name="com.akansh.plugins.ui.PluginsActivity"
             android:exported="false" />
-        <activity android:name=".IntroActivity" />
-        <activity android:name=".TransferHistory" />
+        <activity android:name=".ui.IntroActivity" />
+        <activity android:name=".transfer_history.TransferHistoryActivity" />
         <activity
-            android:name=".Splash"
+            android:name=".ui.Splash"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,12 +49,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="portrait" />
 
         <service
-            android:name=".ServerService"
+            android:name=".server.ServerService"
             android:enabled="true"
             android:exported="true" />
 

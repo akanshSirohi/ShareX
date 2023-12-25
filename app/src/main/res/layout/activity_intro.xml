@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF"
     android:hapticFeedbackEnabled="false"
-    tools:context=".IntroActivity">
+    tools:context=".ui.IntroActivity">
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/viewPager"
