@@ -14,9 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
@@ -53,12 +51,11 @@ import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.akansh.fileserversuit.R;
+import com.akansh.fileserversuit.common.GenerateQR;
 import com.akansh.fileserversuit.common.WifiApManager;
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.transfer_history.TransferHistoryActivity;
@@ -71,15 +68,10 @@ import com.akansh.plugins.PluginsManager;
 import com.akansh.plugins.ui.PluginsActivity;
 import com.bumptech.glide.Glide;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
-import com.github.sumimakito.awesomeqr.AwesomeQrRenderer;
-import com.github.sumimakito.awesomeqr.RenderResult;
-import com.github.sumimakito.awesomeqr.option.RenderOption;
-import com.github.sumimakito.awesomeqr.option.logo.Logo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -895,7 +887,10 @@ public class MainActivity extends AppCompatActivity {
         url="";
         fabActionsHandler.setLabels("0 media selected","0 files selected");
         deviceManager.clearTmp();
-        junkCleaner();
+        utils.junkCleaner();
+        pmode_send_files.clear();
+        pmode_send_images.clear();
+        pmode_send_final_files.clear();
     }
 
     public void pushLog(String log,boolean b) {
@@ -954,8 +949,8 @@ public class MainActivity extends AppCompatActivity {
                 TextView scan_url=findViewById(R.id.scan_url);
                 scan_url.setText(url);
                 ImageView qr_view=findViewById(R.id.qr_img);
-                GenerateQR generateQR=new GenerateQR(qr_view);
-                generateQR.execute();
+                GenerateQR generateQR=new GenerateQR(qr_view, this, this);
+                generateQR.execute(url);
             }
         }else{
             main_view.setVisibility(View.VISIBLE);
@@ -1039,7 +1034,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         fabActionsHandler.setLabels(pmode_send_images.size()+" media selected",pmode_send_files.size()+" files selected");
-        pListWriter();
+        utils.pListWriter(pmode_send_final_files);
     }
 
     private void changeUI(int code) {
@@ -1085,100 +1080,6 @@ public class MainActivity extends AppCompatActivity {
                 qrCodeReaderView.stopCamera();
             }
         });
-    }
-
-    private void junkCleaner() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            File file=new File("/data/data/"+getPackageName()+"/","pFilesList.bin");
-            File temp=new File(Environment.getExternalStorageDirectory()+"/ShareX/.temp");
-            File cache = new File("/data/data/" + getPackageName() + "/cache");
-            if(temp.exists()) {
-                utils.deleteFileOrDir(temp);
-            }
-            if(cache.exists()) {
-                utils.deleteFileOrDir(cache);
-            }
-            String blnk="";
-            try {
-                FileOutputStream fileWriter=new FileOutputStream(file);
-                fileWriter.write(blnk.getBytes());
-                fileWriter.close();
-            }catch (Exception e) {
-                //Do Nothing...
-            }
-            pmode_send_files.clear();
-            pmode_send_images.clear();
-            pmode_send_final_files.clear();
-        });
-    }
-
-
-    public void pListWriter() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            File file=new File("/data/data/"+getPackageName()+"/","pFilesList.bin");
-            StringBuffer data=new StringBuffer();
-            for(String path : pmode_send_final_files) {
-                data.append(path);
-                data.append("\n");
-            }
-            try {
-                FileOutputStream fileWriter=new FileOutputStream(file);
-                fileWriter.write(data.toString().getBytes());
-                fileWriter.close();
-            }catch (Exception e) {
-                //Do Nothing...
-            }
-        });
-    }
-
-    public class GenerateQR {
-
-        ImageView qr_view;
-
-        public GenerateQR(ImageView imageView) {
-            this.qr_view = imageView;
-        }
-
-        public void execute() {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.execute(() -> {
-                Logo logo = new Logo();
-                logo.setBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_logo));
-                logo.setBorderRadius(10);
-                logo.setBorderWidth(10);
-                logo.setScale(0.2f);
-                logo.setClippingRect(new RectF(0, 0, 200, 200));
-                com.github.sumimakito.awesomeqr.option.color.Color color=new com.github.sumimakito.awesomeqr.option.color.Color();
-                color.setLight(Color.parseColor("#ffffff"));
-                color.setDark(Color.parseColor("#000000"));
-                color.setBackground(Color.parseColor("#ffffff"));
-                color.setAuto(false);
-                RenderOption renderOption = new RenderOption();
-                renderOption.setContent(url);
-                renderOption.setSize(800);
-                renderOption.setBorderWidth(20);
-                renderOption.setEcl(ErrorCorrectionLevel.H);
-                renderOption.setPatternScale(1.0f);
-                renderOption.setClearBorder(true);
-                renderOption.setRoundedPatterns(true);
-                renderOption.setColor(color);
-                renderOption.setLogo(logo);
-                try {
-                    RenderResult render = AwesomeQrRenderer.render(renderOption);
-                    if (render.getBitmap() != null) {
-                        runOnUiThread(() -> {
-                            RoundedBitmapDrawable dr = RoundedBitmapDrawableFactory.create(getResources(),render.getBitmap());
-                            dr.setCornerRadius(15f);
-                            qr_view.setImageDrawable(dr);
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-        }
     }
 
     public void showSnackbar(String msg) {

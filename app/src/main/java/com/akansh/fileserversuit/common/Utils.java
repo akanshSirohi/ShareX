@@ -22,12 +22,16 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -462,5 +466,48 @@ public class Utils {
         }catch (Exception e) {
             return false;
         }
+    }
+
+    public void pListWriter(List<String> pmode_send_final_files) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            File file=new File("/data/data/"+ctx.getPackageName()+"/","pFilesList.bin");
+            StringBuffer data=new StringBuffer();
+            for(String path : pmode_send_final_files) {
+                data.append(path);
+                data.append("\n");
+            }
+            try {
+                FileOutputStream fileWriter=new FileOutputStream(file);
+                fileWriter.write(data.toString().getBytes());
+                fileWriter.close();
+            }catch (Exception e) {
+                //Do Nothing...
+            }
+        });
+    }
+
+    public void junkCleaner() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            File file=new File("/data/data/" + ctx.getPackageName() + "/","pFilesList.bin");
+            File temp=new File(Environment.getExternalStorageDirectory() + "/ShareX/.temp");
+            File cache = new File("/data/data/" + ctx.getPackageName() + "/cache");
+            if(temp.exists()) {
+                deleteFileOrDir(temp);
+            }
+            if(cache.exists()) {
+                deleteFileOrDir(cache);
+            }
+            String blnk="";
+            try {
+                FileOutputStream fileWriter=new FileOutputStream(file);
+                fileWriter.write(blnk.getBytes());
+                fileWriter.close();
+            }catch (Exception e) {
+                //Do Nothing...
+            }
+
+        });
     }
 }
