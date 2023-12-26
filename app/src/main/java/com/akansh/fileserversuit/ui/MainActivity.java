@@ -36,6 +36,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -43,6 +44,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -100,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog progress;
     private String serverRoot = null;
     private ConstraintLayout settings_view, main_view, qr_view, logger_wrapper;
-    private TextView settDRoot, settRemDev, settTheme;
+    private TextView settDRoot, settRemDev, settTheme, plugin_folder_label;
     private TextView logger;
     private TextView scan_url, ssl_note;
 
@@ -114,7 +117,8 @@ public class MainActivity extends AppCompatActivity {
     FabActionsHandler fabActionsHandler;
     DeviceManager deviceManager;
     ActivityResultLauncher<Intent> storagePermissionResultLauncher;
-    ActivityResultLauncher<Intent> folderPickerResultLauncher;
+    ActivityResultLauncher<Intent> rootFolderPickerResultLauncher;
+    ActivityResultLauncher<Intent> pluginFolderPickerResultLauncher;
     ActivityResultLauncher<Intent> batteryActivityResultLauncher;
     ActivityResultLauncher<Intent> mutipleFilesActivityResultLauncher;
     ActivityResultLauncher<Intent> gallerySelectorActivityResultLauncher;
@@ -155,6 +159,8 @@ public class MainActivity extends AppCompatActivity {
         settDRoot = findViewById(R.id.sett_subtitle1);
         settRemDev = findViewById(R.id.sett_subtitle6);
         settTheme = findViewById(R.id.sett_subtitle7);
+        plugin_folder_label = findViewById(R.id.sett_subtitle11);
+        plugin_folder_label.setText(utils.loadPluginDevFolder());
         String dev_count = deviceManager.getRemDevices() + " devices remembered";
         settRemDev.setText(dev_count);
         settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME,0)));
@@ -179,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        folderPickerResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        rootFolderPickerResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if(result.getResultCode() == Activity.RESULT_OK) {
                 try {
                     Uri uri = result.getData().getData();
@@ -197,6 +203,28 @@ public class MainActivity extends AppCompatActivity {
                     restartServer();
                 }catch (Exception e) {
                     Log.d(Constants.LOG_TAG,"Err2: "+e);
+                }
+            }
+        });
+
+        pluginFolderPickerResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if(result.getResultCode() == Activity.RESULT_OK) {
+                    try {
+                        Uri uri = result.getData().getData();
+                        String decode = URLDecoder.decode(uri.toString(), "UTF-8");
+                        String root = "";
+                        if(decode.split(":")[1].contains("primary")) {
+                            root = Environment.getExternalStorageDirectory().getAbsolutePath();
+                        }else{
+                            root = utils.getSDCardRoot();
+                        }
+                        File f = new File(root, decode.split(":")[2]);
+                        plugin_folder_label.setText(f.getAbsolutePath());
+                        utils.savePluginDevFolder(f.getAbsolutePath());
+                    } catch (Exception e) {
+                    }
                 }
             }
         });
@@ -697,116 +725,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUp_settingsListener() {
-        CardView card1=findViewById(R.id.sett_card1);
-        CardView card2=findViewById(R.id.sett_card2);
-        CardView card3=findViewById(R.id.sett_card3);
-        CardView card4=findViewById(R.id.sett_card4);
-        CardView card5=findViewById(R.id.sett_card5);
-        CardView card6=findViewById(R.id.sett_card6);
-        CardView card7=findViewById(R.id.sett_card7);
-        CardView card8=findViewById(R.id.sett_card8);
-        CardView card9=findViewById(R.id.sett_card9);
-        CardView card10=findViewById(R.id.sett_card10);
-        CheckBox settHFCheck=findViewById(R.id.sett_hideF_checkBox);
-        CheckBox settRMCheck=findViewById(R.id.sett_resMod_checkBox);
-        CheckBox settFDCheck=findViewById(R.id.sett_frceDwl_checkBox);
-        CheckBox settPMCheck=findViewById(R.id.sett_pMode_checkBox);
-        CheckBox settAppsCheck=findViewById(R.id.sett_apps_checkBox);
-        CheckBox settSslCheck=findViewById(R.id.sett_ssl_checkBox);
-        TextView settPort=findViewById(R.id.sett_subtitle8);
+        CardView card1 = findViewById(R.id.sett_card1);
+        CardView card2 = findViewById(R.id.sett_card2);
+        CardView card3 = findViewById(R.id.sett_card3);
+        CardView card4 = findViewById(R.id.sett_card4);
+        CardView card5 = findViewById(R.id.sett_card5);
+        CardView card6 = findViewById(R.id.sett_card6);
+        CardView card7 = findViewById(R.id.sett_card7);
+        CardView card8 = findViewById(R.id.sett_card8);
+        CardView card9 = findViewById(R.id.sett_card9);
+        CardView card10 = findViewById(R.id.sett_card10);
+        CardView card11 = findViewById(R.id.sett_card11);
+        CheckBox settHFCheck = findViewById(R.id.sett_hideF_checkBox);
+        CheckBox settRMCheck = findViewById(R.id.sett_resMod_checkBox);
+        CheckBox settFDCheck = findViewById(R.id.sett_frceDwl_checkBox);
+        CheckBox settPMCheck = findViewById(R.id.sett_pMode_checkBox);
+        CheckBox settAppsCheck = findViewById(R.id.sett_apps_checkBox);
+        CheckBox settSslCheck = findViewById(R.id.sett_ssl_checkBox);
+        CheckBox settPluginDevCheck = findViewById(R.id.sett_plugin_debug_checkBox);
+        TextView settPort = findViewById(R.id.sett_subtitle8);
+        ImageButton sett_plugin_folder = findViewById(R.id.sett_plugin_folder);
         ImageButton settResetRoot = findViewById(R.id.sett_reset_root);
-        card1.setOnClickListener(view -> {
-            try {
-                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                i.addCategory(Intent.CATEGORY_DEFAULT);
-                Intent fIntent = Intent.createChooser(i, "Choose server root");
-                folderPickerResultLauncher.launch(fIntent);
-            }catch (Exception e) {
-                Log.d(Constants.LOG_TAG,e.toString());
-            }
-        });
-        settDRoot.setText(serverRoot);
-        settPort.setText("Port: "+utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT));
-        settHFCheck.setChecked(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
-        settHFCheck.setOnCheckedChangeListener((compoundButton, b) -> {
-            utils.saveSetting(Constants.LOAD_HIDDEN_MEDIA,b);
-            restartServer();
-        });
-        card2.setOnClickListener(v -> settHFCheck.setChecked(!settHFCheck.isChecked()));
-        settRMCheck.setChecked(utils.loadSetting(Constants.RESTRICT_MODIFY));
-        settRMCheck.setOnCheckedChangeListener((compoundButton, b) -> {
-            utils.saveSetting(Constants.RESTRICT_MODIFY,b);
-            restartServer();
-        });
-        card3.setOnClickListener(v -> settRMCheck.setChecked(!settRMCheck.isChecked()));
-        settFDCheck.setChecked(utils.loadSetting(Constants.FORCE_DOWNLOAD));
-        settFDCheck.setOnCheckedChangeListener((compoundButton, b) -> utils.saveSetting(Constants.FORCE_DOWNLOAD,b));
-        card4.setOnClickListener(v -> settFDCheck.setChecked(!settFDCheck.isChecked()));
-        settPMCheck.setOnCheckedChangeListener((compoundButton, b) -> {
-            utils.saveSetting(Constants.PRIVATE_MODE,b);
-            restartServer();
-            privateMode();
-        });
-        settPMCheck.setChecked(utils.loadSetting(Constants.PRIVATE_MODE));
-        card5.setOnClickListener(v -> settPMCheck.setChecked(!settPMCheck.isChecked()));
-        card6.setOnClickListener(v -> {
-            deviceManager.clearAll();
-            showSnackbar("All remembered devices cleared!");
-            Timer myTimer=new Timer();
-            myTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    MainActivity.this.runOnUiThread(() -> settRemDev.setText(deviceManager.getRemDevices()+" devices remembered"));
-                }
-            },500);
-        });
-        card7.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("Choose Theme");
-            builder.setSingleChoiceItems(themesData.getDisplayList(), currentTheme, (dialog, which) -> {
-                currentTheme = which;
-            });
-            builder.setPositiveButton("Set", (dialog, which) -> {
-                utils.saveInt(Constants.WEB_INTERFACE_THEME, currentTheme);
-                settTheme.setText(themesData.getDisplayItem(currentTheme));
-                dialog.dismiss();
-            });
-            builder.setNegativeButton("Cancel", (dialog, which) -> {
-                currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME,0);
-                dialog.dismiss();
-            });
-            builder.show();
-        });
-        card8.setOnClickListener(v-> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("ShareX Port:");
-            builder.setMessage("Please enter a port number between 1024 and 65535");
-            TextInputLayout textInputLayout = new TextInputLayout(MainActivity.this);
-            textInputLayout.setPadding(getResources().getDimensionPixelOffset(R.dimen.dp_19),0,getResources().getDimensionPixelOffset(R.dimen.dp_19),0);
-            final EditText input = new EditText(MainActivity.this);
-            input.setText(String.valueOf(utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT)));
-            input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_NORMAL);
-            textInputLayout.addView(input);
-            builder.setView(textInputLayout);
-            builder.setPositiveButton("Set", (dialog, which) -> {
-                if(input.getText().toString().length()>0) {
-                    int port = Integer.parseInt(input.getText().toString());
-                    if(port >= 1024 && port <= 65535) {
-                        utils.saveInt(Constants.SERVER_PORT, port);
-                        settPort.setText("Port: " + port);
-                        Toast.makeText(MainActivity.this, "ShareX port changed to " + port, Toast.LENGTH_LONG).show();
-                        dialog.dismiss();
-                        restartServer();
-                    }else{
-                        Toast.makeText(MainActivity.this, "Please enter a valid port number", Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
-            builder.setNegativeButton("Cancel", (dialog, which) -> {
-                dialog.dismiss();
-            });
-            builder.show();
-        });
+
+
+        // App Root Settings
         settResetRoot.setOnClickListener(view -> {
             if(utils.isExternalStorageMounted()) {
                 String[] options = {"Internal Storage","SD Card"};
@@ -838,17 +780,153 @@ public class MainActivity extends AppCompatActivity {
                 restartServer();
             }
         });
+        card1.setOnClickListener(view -> {
+            try {
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                i.addCategory(Intent.CATEGORY_DEFAULT);
+                Intent fIntent = Intent.createChooser(i, "Choose server root");
+                rootFolderPickerResultLauncher.launch(fIntent);
+            }catch (Exception e) {
+                Log.d(Constants.LOG_TAG,e.toString());
+            }
+        });
+        settDRoot.setText(serverRoot);
+        
+        // Show hidden files check
+        settHFCheck.setChecked(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
+        settHFCheck.setOnCheckedChangeListener((compoundButton, b) -> {
+            utils.saveSetting(Constants.LOAD_HIDDEN_MEDIA,b);
+            restartServer();
+        });
+        card2.setOnClickListener(v -> settHFCheck.setChecked(!settHFCheck.isChecked()));
+        
+        // Restrict Modification Settings
+        settRMCheck.setChecked(utils.loadSetting(Constants.RESTRICT_MODIFY));
+        settRMCheck.setOnCheckedChangeListener((compoundButton, b) -> {
+            utils.saveSetting(Constants.RESTRICT_MODIFY,b);
+            restartServer();
+        });
+        card3.setOnClickListener(v -> settRMCheck.setChecked(!settRMCheck.isChecked()));
+
+        // ForceD Download Settings
+        settFDCheck.setChecked(utils.loadSetting(Constants.FORCE_DOWNLOAD));
+        settFDCheck.setOnCheckedChangeListener((compoundButton, b) -> utils.saveSetting(Constants.FORCE_DOWNLOAD,b));
+        card4.setOnClickListener(v -> settFDCheck.setChecked(!settFDCheck.isChecked()));
+
+        // Private mode Settings
+        settPMCheck.setOnCheckedChangeListener((compoundButton, b) -> {
+            utils.saveSetting(Constants.PRIVATE_MODE,b);
+            restartServer();
+            privateMode();
+        });
+        settPMCheck.setChecked(utils.loadSetting(Constants.PRIVATE_MODE));
+        card5.setOnClickListener(v -> settPMCheck.setChecked(!settPMCheck.isChecked()));
+
+        // Clear Remember Device Settings
+        card6.setOnClickListener(v -> {
+            deviceManager.clearAll();
+            showSnackbar("All remembered devices cleared!");
+            Timer myTimer=new Timer();
+            myTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    MainActivity.this.runOnUiThread(() -> settRemDev.setText(deviceManager.getRemDevices()+" devices remembered"));
+                }
+            },500);
+        });
+
+        // Theme Chooser Setting
+        card7.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Choose Theme");
+            builder.setSingleChoiceItems(themesData.getDisplayList(), currentTheme, (dialog, which) -> {
+                currentTheme = which;
+            });
+            builder.setPositiveButton("Set", (dialog, which) -> {
+                utils.saveInt(Constants.WEB_INTERFACE_THEME, currentTheme);
+                settTheme.setText(themesData.getDisplayItem(currentTheme));
+                dialog.dismiss();
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
+                currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME,0);
+                dialog.dismiss();
+            });
+            builder.show();
+        });
+
+        // Sharex Port Settings
+        settPort.setText("Port: "+utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT));
+        card8.setOnClickListener(v-> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("ShareX Port:");
+            builder.setMessage("Please enter a port number between 1024 and 65535");
+            TextInputLayout textInputLayout = new TextInputLayout(MainActivity.this);
+            textInputLayout.setPadding(getResources().getDimensionPixelOffset(R.dimen.dp_19),0,getResources().getDimensionPixelOffset(R.dimen.dp_19),0);
+            final EditText input = new EditText(MainActivity.this);
+            input.setText(String.valueOf(utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT)));
+            input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_NORMAL);
+            textInputLayout.addView(input);
+            builder.setView(textInputLayout);
+            builder.setPositiveButton("Set", (dialog, which) -> {
+                if(input.getText().toString().length()>0) {
+                    int port = Integer.parseInt(input.getText().toString());
+                    if(port >= 1024 && port <= 65535) {
+                        utils.saveInt(Constants.SERVER_PORT, port);
+                        settPort.setText("Port: " + port);
+                        Toast.makeText(MainActivity.this, "ShareX port changed to " + port, Toast.LENGTH_LONG).show();
+                        dialog.dismiss();
+                        restartServer();
+                    }else{
+                        Toast.makeText(MainActivity.this, "Please enter a valid port number", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> {
+                dialog.dismiss();
+            });
+            builder.show();
+        });
+
+        // Load Apps Settings
         card9.setOnClickListener(v -> settAppsCheck.setChecked(!settAppsCheck.isChecked()));
         settAppsCheck.setChecked(utils.loadSetting(Constants.LOAD_APPS));
         settAppsCheck.setOnCheckedChangeListener((compoundButton, b) -> {
             utils.saveSetting(Constants.LOAD_APPS,b);
             restartServer();
         });
+
+        // SSL Settings
         card10.setOnClickListener(v -> settSslCheck.setChecked(!settSslCheck.isChecked()));
         settSslCheck.setChecked(utils.loadSetting(Constants.SSL));
         settSslCheck.setOnCheckedChangeListener((compoundButton, b) -> {
             utils.saveSetting(Constants.SSL,b);
             restartServer();
+        });
+
+        // Plugin Settings
+        card11.setOnClickListener(v -> {
+            settPluginDevCheck.setChecked(!settPluginDevCheck.isChecked());
+            if(settPluginDevCheck.isChecked()) {
+                utils.createDefualtPluginDevDir();
+            }
+        });
+        settPluginDevCheck.setChecked(utils.loadSetting(Constants.PLUGIN_DEV));
+        settPluginDevCheck.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            utils.saveSetting(Constants.PLUGIN_DEV, isChecked);
+            if(isChecked) {
+                utils.createDefualtPluginDevDir();
+            }
+        });
+
+        sett_plugin_folder.setOnClickListener(v -> {
+            try {
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                i.addCategory(Intent.CATEGORY_DEFAULT);
+                Intent fIntent = Intent.createChooser(i, "Choose plugin debug folder");
+                pluginFolderPickerResultLauncher.launch(fIntent);
+            }catch (Exception e) {
+                Log.d(Constants.LOG_TAG,e.toString());
+            }
         });
     }
 

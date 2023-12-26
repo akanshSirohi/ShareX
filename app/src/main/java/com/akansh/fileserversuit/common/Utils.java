@@ -214,6 +214,17 @@ public class Utils {
         return sharedPrefs.getString("SERVER_ROOT", Environment.getExternalStorageDirectory().getAbsolutePath());
     }
 
+    public String loadPluginDevFolder() {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getString("PLUGIN_DEV_ROOT", Environment.getExternalStorageDirectory().getAbsolutePath() + "/ShareX/plugin_debug");
+    }
+
+    public void savePluginDevFolder(String path) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putString("PLUGIN_DEV_ROOT", path);
+        editor.apply();
+    }
+
     public boolean isServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -509,5 +520,12 @@ public class Utils {
             }
 
         });
+    }
+
+    public void createDefualtPluginDevDir() {
+        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "/ShareX/plugin_debug");
+        if (!f.exists()) {
+            f.mkdirs();
+        }
     }
 }

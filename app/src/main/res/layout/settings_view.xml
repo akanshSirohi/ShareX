@@ -701,7 +701,7 @@
                         android:textColor="@color/txt_color_secondary"
                         android:textSize="12sp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/imageButton"
+                        app:layout_constraintEnd_toStartOf="@+id/sett_plugin_folder"
                         app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="@+id/sett_title11"
                         app:layout_constraintTop_toBottomOf="@+id/sett_title11" />
@@ -718,7 +718,7 @@
                         app:layout_constraintVertical_bias="0.529" />
 
                     <ImageButton
-                        android:id="@+id/imageButton"
+                        android:id="@+id/sett_plugin_folder"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginEnd="8dp"
