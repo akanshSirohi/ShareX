@@ -28,14 +28,12 @@ public class TemplateEngine {
 
     // Special Variables
     private String plugin_uid, base_url, plugin_dev_dir;
-    private String currentDirectory;  // Keep track of the current directory
 
     public TemplateEngine(Context ctx) {
         this.ctx = ctx;
     }
 
     public void setPlugin_uid(String plugin_uid) {
-        this.currentDirectory = "";
         this.plugin_uid = plugin_uid;
     }
 
@@ -50,6 +48,18 @@ public class TemplateEngine {
     public String renderHtml(String file, RENDER_TYPE type) {
         String html = readFile(file);
         return compileHtml(html, type);
+    }
+
+    private String readFile(String path) {
+        try {
+            FileInputStream fis = new FileInputStream(path);
+            byte[] data = new byte[fis.available()];
+            fis.read(data);
+            fis.close();
+            return new String(data);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String compileHtml(String html, RENDER_TYPE type) {
@@ -82,57 +92,25 @@ public class TemplateEngine {
         }
     }
 
-    private String readFile(String path) {
-        try {
-            FileInputStream fis = new FileInputStream(path);
-            byte[] data = new byte[fis.available()];
-            fis.read(data);
-            fis.close();
-            return new String(data);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     private String getFileProperPath(String path, RENDER_TYPE type) {
-        String base = "";
-        if(type == RENDER_TYPE.NORMAL) {
+        String base;
+        if (type == RENDER_TYPE.NORMAL) {
             base = Constants.NEW_DIR;
-        }else{
+        } else {
             base = "plugins";
         }
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
-        String intermediate = updateCurrentDirectory(path);
-        if(type == RENDER_TYPE.NORMAL) {
+
+        if (type == RENDER_TYPE.NORMAL) {
             return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + path;
-        }else{
-            if(plugin_uid == "debug") {
-                Log.d(Constants.LOG_TAG,"Render: "+ plugin_dev_dir + intermediate + path);
-                return plugin_dev_dir + intermediate + path;
-            }else{
+        } else {
+            if (plugin_uid == "debug") {
+                return plugin_dev_dir + "/" + path;
+            } else {
                 return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + plugin_uid + "/" + path;
             }
         }
     }
-
-    private String updateCurrentDirectory(String path) {
-        String directory = "";
-        if(path.contains("/")) {
-            directory = path.substring(0, path.lastIndexOf("/"));
-        }
-        if(currentDirectory.isEmpty()) {
-            currentDirectory = directory;
-            return "/";
-        }else{
-            Log.d(Constants.LOG_TAG, "Dir:"+directory);
-            Log.d(Constants.LOG_TAG, "CurrDir:"+currentDirectory);
-//            if(currentDirectory != directory) {
-//                currentDirectory += "/" + directory;
-//            }
-            return "/" + currentDirectory + "/";
-        }
-    }
-
 }

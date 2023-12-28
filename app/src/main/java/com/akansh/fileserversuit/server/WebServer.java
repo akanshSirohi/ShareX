@@ -393,7 +393,7 @@ public class WebServer extends NanoHTTPD {
                 return newFixedLengthResponse(Status.OK, mime, fis, bytes);
             }
         } catch (Exception e) {
-            return newFixedLengthResponse("Error Occured: " + e.getMessage());
+            return newFixedLengthResponse("Error Occured: " + e);
         }
     }
 

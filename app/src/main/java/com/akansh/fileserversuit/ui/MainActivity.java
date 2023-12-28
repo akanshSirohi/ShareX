@@ -116,12 +116,12 @@ public class MainActivity extends AppCompatActivity {
 
     FabActionsHandler fabActionsHandler;
     DeviceManager deviceManager;
-    ActivityResultLauncher<Intent> storagePermissionResultLauncher;
-    ActivityResultLauncher<Intent> rootFolderPickerResultLauncher;
-    ActivityResultLauncher<Intent> pluginFolderPickerResultLauncher;
-    ActivityResultLauncher<Intent> batteryActivityResultLauncher;
-    ActivityResultLauncher<Intent> mutipleFilesActivityResultLauncher;
-    ActivityResultLauncher<Intent> gallerySelectorActivityResultLauncher;
+    ActivityResultLauncher<Intent> storagePermissionResultLauncher,
+            rootFolderPickerResultLauncher,
+            pluginFolderPickerResultLauncher,
+            batteryActivityResultLauncher,
+            mutipleFilesActivityResultLauncher,
+            gallerySelectorActivityResultLauncher;
 
     int exit = 0;
     int currentTheme, storageChoice = 0;
@@ -223,8 +223,8 @@ public class MainActivity extends AppCompatActivity {
                         File f = new File(root, decode.split(":")[2]);
                         plugin_folder_label.setText(f.getAbsolutePath());
                         utils.savePluginDevFolder(f.getAbsolutePath());
-                    } catch (Exception e) {
-                    }
+                        restartServer();
+                    } catch (Exception e) {}
                 }
             }
         });
