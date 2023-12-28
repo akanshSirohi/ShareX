@@ -1,6 +1,7 @@
 package com.akansh.fileserversuit.server;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
 
@@ -26,18 +27,24 @@ public class TemplateEngine {
     Context ctx;
 
     // Special Variables
-    private String plugin_uid, base_url;
+    private String plugin_uid, base_url, plugin_dev_dir;
+    private String currentDirectory;  // Keep track of the current directory
 
     public TemplateEngine(Context ctx) {
         this.ctx = ctx;
     }
 
     public void setPlugin_uid(String plugin_uid) {
+        this.currentDirectory = "";
         this.plugin_uid = plugin_uid;
     }
 
     public void setBase_url(String base_url) {
         this.base_url = base_url;
+    }
+
+    public void setPlugin_dev_dir(String plugin_dev_dir) {
+        this.plugin_dev_dir = plugin_dev_dir;
     }
 
     public String renderHtml(String file, RENDER_TYPE type) {
@@ -97,10 +104,35 @@ public class TemplateEngine {
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
+        String intermediate = updateCurrentDirectory(path);
         if(type == RENDER_TYPE.NORMAL) {
             return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + path;
         }else{
-            return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + plugin_uid + "/" + path;
+            if(plugin_uid == "debug") {
+                Log.d(Constants.LOG_TAG,"Render: "+ plugin_dev_dir + intermediate + path);
+                return plugin_dev_dir + intermediate + path;
+            }else{
+                return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + plugin_uid + "/" + path;
+            }
         }
     }
+
+    private String updateCurrentDirectory(String path) {
+        String directory = "";
+        if(path.contains("/")) {
+            directory = path.substring(0, path.lastIndexOf("/"));
+        }
+        if(currentDirectory.isEmpty()) {
+            currentDirectory = directory;
+            return "/";
+        }else{
+            Log.d(Constants.LOG_TAG, "Dir:"+directory);
+            Log.d(Constants.LOG_TAG, "CurrDir:"+currentDirectory);
+//            if(currentDirectory != directory) {
+//                currentDirectory += "/" + directory;
+//            }
+            return "/" + currentDirectory + "/";
+        }
+    }
+
 }

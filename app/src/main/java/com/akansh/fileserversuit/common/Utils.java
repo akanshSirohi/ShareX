@@ -146,7 +146,11 @@ public class Utils {
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
-        return "/data/data/" + ctx.getPackageName() + "/plugins/" + pluginUID + "/" + path;
+        if(pluginUID == "debug") {
+            return loadPluginDevFolder() + "/" + path;
+        }else{
+            return "/data/data/" + ctx.getPackageName() + "/plugins/" + pluginUID + "/" + path;
+        }
     }
 
     public void saveString(String constant, String str) {
@@ -523,7 +527,7 @@ public class Utils {
     }
 
     public void createDefualtPluginDevDir() {
-        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "/ShareX/plugin_debug");
+        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "ShareX/plugin_debug");
         if (!f.exists()) {
             f.mkdirs();
         }

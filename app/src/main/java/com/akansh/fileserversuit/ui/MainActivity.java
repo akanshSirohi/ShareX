@@ -915,6 +915,7 @@ public class MainActivity extends AppCompatActivity {
             utils.saveSetting(Constants.PLUGIN_DEV, isChecked);
             if(isChecked) {
                 utils.createDefualtPluginDevDir();
+                restartServer();
             }
         });
 

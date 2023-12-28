@@ -56,6 +56,9 @@ public class WebServer extends NanoHTTPD {
     void setContext(Context context) {
         utils=new Utils(context);
         templateEngine=new TemplateEngine(context);
+        if(utils.loadSetting(Constants.PLUGIN_DEV)) {
+            templateEngine.setPlugin_dev_dir(utils.loadPluginDevFolder());
+        }
         historyDBManager=new HistoryDBManager(context);
         ctx=context;
         themesData = new ThemesData();
@@ -331,12 +334,21 @@ public class WebServer extends NanoHTTPD {
                     return newFixedLengthResponse("");
                 }
             } else if (uri.startsWith("/SharexApp/")) {
-                String plugin_uid = Utils.extractPluginUID(uri);
+                if(!utils.loadSetting(Constants.PLUGIN_DEV) && (uri.endsWith("/debug") || uri.endsWith("/debug/"))) {
+                    return newFixedLengthResponse(Status.BAD_REQUEST, NanoHTTPD.MIME_PLAINTEXT, "400 Bad Request! Please enable plugin development mode in settings first!");
+                }
+                boolean plugin_debug = utils.loadSetting(Constants.PLUGIN_DEV) && (uri.contains("/debug") || uri.contains("/debug/"));
+                String plugin_uid = "";
+                if(!plugin_debug) {
+                    plugin_uid = Utils.extractPluginUID(uri);
+                }else{
+                    plugin_uid = "debug";
+                }
                 final String entry_point = "app.html";
-                if(!serverUtils.getPluginStatus(plugin_uid)) {
+                if((!plugin_debug && !serverUtils.getPluginStatus(plugin_uid)) || plugin_uid == null) {
                     return newFixedLengthResponse(Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "403 Access Denied!");
                 }
-                String[] plugin_uri_parts = uri.split(plugin_uid, 2);
+                String[] plugin_uri_parts = uri.split(plugin_uid);
                 String replace_base = plugin_uri_parts.length == 1 ? plugin_uid : ".";
                 String plugin_uri = plugin_uri_parts.length == 1 ? "/" : plugin_uri_parts[1];
                 path = utils.getPluginFileProperPath(plugin_uri, plugin_uid);
