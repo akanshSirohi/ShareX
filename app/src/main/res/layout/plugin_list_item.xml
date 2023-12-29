@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -34,7 +35,7 @@
                 app:layout_constraintStart_toEndOf="@+id/imageView"
                 app:layout_constraintTop_toTopOf="@+id/imageView" />
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imageView"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
@@ -77,9 +78,9 @@
                 android:layout_marginEnd="16dp"
                 android:ellipsize="end"
                 android:fontFamily="@font/product_sans"
+                android:justificationMode="inter_word"
                 android:text="Plugin long description..."
                 android:textColor="@color/txt_color_secondary"
-                android:justificationMode="inter_word"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="@+id/plugin_author"
@@ -133,6 +134,17 @@
                 app:layout_constraintBottom_toBottomOf="@+id/plugin_uninstall_btn"
                 app:layout_constraintStart_toStartOf="@+id/imageView"
                 app:layout_constraintTop_toTopOf="@+id/plugin_uninstall_btn" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/plugin_external_link"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ripple_bg"
+                android:padding="10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/txt_color"
+                card_view:srcCompat="@drawable/ic_external_link" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

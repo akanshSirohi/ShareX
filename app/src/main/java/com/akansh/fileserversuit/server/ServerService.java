@@ -49,7 +49,7 @@ public class ServerService extends Service {
                 String prefix = utils.loadSetting(Constants.SSL) ? "https://" : "http://";
                 String url = prefix + webServer.getHostname() + ":" + webServer.getListeningPort();
                 sendLog(Constants.ACTION_URL, "url", url);
-                utils.saveString(Constants.TEMP_URL, url);
+                utils.saveString(Constants.SERVER_URL, url);
                 showForegroundNotification("Running At: " + url);
 
                 webServerSocket = new WebServerSocket(Constants.SERVER_PORT_DEFAULT + 1);

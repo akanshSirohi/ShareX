@@ -449,7 +449,7 @@ public class MainActivity extends AppCompatActivity {
     public void initializeApp() {
         if(utils.isServiceRunning(ServerService.class)) {
             changeUI(Constants.SERVER_ON);
-            String u=utils.loadString(Constants.TEMP_URL);
+            String u=utils.loadString(Constants.SERVER_URL);
             if(u!=null) {
                 url=u;
                 pushLog("Server running at: "+url,false);
@@ -746,6 +746,7 @@ public class MainActivity extends AppCompatActivity {
         TextView settPort = findViewById(R.id.sett_subtitle8);
         ImageButton sett_plugin_folder = findViewById(R.id.sett_plugin_folder);
         ImageButton settResetRoot = findViewById(R.id.sett_reset_root);
+        ImageButton sett_plugin_debug_link = findViewById(R.id.sett_plugin_debug_link);
 
 
         // App Root Settings
@@ -929,6 +930,26 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(Constants.LOG_TAG,e.toString());
             }
         });
+
+        sett_plugin_debug_link.setOnClickListener(v -> {
+            try {
+                if(utils.isServiceRunning(ServerService.class)) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url + "/SharexApp/debug"));
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(MainActivity.this, "No browser available to open the url!", Toast.LENGTH_LONG).show();
+                    }
+                }else{
+                    Toast.makeText(MainActivity.this, "Start ShareX first!", Toast.LENGTH_LONG).show();
+                }
+            }catch (Exception e) {
+                Log.d(Constants.LOG_TAG,e.toString());
+                Toast.makeText(MainActivity.this, "Something went wrong!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+
     }
 
     private void toggleSettings() {

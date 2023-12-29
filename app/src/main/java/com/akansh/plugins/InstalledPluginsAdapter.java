@@ -8,10 +8,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.akansh.fileserversuit.R;
@@ -45,6 +48,7 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
 
         public TextView plugin_title, plugin_version, plugin_author, plugin_description;
         public Button plugin_uninstall_btn, plugin_update_btn;
+        public AppCompatImageButton plugin_external_link;
         private Switch plugin_enabled;
 
         public ItemViewHolder(@NonNull View itemView) {
@@ -56,6 +60,7 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
             plugin_update_btn = itemView.findViewById(R.id.plugin_update_btn);
             plugin_uninstall_btn = itemView.findViewById(R.id.plugin_uninstall_btn);
             plugin_enabled = itemView.findViewById(R.id.plugin_enabled);
+            plugin_external_link = itemView.findViewById(R.id.plugin_external_link);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 plugin_description.setJustificationMode(LineBreaker.JUSTIFICATION_MODE_INTER_WORD);
@@ -78,6 +83,8 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
                     listener.onUninstallPlugin(pluginArrayList.get(getAdapterPosition()));
                 }
             });
+
+            plugin_external_link.setOnClickListener(v -> listener.onPluginExternalLinkClick(pluginArrayList.get(getAdapterPosition()).getPlugin_uid()));
 
             plugin_description.setOnClickListener(v -> {
                 Plugin plugin = pluginArrayList.get(getAdapterPosition());
@@ -152,5 +159,6 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
         void onUninstallPlugin(Plugin plugin);
         void onUpdatePlugin(Plugin plugin);
         void onPluginStatusChange(String uid, boolean status);
+        void onPluginExternalLinkClick(String uid);
     }
 }

@@ -2,11 +2,15 @@ package com.akansh.plugins.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +22,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.common.Utils;
+import com.akansh.fileserversuit.server.ServerService;
+import com.akansh.fileserversuit.ui.MainActivity;
 import com.akansh.plugins.common.InstallStatus;
 import com.akansh.plugins.InstalledPluginsAdapter;
 import com.akansh.plugins.common.Plugin;
@@ -97,6 +103,22 @@ public class InstalledPlugins extends Fragment {
             @Override
             public void onPluginStatusChange(String uid, boolean status) {
                 pluginsDBHelper.changeStatus(uid, status);
+            }
+
+            @Override
+            public void onPluginExternalLinkClick(String uid) {
+                Utils utils = new Utils(ctx);
+                if(utils.isServiceRunning(ServerService.class)) {
+                    Log.d(Constants.LOG_TAG, utils.loadString(Constants.SERVER_URL) + "/SharexApp/" + uid);
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(utils.loadString(Constants.SERVER_URL) + "/SharexApp/" + uid));
+                    if (intent.resolveActivity(ctx.getPackageManager()) != null) {
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(ctx, "No browser available to open the url!", Toast.LENGTH_LONG).show();
+                    }
+                }else{
+                    Toast.makeText(ctx, "Start ShareX first!", Toast.LENGTH_LONG).show();
+                }
             }
         });
         pluginsListView.setAdapter(installedPluginsAdapter);

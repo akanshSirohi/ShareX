@@ -695,13 +695,14 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_marginBottom="14dp"
                         android:fontFamily="@font/product_sans"
-                        android:text="No debug folder selected"
+                        android:text="No debug folder selected, No debug folder selected, No debug folder selected"
                         android:textColor="@color/txt_color_secondary"
                         android:textSize="12sp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/sett_plugin_folder"
+                        app:layout_constraintEnd_toStartOf="@+id/sett_plugin_debug_link"
                         app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="@+id/sett_title11"
                         app:layout_constraintTop_toBottomOf="@+id/sett_title11" />
@@ -728,6 +729,19 @@
                         app:layout_constraintEnd_toStartOf="@+id/sett_plugin_debug_checkBox"
                         app:layout_constraintTop_toTopOf="@+id/sett_plugin_debug_checkBox"
                         app:srcCompat="@drawable/ic_folder_open" />
+
+                    <ImageButton
+                        android:id="@+id/sett_plugin_debug_link"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/ripple_bg"
+                        android:padding="8dp"
+                        android:tint="@color/txt_color_secondary"
+                        app:layout_constraintBottom_toBottomOf="@+id/sett_plugin_folder"
+                        app:layout_constraintEnd_toStartOf="@+id/sett_plugin_folder"
+                        app:layout_constraintTop_toTopOf="@+id/sett_plugin_folder"
+                        app:srcCompat="@drawable/ic_external_link" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </androidx.cardview.widget.CardView>
 
