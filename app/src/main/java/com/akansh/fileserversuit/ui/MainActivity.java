@@ -428,6 +428,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        super.onResume();
         try {
             IntentFilter filter = new IntentFilter();
             filter.addAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
@@ -436,17 +437,17 @@ public class MainActivity extends AppCompatActivity {
             //Do Nothing!
         }
         privateMode();
-        super.onResume();
     }
 
     @Override
     protected void onStart() {
-        privateMode();
         super.onStart();
+        privateMode();
     }
 
     @SuppressLint("SdCardPath")
     public void initializeApp() {
+        Log.d(Constants.LOG_TAG,"App Initialized!");
         if(utils.isServiceRunning(ServerService.class)) {
             changeUI(Constants.SERVER_ON);
             String u=utils.loadString(Constants.SERVER_URL);
@@ -456,19 +457,20 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         serverBtn.setOnClickListener(view -> {
-        if (!utils.isServiceRunning(ServerService.class)) {
-            if(isValidIP()) {
-                pushLog("Starting server...", true);
-                startServer();
-                changeUI(Constants.SERVER_ON);
-            }else{
-                showSnackbar("Make sure your hotspot is open or wifi connected...");
+            askIgnoreBatteryOptimizations();
+            if (!utils.isServiceRunning(ServerService.class)) {
+                if(isValidIP()) {
+                    pushLog("Starting server...", true);
+                    startServer();
+                    changeUI(Constants.SERVER_ON);
+                }else{
+                    showSnackbar("Make sure your hotspot is open or wifi connected...");
+                }
+            } else {
+                pushLog("Stopping server...",true);
+                stopServer();
+                changeUI(Constants.SERVER_OFF);
             }
-        } else {
-            pushLog("Stopping server...",true);
-            stopServer();
-            changeUI(Constants.SERVER_OFF);
-        }
         });
 
         // Copy WebApp from app assets to Internal Storage
@@ -502,7 +504,6 @@ public class MainActivity extends AppCompatActivity {
                     if(!Constants.DEBUG) {
                         showAbout();
                     }
-                    askIgnoreBatteryOptimizations();
                 }
 
                 @Override
@@ -527,8 +528,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
             webInterfaceSetup.setup();
-        }else{
-            askIgnoreBatteryOptimizations();
         }
 
         // Setup Side Bar Drawer Navigation
@@ -621,10 +620,11 @@ public class MainActivity extends AppCompatActivity {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
                 if (!Environment.isExternalStorageManager()) {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                     intent.addCategory("android.intent.category.DEFAULT");
                     intent.setData(Uri.parse("package:"+getPackageName()));
                     storagePermissionResultLauncher.launch(intent);
+                    requestingStorage = true;
                 }
             } catch (Exception e) {
                 if (!Environment.isExternalStorageManager()) {
