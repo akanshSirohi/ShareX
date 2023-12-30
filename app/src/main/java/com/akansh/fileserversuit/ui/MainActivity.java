@@ -934,7 +934,7 @@ public class MainActivity extends AppCompatActivity {
         sett_plugin_debug_link.setOnClickListener(v -> {
             try {
                 if(utils.isServiceRunning(ServerService.class)) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url + "/SharexApp/debug"));
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url + "/SharexApp/debug/"));
                     if (intent.resolveActivity(getPackageManager()) != null) {
                         startActivity(intent);
                     } else {

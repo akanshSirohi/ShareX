@@ -110,7 +110,7 @@ public class InstalledPlugins extends Fragment {
                 Utils utils = new Utils(ctx);
                 if(utils.isServiceRunning(ServerService.class)) {
                     Log.d(Constants.LOG_TAG, utils.loadString(Constants.SERVER_URL) + "/SharexApp/" + uid);
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(utils.loadString(Constants.SERVER_URL) + "/SharexApp/" + uid));
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(utils.loadString(Constants.SERVER_URL) + "/SharexApp/" + uid + "/"));
                     if (intent.resolveActivity(ctx.getPackageManager()) != null) {
                         startActivity(intent);
                     } else {
