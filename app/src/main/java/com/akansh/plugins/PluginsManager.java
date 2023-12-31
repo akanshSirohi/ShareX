@@ -95,8 +95,7 @@ public class PluginsManager {
                                 }
                             } else {
                                 // Plugin Not Exist And Install New
-                                UUID uniqueId = UUID.randomUUID();
-                                String plugin_uid = uniqueId.toString();
+                                String plugin_uid = package_name.replace(".","-");
                                 File new_plugin_dir = new File(plugins_dir, plugin_uid);
                                 boolean extraction_status = zipUtils.extractZip(tmp_plugin_zip_dest.getAbsolutePath(), new_plugin_dir.getAbsolutePath(), true);
                                 if (extraction_status) {

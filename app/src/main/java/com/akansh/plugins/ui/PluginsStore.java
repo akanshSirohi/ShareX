@@ -37,6 +37,7 @@ public class PluginsStore extends Fragment {
     StorePluginsAdapter storePluginsAdapter;
     ArrayList<Plugin> storePluginsListItems = new ArrayList<>();
     PluginsStoreActionListener pluginsStoreActionListener;
+    RecyclerView storePluginsList;
 
     public PluginsStore(Context ctx, Activity activity, PluginsManager pluginsManager) {
         this.ctx = ctx;
@@ -57,7 +58,7 @@ public class PluginsStore extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.plugins_store_layout, container, false);
-        RecyclerView storePluginsList = view.findViewById(R.id.storePluginsList);
+        storePluginsList = view.findViewById(R.id.storePluginsList);
         storePluginsList.setLayoutManager(new LinearLayoutManager(ctx));
         File filePath = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
         if (filePath.exists()) {
@@ -111,7 +112,12 @@ public class PluginsStore extends Fragment {
     public void updatePluginStore() {
         File filePath = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
         storePluginsListItems = getPluginsListFromJson(filePath);
-        storePluginsAdapter.updateStorePluginsList(storePluginsListItems);
+        try {
+            if (storePluginsAdapter == null) {
+                storePluginsAdapter = (StorePluginsAdapter) storePluginsList.getAdapter();
+            }
+            storePluginsAdapter.updateStorePluginsList(storePluginsListItems);
+        }catch (Exception e) {}
     }
 
     public interface PluginsStoreActionListener {

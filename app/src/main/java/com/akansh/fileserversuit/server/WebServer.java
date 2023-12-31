@@ -344,7 +344,7 @@ public class WebServer extends NanoHTTPD {
                 }else{
                     plugin_uid = "debug";
                 }
-                final String entry_point = "app.html";
+                final String entry_point = "index.html";
                 if((!plugin_debug && !serverUtils.getPluginStatus(plugin_uid)) || plugin_uid == null) {
                     return newFixedLengthResponse(Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "403 Access Denied!");
                 }
