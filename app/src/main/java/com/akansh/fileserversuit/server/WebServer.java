@@ -357,7 +357,12 @@ public class WebServer extends NanoHTTPD {
                 }else{
                     File f = new File(path);
                     if(!f.exists()) {
-                        return newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "404 Not Found");
+                        File try_path = new File(path + ".html");
+                        if(!try_path.exists()) {
+                            return newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "404 Not Found");
+                        }else{
+                            path = path + ".html";
+                        }
                     }else if (f.isDirectory()) {
                         path = path.endsWith("/") ? path : path + "/";
                         path = utils.getPluginFileProperPath( path + entry_point, plugin_uid);
