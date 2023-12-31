@@ -529,7 +529,9 @@ function loadPluginsList() {
           </div>
         `;
       });
-
+      if(plugins.length == 0) {
+        html = `<div class="text-center mt-3 text-white"><i class="fa-solid fa-folder-open"></i>&nbsp;No Plugins Installed!</div>`;
+      }
       $("#pluginsList").html(html);
     }
   );
