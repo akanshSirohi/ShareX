@@ -215,15 +215,15 @@ public class PluginsManager {
 
     public void downloadPlugin(String packageName, InstallStatus status) {
         new Thread(() -> {
-//            https://raw.githubusercontent.com/akanshSirohi/ShareX-Plugins/master/sharex.test.plugin/sharex_dist/sharex.test.plugin.zip
 //            String base_url = String.format("https://github.com/akanshSirohi/ShareX-Plugins/raw/master/%s/sharex_dist/%s.zip", packageName, packageName);
-            String base_url = String.format("https://raw.githubusercontent.com/akanshSirohi/ShareX-Plugins/master/%s/sharex_dist/%s.zip", packageName, packageName);
+//            String base_url = String.format("https://raw.githubusercontent.com/akanshSirohi/ShareX-Plugins/master/%s/sharex_dist/%s.zip", packageName, packageName);
+            String base_url = String.format("https://api.github.com/repos/akanshSirohi/ShareX-Plugins/contents/%s/sharex_dist/%s.zip", packageName, packageName);
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(10, TimeUnit.SECONDS)
                     .build();
             Request request = new Request.Builder()
-
                     .url(base_url)
+                    .addHeader("Accept","application/vnd.github.v3.raw")
                     .build();
             client.newCall(request).enqueue(new Callback() {
                 @Override

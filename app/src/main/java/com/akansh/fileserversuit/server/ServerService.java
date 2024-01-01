@@ -41,7 +41,8 @@ public class ServerService extends Service {
         if(intent.getAction() == null) {
             try {
                 String host = utils.getIPAddress(true);
-                webServer = new WebServer(host, utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT));
+                int port = utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT);
+                webServer = new WebServer(host, port);
                 webServer.setContext(context);
                 webServer.setRoot(utils.loadRoot());
                 webServer.setAllowHiddenMedia(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
@@ -52,7 +53,7 @@ public class ServerService extends Service {
                 utils.saveString(Constants.SERVER_URL, url);
                 showForegroundNotification("Running At: " + url);
 
-                webServerSocket = new WebServerSocket(Constants.SERVER_PORT_DEFAULT + 1);
+                webServerSocket = new WebServerSocket(port + 1);
                 webServerSocket.start(-1);
             } catch (IOException e) {
                 Toast.makeText(this, "Server Error: " + e.getMessage(), Toast.LENGTH_LONG).show();

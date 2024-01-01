@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.nanohttpd.fileupload.NanoFileUpload;
 import org.nanohttpd.protocols.http.IHTTPSession;
@@ -344,6 +346,16 @@ public class WebServer extends NanoHTTPD {
                 }else{
                     plugin_uid = "debug";
                 }
+
+                // Simple redirector for base only
+                Pattern pattern = Pattern.compile("\\.([^.]+)$");
+                Matcher matcher = pattern.matcher(uri);
+                if(!matcher.find() && uri.endsWith(plugin_uid) && !uri.endsWith("/")) {
+                    Response response = newFixedLengthResponse(Status.REDIRECT, NanoHTTPD.MIME_PLAINTEXT ,"");
+                    response.addHeader("Location", uri + "/");
+                    return response;
+                }
+
                 final String entry_point = "index.html";
                 if((!plugin_debug && !serverUtils.getPluginStatus(plugin_uid)) || plugin_uid == null) {
                     return newFixedLengthResponse(Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "403 Access Denied!");
