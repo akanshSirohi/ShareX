@@ -6,9 +6,9 @@ import org.json.JSONObject;
 
 public class SocketUser {
     private final String uuid;
-    private final String public_data;
     private final String plugin_package;
-    private boolean is_alive = true;
+    private String public_data;
+    private WSDSocket wsdSocket;
 
     public SocketUser(String uuid, String public_data, String plugin_package) {
         this.uuid = uuid;
@@ -24,16 +24,12 @@ public class SocketUser {
         return public_data;
     }
 
+    public void updatePublic_data(String public_data) {
+        this.public_data = public_data;
+    }
+
     public String getPlugin_package() {
         return plugin_package;
-    }
-
-    public boolean is_alive() {
-        return is_alive;
-    }
-
-    public void set_alive(boolean is_alive) {
-        this.is_alive = is_alive;
     }
 
     public JSONObject getJSONObject() {
@@ -41,10 +37,17 @@ public class SocketUser {
         try {
             jsonObject.put("uuid", uuid);
             jsonObject.put("public_data", public_data);
-            jsonObject.put("plugin_package", plugin_package);
             return jsonObject;
         }catch (Exception e) {}
         return jsonObject;
+    }
+
+    public WSDSocket getWsdSocket() {
+        return wsdSocket;
+    }
+
+    public void setWsdSocket(WSDSocket wsdSocket) {
+        this.wsdSocket = wsdSocket;
     }
 
     @NonNull
