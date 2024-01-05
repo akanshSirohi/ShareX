@@ -76,6 +76,26 @@ public class WebServerSocket extends NanoWSD {
                     }
                 }catch (Exception e){}
             }
+
+            @Override
+            public void onSendMessageToOther(String receiver_uuid, String message, String sender_package_name) {
+                try {
+                    if(socketUsers.containsKey(receiver_uuid)) {
+                        SocketUser socketUser = socketUsers.get(receiver_uuid);
+                        if(socketUser != null) {
+                            // Verify if they are both on same app
+                            if(socketUser.getPlugin_package().equals(sender_package_name)) {
+                                JSONObject jsonObject = new JSONObject();
+                                jsonObject.put("action", SocketActions.MSG_ARRIVE);
+                                jsonObject.put("message", message);
+                                socketUser.getWsdSocket().send(jsonObject.toString());
+                            }
+                        }
+                    }
+                }catch (Exception e){
+                    Log.d(Constants.LOG_TAG, "Error: "+e.getMessage());
+                }
+            }
         });
         return wsdSocket;
     }

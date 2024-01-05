@@ -35,6 +35,7 @@ public class SocketUser {
     public JSONObject getJSONObject() {
         JSONObject jsonObject = new JSONObject();
         try {
+            JSONObject public_data = new JSONObject(this.public_data);
             jsonObject.put("uuid", uuid);
             jsonObject.put("public_data", public_data);
             return jsonObject;

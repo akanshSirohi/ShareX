@@ -57,6 +57,11 @@ class WSDSocket extends WebSocket {
                         this.wsdSocketListener.onAllUsersRequest(this);
                     }
                     break;
+                case SocketActions.SEND_MSG:
+                    if(this.wsdSocketListener != null) {
+                        JSONObject contents = jsonObject.getJSONObject("data");
+                        this.wsdSocketListener.onSendMessageToOther(contents.getString("uuid"), contents.getString("msg"), package_name);
+                    }
             }
         } catch (Exception e) {}
     }
@@ -95,5 +100,6 @@ class WSDSocket extends WebSocket {
         void onUpdateUserData(String public_data, WSDSocket socket);
         void onAllUsersRequest(WSDSocket socket);
         void onRemoveUser(String uuid);
+        void onSendMessageToOther(String receiver_uuid, String message, String sender_package_name);
     }
 }
