@@ -39,6 +39,19 @@ public class WebServerSocket extends NanoWSD {
             public void onNewUser(SocketUser socketUser, WSDSocket socket) {
                 socketUser.setWsdSocket(socket);
                 socketUsers.put(socketUser.getUuid(), socketUser);
+                try {
+                    JSONObject newUserObject = new JSONObject();
+                    newUserObject.put("action", SocketActions.USER_ARRIVE);
+                    newUserObject.put("user", socketUser.getJSONObject());
+                    for (Map.Entry<String, SocketUser> entry : socketUsers.entrySet()) {
+                        SocketUser connectedUser = entry.getValue();
+                        if(connectedUser.getPlugin_package().equals(socket.package_name) && !connectedUser.getUuid().equals(socket.uuid)) {
+                            connectedUser.getWsdSocket().send(newUserObject.toString());
+                        }
+                    }
+                }catch (Exception e) {
+                    Log.d(Constants.LOG_TAG, "User Arrive Error: "+e.getMessage());
+                }
             }
 
             @Override
