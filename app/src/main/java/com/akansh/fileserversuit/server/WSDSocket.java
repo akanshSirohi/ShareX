@@ -62,6 +62,12 @@ class WSDSocket extends WebSocket {
                         JSONObject contents = jsonObject.getJSONObject("data");
                         this.wsdSocketListener.onSendMessageToOther(contents.getString("uuid"), contents.getString("msg"), package_name);
                     }
+                case SocketActions.GET_PUBLIC_DATA_OF_USER:
+                    if(this.wsdSocketListener != null) {
+                        JSONObject contents = jsonObject.getJSONObject("data");
+                        String uuid = contents.getString("uuid");
+                        this.wsdSocketListener.onGetPublicDataOfUser(uuid, this);
+                    }
             }
         } catch (Exception e) {}
     }
@@ -101,5 +107,6 @@ class WSDSocket extends WebSocket {
         void onAllUsersRequest(WSDSocket socket);
         void onRemoveUser(String uuid);
         void onSendMessageToOther(String receiver_uuid, String message, String sender_package_name);
+        void onGetPublicDataOfUser(String uuid, WSDSocket socket);
     }
 }
