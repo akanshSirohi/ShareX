@@ -3,8 +3,8 @@ package com.akansh.fileserversuit.server;
 import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
+import com.akansh.fileserversuit.common.SocketActions;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.nanohttpd.protocols.http.IHTTPSession;
 import org.nanohttpd.protocols.websockets.CloseCode;
@@ -21,9 +21,19 @@ class WSDSocket extends WebSocket {
     }
 
     public WsdSocketListener wsdSocketListener;
+    private JsonDBHandler jsonDBHandler;
 
     public WSDSocket(IHTTPSession handshakeRequest) {
         super(handshakeRequest);
+        jsonDBHandler = new JsonDBHandler();
+        jsonDBHandler.setJsonDBHandlerListener((action, data) -> {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("action", action);
+                jsonObject.put("data", data);
+                send(jsonObject.toString());
+            } catch (Exception e) {}
+        });
     }
 
     public void setWsdSocketListener(WsdSocketListener wsdSocketListener) {
@@ -62,12 +72,20 @@ class WSDSocket extends WebSocket {
                         JSONObject contents = jsonObject.getJSONObject("data");
                         this.wsdSocketListener.onSendMessageToOther(contents.getString("uuid"), contents.getString("msg"), package_name);
                     }
+                    break;
                 case SocketActions.GET_PUBLIC_DATA_OF_USER:
                     if(this.wsdSocketListener != null) {
                         JSONObject contents = jsonObject.getJSONObject("data");
                         String uuid = contents.getString("uuid");
                         this.wsdSocketListener.onGetPublicDataOfUser(uuid, this);
                     }
+                    break;
+                default:
+                    if(action.startsWith("db_action_")) {
+                        String db_action = action.replace("db_action_", "");
+                        jsonDBHandler.handleActions(db_action, jsonObject.getJSONObject("data").toString());
+                    }
+                    break;
             }
         } catch (Exception e) {}
     }

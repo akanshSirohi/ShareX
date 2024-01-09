@@ -1,26 +1,18 @@
 package com.akansh.fileserversuit.server;
 
-import android.os.Handler;
 import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
+import com.akansh.fileserversuit.common.SocketActions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.nanohttpd.protocols.http.IHTTPSession;
-import org.nanohttpd.protocols.http.NanoHTTPD;
-import org.nanohttpd.protocols.websockets.CloseCode;
 import org.nanohttpd.protocols.websockets.NanoWSD;
 import org.nanohttpd.protocols.websockets.WebSocket;
-import org.nanohttpd.protocols.websockets.WebSocketFrame;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class WebServerSocket extends NanoWSD {
 

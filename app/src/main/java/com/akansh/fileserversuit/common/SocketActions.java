@@ -1,4 +1,4 @@
-package com.akansh.fileserversuit.server;
+package com.akansh.fileserversuit.common;
 
 public class SocketActions {
     public static final String INIT_USER = "init_user";
