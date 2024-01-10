@@ -23,9 +23,9 @@ class WSDSocket extends WebSocket {
     public WsdSocketListener wsdSocketListener;
     private JsonDBHandler jsonDBHandler;
 
-    public WSDSocket(IHTTPSession handshakeRequest) {
+    public WSDSocket(IHTTPSession handshakeRequest, String appPackageName) {
         super(handshakeRequest);
-        jsonDBHandler = new JsonDBHandler();
+        jsonDBHandler = new JsonDBHandler(appPackageName);
         jsonDBHandler.setJsonDBHandlerListener((action, data) -> {
             JSONObject jsonObject = new JSONObject();
             try {
@@ -106,6 +106,7 @@ class WSDSocket extends WebSocket {
                         this.package_name = jsonObject.getString("package_name");
                         this.uuid = jsonData.getString("uuid");
                         this.wsdSocketListener.onNewUser(socketUser, this);
+                        jsonDBHandler.setPlugin_uuid(this.uuid);
                     }
                     break;
                 case UPDATE:

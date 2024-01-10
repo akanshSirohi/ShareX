@@ -17,15 +17,17 @@ import java.util.Map;
 public class WebServerSocket extends NanoWSD {
 
     HashMap<String, SocketUser> socketUsers;
+    String appPackageName;
 
-    public WebServerSocket(int port) {
+    public WebServerSocket(int port, String appPackageName) {
         super(port);
         socketUsers = new HashMap<>();
+        this.appPackageName = appPackageName;
     }
 
     @Override
     protected WebSocket openWebSocket(IHTTPSession ihttpSession) {
-        WSDSocket wsdSocket = new WSDSocket(ihttpSession);
+        WSDSocket wsdSocket = new WSDSocket(ihttpSession, appPackageName);
         wsdSocket.setWsdSocketListener(new WSDSocket.WsdSocketListener() {
             @Override
             public void onNewUser(SocketUser socketUser, WSDSocket socket) {

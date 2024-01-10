@@ -52,8 +52,7 @@ public class ServerService extends Service {
                 sendLog(Constants.ACTION_URL, "url", url);
                 utils.saveString(Constants.SERVER_URL, url);
                 showForegroundNotification("Running At: " + url);
-
-                webServerSocket = new WebServerSocket(port + 1);
+                webServerSocket = new WebServerSocket(port + 1, this.getApplication().getPackageName());
                 webServerSocket.start(-1);
             } catch (IOException e) {
                 Toast.makeText(this, "Server Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
