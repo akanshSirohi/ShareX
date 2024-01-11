@@ -24,9 +24,11 @@ public class JsonDBHandler {
         this.appPackageName = appPackageName;
     }
 
-    public void setPlugin_uuid(String plugin_uuid) {
-        this.pluginFilesDir = new File(String.format("/data/data/%s/plugins/plugin_files/%s", appPackageName, plugin_uuid));
-        this.pluginFilesDir.mkdirs();
+    public void setPlugin_package(String plugin_package) {
+        this.pluginFilesDir = new File(String.format("/data/data/%s/plugins/plugin_files/%s", appPackageName, plugin_package));
+
+        boolean b = this.pluginFilesDir.mkdirs();
+        Log.d(Constants.LOG_TAG, "Plugin Files Dir: "+b);
     }
 
     public void setJsonDBHandlerListener(JsonDBHandlerListener jsonDBHandlerListener) {
@@ -72,17 +74,23 @@ public class JsonDBHandler {
                 String dbFileContent = readFile(dbFile);
                 JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
                 JSONArray jsonArray = new JSONArray();
+                JSONObject insert_obj = new JSONObject(new_data);
+                JSONObject result_response = new JSONObject();
+                if(insert_obj.has("_uuid")) {
+                    result_response.put("_uuid", insert_obj.getString("_uuid"));
+                }
                 if (mainDBJsonObject.has(collection)) {
                     jsonArray = mainDBJsonObject.getJSONArray(collection);
-                    jsonArray.put(new JSONObject(new_data));
+                    jsonArray.put(insert_obj);
                     mainDBJsonObject.put(collection, jsonArray);
                 }else{
-                    jsonArray.put(new JSONObject(new_data));
+                    jsonArray.put(insert_obj);
                 }
                 mainDBJsonObject.put(collection, jsonArray);
                 boolean res = writeFile(dbFile, mainDBJsonObject.toString());
                 String result_msg = res ? "success" : "fail";
-                this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), result_msg);
+                result_response.put("status",result_msg);
+                this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), result_response.toString());
                 return;
             }
             this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), "fail");

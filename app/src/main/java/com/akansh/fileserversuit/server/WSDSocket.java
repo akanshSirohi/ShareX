@@ -106,7 +106,7 @@ class WSDSocket extends WebSocket {
                         this.package_name = jsonObject.getString("package_name");
                         this.uuid = jsonData.getString("uuid");
                         this.wsdSocketListener.onNewUser(socketUser, this);
-                        jsonDBHandler.setPlugin_uuid(this.uuid);
+                        jsonDBHandler.setPlugin_package(this.package_name);
                     }
                     break;
                 case UPDATE:
