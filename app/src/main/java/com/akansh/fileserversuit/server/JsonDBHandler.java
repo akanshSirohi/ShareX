@@ -28,7 +28,7 @@ public class JsonDBHandler {
         this.pluginFilesDir = new File(String.format("/data/data/%s/plugins/plugin_files/%s", appPackageName, plugin_package));
 
         boolean b = this.pluginFilesDir.mkdirs();
-        Log.d(Constants.LOG_TAG, "Plugin Files Dir: "+b);
+        Log.d(Constants.LOG_TAG, "Plugin Files Dir: " + b);
     }
 
     public void setJsonDBHandlerListener(JsonDBHandlerListener jsonDBHandlerListener) {
@@ -50,7 +50,7 @@ public class JsonDBHandler {
                         String result_msg = dbFileExists ? "success" : "fail";
                         this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INIT_DB_RESULT), result_msg);
                     } catch (Exception e) {
-                        Log.d(Constants.LOG_TAG, "InitDB Error: "+e.getMessage());
+                        Log.d(Constants.LOG_TAG, "InitDB Error: " + e.getMessage());
                         this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INIT_DB_RESULT), "fail");
                     }
                 } else {
@@ -58,47 +58,65 @@ public class JsonDBHandler {
                 }
                 break;
             case JsonDBActions.INSERT_DATA:
-                insertData(data);
+                insertData(data, false);
+                break;
+            case JsonDBActions.INSERT_DATA_BULK:
+                insertData(data, true);
                 break;
         }
     }
 
-    private void insertData(String data) {
+    private void insertData(String data, boolean isBulk) {
         try {
             JSONObject jsonObject = new JSONObject(data);
             String db_name = jsonObject.getString("db_name");
             File dbFile = new File(pluginFilesDir, db_name + ".json");
             String collection = jsonObject.getString("collection");
             String new_data = jsonObject.getString("new_data");
+            JSONObject result_response = new JSONObject();
+
             if (dbFile.exists()) {
                 String dbFileContent = readFile(dbFile);
                 JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
-                JSONArray jsonArray = new JSONArray();
-                JSONObject insert_obj = new JSONObject(new_data);
-                JSONObject result_response = new JSONObject();
-                if(insert_obj.has("_uuid")) {
-                    result_response.put("_uuid", insert_obj.getString("_uuid"));
+                JSONArray collectionArray = mainDBJsonObject.optJSONArray(collection);
+
+                if (collectionArray == null) {
+                    collectionArray = new JSONArray();
+                    mainDBJsonObject.put(collection, collectionArray);
                 }
-                if (mainDBJsonObject.has(collection)) {
-                    jsonArray = mainDBJsonObject.getJSONArray(collection);
-                    jsonArray.put(insert_obj);
-                    mainDBJsonObject.put(collection, jsonArray);
-                }else{
-                    jsonArray.put(insert_obj);
+
+                JSONArray insertArray = isBulk ? new JSONArray(new_data) : new JSONArray().put(new JSONObject(new_data));
+                Log.d(Constants.LOG_TAG, "Insert Data: " + insertArray.toString());
+
+
+                JSONArray inserted_ids = new JSONArray();
+
+                for (int i = 0; i < insertArray.length(); i++) {
+                    JSONObject insertObj = insertArray.getJSONObject(i);
+                    collectionArray.put(insertObj);
+                    if (insertObj.has("_uuid")) {
+                        inserted_ids.put(insertObj.getString("_uuid"));
+                    }
                 }
-                mainDBJsonObject.put(collection, jsonArray);
+
+                mainDBJsonObject.put(collection, collectionArray);
+
                 boolean res = writeFile(dbFile, mainDBJsonObject.toString());
-                String result_msg = res ? "success" : "fail";
-                result_response.put("status",result_msg);
-                this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), result_response.toString());
-                return;
+                result_response.put("status", res ? "success" : "fail");
+
+                if (inserted_ids.length() > 0) {
+                    result_response.put("inserted_uuid", inserted_ids);
+                }
+            }else {
+                result_response.put("status","fail");
             }
-            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), "fail");
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), result_response.toString());
         } catch (Exception e) {
-            Log.d(Constants.LOG_TAG, "Insert Data Error: "+e.getMessage());
-            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), "fail");
+            Log.d(Constants.LOG_TAG, "Insert Data Error: " + e.getMessage());
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), "{status:\"fail\"}");
         }
     }
+
 
     private String readFile(File file) {
         try {
