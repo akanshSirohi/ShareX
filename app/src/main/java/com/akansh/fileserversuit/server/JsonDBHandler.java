@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.common.JsonDBActions;
+import com.jayway.jsonpath.JsonPath;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -63,6 +64,12 @@ public class JsonDBHandler {
             case JsonDBActions.INSERT_DATA_BULK:
                 insertData(data, true);
                 break;
+            case JsonDBActions.GET_ALL_DATA:
+                findAll(data);
+                break;
+            case JsonDBActions.GET_DATA:
+                find(data);
+                break;
         }
     }
 
@@ -113,10 +120,58 @@ public class JsonDBHandler {
             this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), result_response.toString());
         } catch (Exception e) {
             Log.d(Constants.LOG_TAG, "Insert Data Error: " + e.getMessage());
-            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), "{status:\"fail\"}");
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INSERT_DATA_RESULT), "{\"status\":\"fail\"}");
         }
     }
 
+    public void findAll(String data) {
+        try {
+            JSONObject jsonObject = new JSONObject(data);
+            JSONArray collectionArray = readCollectionFromDB(jsonObject.getString("db_name"), jsonObject.getString("collection"));
+            JSONObject result_response = new JSONObject();
+            result_response.put("status", "success");
+            result_response.put("data", collectionArray);
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.GET_ALL_DATA_RESULT), result_response.toString());
+            return;
+        } catch (Exception e) {
+            Log.d(Constants.LOG_TAG, "Get Collection Error: " + e.getMessage());
+        }
+        this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.GET_ALL_DATA_RESULT), "{\"status\":\"fail\"}");
+    }
+
+    public void find(String data) {
+        try {
+            JSONObject jsonObject = new JSONObject(data);
+            String db_name = jsonObject.getString("db_name");
+            String collection = jsonObject.getString("collection");
+            String query = jsonObject.getString("query");
+            JSONArray collectionArray = readCollectionFromDB(db_name, collection);
+            String result = JsonPath.read(collectionArray.toString(), query).toString();
+            JSONObject result_response = new JSONObject();
+            result_response.put("status", "success");
+            result_response.put("data", result);
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.GET_DATA_RESULT), result_response.toString());
+        }catch (Exception e){
+            Log.d(Constants.LOG_TAG, "Find Error: "+e.getMessage());
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.GET_DATA_RESULT), "{\"status\":\"fail\"}");
+        }
+    }
+
+
+    private JSONArray readCollectionFromDB(String db_name, String collection) {
+        try {
+            File dbFile = new File(pluginFilesDir, db_name + ".json");
+            if (dbFile.exists()) {
+                String dbFileContent = readFile(dbFile);
+                JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
+                JSONArray collectionArray = mainDBJsonObject.optJSONArray(collection);
+                if (collectionArray != null) {
+                    return collectionArray;
+                }
+            }
+        }catch (Exception e){}
+        return new JSONArray();
+    }
 
     private String readFile(File file) {
         try {
