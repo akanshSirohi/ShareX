@@ -38,7 +38,7 @@ public class JsonDBHandler {
 
     public void handleActions(String action, String data) {
         switch (action) {
-            case JsonDBActions.INIT_DB:
+            case JsonDBActions.INIT_DB -> {
                 if (pluginFilesDir.exists()) {
                     try {
                         JSONObject jsonObject = new JSONObject(data);
@@ -57,19 +57,11 @@ public class JsonDBHandler {
                 } else {
                     this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INIT_DB_RESULT), "fail");
                 }
-                break;
-            case JsonDBActions.INSERT_DATA:
-                insertData(data, false);
-                break;
-            case JsonDBActions.INSERT_DATA_BULK:
-                insertData(data, true);
-                break;
-            case JsonDBActions.GET_ALL_DATA:
-                findAll(data);
-                break;
-            case JsonDBActions.GET_DATA:
-                find(data);
-                break;
+            }
+            case JsonDBActions.INSERT_DATA -> insertData(data, false);
+            case JsonDBActions.INSERT_DATA_BULK -> insertData(data, true);
+            case JsonDBActions.GET_ALL_DATA -> findAll(data);
+            case JsonDBActions.GET_DATA -> find(data);
         }
     }
 
@@ -169,7 +161,9 @@ public class JsonDBHandler {
                     return collectionArray;
                 }
             }
-        }catch (Exception e){}
+        }catch (Exception e){
+            Log.d(Constants.LOG_TAG, "Read Collection Error: "+e.getMessage());
+        }
         return new JSONArray();
     }
 
