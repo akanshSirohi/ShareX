@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.common.JsonDBActions;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
 import org.json.JSONArray;
@@ -14,6 +15,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.util.Iterator;
+import java.util.List;
 
 public class JsonDBHandler {
 
@@ -62,6 +65,7 @@ public class JsonDBHandler {
             case JsonDBActions.INSERT_DATA_BULK -> insertData(data, true);
             case JsonDBActions.GET_ALL_DATA -> findAll(data);
             case JsonDBActions.GET_DATA -> find(data);
+            case JsonDBActions.UPDATE_DATA -> update(data);
         }
     }
 
@@ -146,6 +150,57 @@ public class JsonDBHandler {
         }catch (Exception e){
             Log.d(Constants.LOG_TAG, "Find Error: "+e.getMessage());
             this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.GET_DATA_RESULT), "{\"status\":\"fail\"}");
+        }
+    }
+
+    public void update(String data) {
+        try {
+            JSONObject jsonObject = new JSONObject(data);
+            String db_name = jsonObject.getString("db_name");
+            String collection = jsonObject.getString("collection");
+            String query = jsonObject.getString("query");
+            JSONArray update = jsonObject.getJSONArray("update");
+
+            File dbFile = new File(pluginFilesDir, db_name + ".json");
+            String dbFileContent = readFile(dbFile);
+            JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
+            JSONArray collectionArray = mainDBJsonObject.optJSONArray(collection);
+
+            JSONObject result_response = new JSONObject();
+
+            if(collectionArray == null) {
+                // return error, no collection found
+                jsonObject.put("status", "fail");
+                jsonObject.put("msg", "No collection found!");
+                this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.UPDATE_DATA_RESULT), result_response.toString());
+                return;
+            }
+
+            DocumentContext collections_doc = JsonPath.parse(collectionArray.toString());
+
+            for (int i = 0; i < update.length(); i++) {
+                String[] update_command = update.getString(i).split(":");
+                String update_sub_query = "." + update_command[0];
+                String update_data = update_command[1];
+                collections_doc.set(query + update_sub_query, update_data);
+            }
+
+            int update_count = new JSONArray(JsonPath.read(collectionArray.toString(), query).toString()).length();
+            Log.d(Constants.LOG_TAG, "Updated Collection: "+collections_doc.jsonString());
+            Log.d(Constants.LOG_TAG, "Updated Collection Count: "+update_count);
+            mainDBJsonObject.put(collection, new JSONArray(collections_doc.jsonString()));
+
+            boolean res = writeFile(dbFile, mainDBJsonObject.toString());
+            if(res) {
+                result_response.put("status", "success");
+            }else{
+                jsonObject.put("status", "fail");
+                jsonObject.put("msg", "DB Write error!");
+            }
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.UPDATE_DATA_RESULT), result_response.toString());
+        }catch (Exception e){
+            Log.d(Constants.LOG_TAG, "Update Error: "+e.getMessage());
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.UPDATE_DATA_RESULT), "{\"status\":\"fail\"}");
         }
     }
 

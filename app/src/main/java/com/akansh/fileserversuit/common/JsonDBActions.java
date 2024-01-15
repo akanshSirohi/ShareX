@@ -10,4 +10,6 @@ public class JsonDBActions {
     public static final String GET_ALL_DATA_RESULT = "get_all_data_result";
     public static final String GET_DATA = "get_data";
     public static final String GET_DATA_RESULT = "get_data_result";
+    public static final String UPDATE_DATA = "update_data";
+    public static final String UPDATE_DATA_RESULT = "update_data_result";
 }
