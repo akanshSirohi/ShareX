@@ -3,7 +3,10 @@ package com.akansh.fileserversuit.server;
 import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
+import com.akansh.fileserversuit.common.JSONHelper;
 import com.akansh.fileserversuit.common.JsonDBActions;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
@@ -15,8 +18,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.util.Iterator;
-import java.util.List;
 
 public class JsonDBHandler {
 
@@ -182,15 +183,32 @@ public class JsonDBHandler {
                 String[] update_command = update.getString(i).split(":");
                 String update_sub_query = "." + update_command[0];
                 String update_data = update_command[1];
-                collections_doc.set(query + update_sub_query, update_data);
+//                collections_doc.set(query + update_sub_query, update_data);
+                JSONHelper.deeplySet(collections_doc, JsonPath.compile(query + update_sub_query), update_data);
+//                ObjectMapper objectMapper = new ObjectMapper();
+//                try {
+//                    JsonNode jsonNode = objectMapper.readTree(collectionArray.toString());
+//                    // Use JsonPath to filter based on the query
+//                    Object result = JsonPath.parse(jsonNode).read(JsonPath.compile(query));
+//                    // Loop through the matching objects
+//                    if (result instanceof Iterable) {
+//                        for (Object match : (Iterable<?>) result) {
+//                            String jsonString = objectMapper.writeValueAsString(match);
+//                            System.out.println("Matching Object as JSON String: " + jsonString);
+//                        }
+//                    }
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
             }
 
             int update_count = new JSONArray(JsonPath.read(collectionArray.toString(), query).toString()).length();
-            Log.d(Constants.LOG_TAG, "Updated Collection: "+collections_doc.jsonString());
+            Log.d(Constants.LOG_TAG, "Updated Collection: " + collections_doc.jsonString());
             Log.d(Constants.LOG_TAG, "Updated Collection Count: "+update_count);
             mainDBJsonObject.put(collection, new JSONArray(collections_doc.jsonString()));
 
-            boolean res = writeFile(dbFile, mainDBJsonObject.toString());
+//            boolean res = writeFile(dbFile, mainDBJsonObject.toString());
+            boolean res = true;
             if(res) {
                 result_response.put("status", "success");
             }else{
