@@ -118,7 +118,7 @@ public class JsonDBHandler {
         }
     }
 
-    public void findAll(String data) {
+    private void findAll(String data) {
         try {
             JSONObject jsonObject = new JSONObject(data);
             JSONArray collectionArray = readCollectionFromDB(jsonObject.getString("db_name"), jsonObject.getString("collection"));
@@ -133,7 +133,7 @@ public class JsonDBHandler {
         this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.GET_ALL_DATA_RESULT), "{\"status\":\"fail\"}");
     }
 
-    public void find(String data) {
+    private void find(String data) {
         try {
             JSONObject jsonObject = new JSONObject(data);
             String db_name = jsonObject.getString("db_name");
@@ -151,7 +151,7 @@ public class JsonDBHandler {
         }
     }
 
-    public void update(String data) {
+    private void update(String data) {
         try {
             JSONObject jsonObject = new JSONObject(data);
             String db_name = jsonObject.getString("db_name");
@@ -168,8 +168,8 @@ public class JsonDBHandler {
 
             if(collectionArray == null) {
                 // return error, no collection found
-                jsonObject.put("status", "fail");
-                jsonObject.put("msg", "No collection found!");
+                result_response.put("status", "fail");
+                result_response.put("msg", "No collection found!");
                 this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.UPDATE_DATA_RESULT), result_response.toString());
                 return;
             }
@@ -180,20 +180,52 @@ public class JsonDBHandler {
                 String[] update_command = update.getString(i).split(":");
                 String update_sub_query = "." + update_command[0];
                 String update_data = update_command[1];
-                collections_doc.set(query + update_sub_query, update_data);
+                DocumentContext ctx = collections_doc.set(query + update_sub_query, update_data);
             }
             mainDBJsonObject.put(collection, new JSONArray(collections_doc.jsonString()));
             boolean res = writeFile(dbFile, mainDBJsonObject.toString());
             if(res) {
                 result_response.put("status", "success");
             }else{
-                jsonObject.put("status", "fail");
-                jsonObject.put("msg", "DB Write error!");
+                result_response.put("status", "fail");
+                result_response.put("msg", "DB Write error!");
             }
             this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.UPDATE_DATA_RESULT), result_response.toString());
         }catch (Exception e){
             Log.d(Constants.LOG_TAG, "Update Error: "+e.getMessage());
             this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.UPDATE_DATA_RESULT), "{\"status\":\"fail\"}");
+        }
+    }
+
+    private void delete(String data) {
+        try {
+            JSONObject jsonObject = new JSONObject(data);
+            String db_name = jsonObject.getString("db_name");
+            String collection = jsonObject.getString("collection");
+            String query = jsonObject.getString("query");
+
+            File dbFile = new File(pluginFilesDir, db_name + ".json");
+            String dbFileContent = readFile(dbFile);
+            JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
+            JSONArray collectionArray = mainDBJsonObject.optJSONArray(collection);
+
+            JSONObject result_response = new JSONObject();
+            if(collectionArray == null) {
+                // return error, no collection found
+                result_response.put("status", "fail");
+                result_response.put("msg", "No collection found!");
+                this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.DELETE_DATA_RESULT), result_response.toString());
+                return;
+            }
+            DocumentContext collections_doc = JsonPath.parse(collectionArray.toString());
+            collections_doc.delete(query);
+            mainDBJsonObject.put(collection, new JSONArray(collections_doc.jsonString()));
+            result_response.put("status", "success");
+            result_response.put("data", "");
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.DELETE_DATA_RESULT), result_response.toString());
+        }catch (Exception e){
+            Log.d(Constants.LOG_TAG, "Delete Error: "+e.getMessage());
+            this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.DELETE_DATA_RESULT), "{\"status\":\"fail\"}");
         }
     }
 

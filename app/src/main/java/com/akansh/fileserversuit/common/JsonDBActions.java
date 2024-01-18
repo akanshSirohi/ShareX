@@ -12,4 +12,6 @@ public class JsonDBActions {
     public static final String GET_DATA_RESULT = "get_data_result";
     public static final String UPDATE_DATA = "update_data";
     public static final String UPDATE_DATA_RESULT = "update_data_result";
+    public static final String DELETE_DATA = "delete_data";
+    public static final String DELETE_DATA_RESULT = "delete_data_result";
 }
