@@ -64,6 +64,7 @@ public class JsonDBHandler {
             case JsonDBActions.GET_ALL_DATA -> findAll(data);
             case JsonDBActions.GET_DATA -> find(data);
             case JsonDBActions.UPDATE_DATA -> update(data);
+            case JsonDBActions.DELETE_DATA -> delete(data);
         }
     }
 
