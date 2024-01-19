@@ -32,6 +32,7 @@ public class WebServerSocket extends NanoWSD {
             @Override
             public void onNewUser(SocketUser socketUser, WSDSocket socket) {
                 socketUser.setWsdSocket(socket);
+                socketUsers.remove(socketUser.getUuid());
                 socketUsers.put(socketUser.getUuid(), socketUser);
                 try {
                     JSONObject newUserObject = new JSONObject();
