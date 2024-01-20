@@ -1,3 +1,7 @@
+a {
+  cursor: pointer;
+}
+
 .focus_btn {
   border-style: solid;
   border-color: red;

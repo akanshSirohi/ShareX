@@ -124,7 +124,7 @@ function initApp() {
     }
   }
 
-  $("#info").focusin(function () {
+  $("#info").click(function () {
     $.get(
       "ShareX",
       {
@@ -517,13 +517,26 @@ function loadPluginsList() {
     function (response) {
       let plugins = JSON.parse(response);
       let html = "";
-      plugins.forEach(plugin => {
+      plugins.forEach((plugin,idx) => {
         html += `
-          <div class="card mt-2">
+          <div class="card border-primary mt-2">
               <div class="card-body">
                   <h4 class="card-title">${plugin.name}</h4>
                   <h6 class="card-subtitle mb-2 text-muted">${plugin.author} | ${plugin.version}</h6>
-                  <p class="card-text">${plugin.description}</p>
+                  <div class="accordion mb-2" id="accordion_${idx}">
+                    <div class="accordion-item">
+                      <h2 class="accordion-header" id="heading${idx}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_${idx}" aria-expanded="false">
+                          Description
+                        </button>
+                      </h2>
+                      <div id="collapse_${idx}" class="accordion-collapse collapse" aria-labelledby="heading${idx}" data-bs-parent="#accordion_${idx}" style="">
+                        <div class="accordion-body">
+                          ${plugin.description}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <a href="/SharexApp/${plugin.uid}/" class="btn btn-primary" target="_blank">Open App&nbsp;&nbsp;<i class="fa-solid fa-up-right-from-square"></i></a>
               </div>
           </div>
