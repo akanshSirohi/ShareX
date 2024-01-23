@@ -221,8 +221,13 @@ public class JsonDBHandler {
             DocumentContext collections_doc = JsonPath.parse(collectionArray.toString());
             collections_doc.delete(query);
             mainDBJsonObject.put(collection, new JSONArray(collections_doc.jsonString()));
-            result_response.put("status", "success");
-            result_response.put("data", "");
+            boolean res = writeFile(dbFile, mainDBJsonObject.toString());
+            if(res) {
+                result_response.put("status", "success");
+            }else{
+                result_response.put("status", "fail");
+                result_response.put("msg", "DB Write error!");
+            }
             this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.DELETE_DATA_RESULT), result_response.toString());
         }catch (Exception e){
             Log.d(Constants.LOG_TAG, "Delete Error: "+e.getMessage());
