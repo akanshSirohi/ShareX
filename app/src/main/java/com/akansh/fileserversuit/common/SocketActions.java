@@ -11,4 +11,8 @@ public class SocketActions {
     public static final String MSG_ARRIVE = "msg_arrive";
     public static final String GET_PUBLIC_DATA_OF_USER = "get_public_data_of_user";
     public static final String RETURN_PUBLIC_DATA_OF_USER = "return_public_data_of_user";
+    public static final String CREATE_JSON_FILE = "create_json_file";
+    public static final String RETURN_CREATE_JSON_FILE = "return_create_json_file";
+    public static final String READ_JSON_FILE = "read_json_file";
+    public static final String RETURN_READ_JSON_FILE = "return_read_json_file";
 }

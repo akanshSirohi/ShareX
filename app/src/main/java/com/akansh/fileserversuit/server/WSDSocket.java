@@ -80,6 +80,29 @@ class WSDSocket extends WebSocket {
                         this.wsdSocketListener.onGetPublicDataOfUser(uuid, this);
                     }
                     break;
+                case SocketActions.CREATE_JSON_FILE:
+                    if(this.wsdSocketListener != null) {
+                        JSONObject contents = jsonObject.getJSONObject("data");
+                        String file_name = contents.getString("filename");
+                        String file_data = contents.getJSONObject("data").toString();
+                        boolean res = jsonDBHandler.createJsonFile(file_name, file_data);
+                        JSONObject response_obj = new JSONObject();
+                        response_obj.put("action", SocketActions.RETURN_CREATE_JSON_FILE);
+                        response_obj.put("result", res);
+                        send(response_obj.toString());
+                    }
+                    break;
+                case SocketActions.READ_JSON_FILE:
+                    if(this.wsdSocketListener != null) {
+                        JSONObject contents = jsonObject.getJSONObject("data");
+                        String file_name = contents.getString("filename");
+                        String file_data = jsonDBHandler.readJsonFile(file_name);
+                        JSONObject response_obj = new JSONObject();
+                        response_obj.put("action", SocketActions.RETURN_READ_JSON_FILE);
+                        response_obj.put("data", file_data);
+                        send(response_obj.toString());
+                    }
+                    break;
                 default:
                     if(action.startsWith("db_action_")) {
                         String db_action = action.replace("db_action_", "");

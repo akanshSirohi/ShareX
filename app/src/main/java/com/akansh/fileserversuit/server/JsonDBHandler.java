@@ -285,6 +285,62 @@ public class JsonDBHandler {
         return false;
     }
 
+    public boolean createJsonFile(String file_name, String file_data) {
+        try {
+            if(!file_name.endsWith(".json")) {
+                file_name = file_name + ".json"; // Add .json extension
+            }
+            File json_files_dir = new File(pluginFilesDir, "json_files");
+            if(!json_files_dir.exists()) {
+                json_files_dir.mkdirs();
+            }
+            File file = new File(json_files_dir, file_name);
+            boolean fileExists = file.exists();
+            if (!file.exists()) {
+                fileExists = file.createNewFile();
+            }
+            if (fileExists) {
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+                bufferedOutputStream.write(file_data.getBytes());
+                bufferedOutputStream.flush();
+                bufferedOutputStream.close();
+                return true;
+            }
+        } catch (Exception e) {
+            Log.d(Constants.LOG_TAG, "Create Json File Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public String readJsonFile(String file_name) {
+        try {
+            if(!file_name.endsWith(".json")) {
+                file_name = file_name + ".json"; // Add .json extension
+            }
+            File json_files_dir = new File(pluginFilesDir, "json_files");
+            if(!json_files_dir.exists()) {
+                json_files_dir.mkdirs();
+            }
+            File file = new File(json_files_dir, file_name);
+            if (file.exists()) {
+                BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+                StringBuilder stringBuilder = new StringBuilder();
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                bufferedReader.close();
+                if (stringBuilder.length() > 0) {
+                    return stringBuilder.toString();
+                }
+            }
+        } catch (Exception e) {
+            Log.d(Constants.LOG_TAG, "Read Json File Error: " + e.getMessage());
+        }
+        return "{}";
+    }
+
     private String prepare_action(String action) {
         return "db_action_" + action;
     }
