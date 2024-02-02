@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<!--Created by The Translator <https://play.google.com/store/apps/details?id=com.sunilpaulmathew.translator>-->
+
+<string name="app_name">"ShareX"</string>
+<string name="header_end">"X"</string>
+<string name="ver">"v2.3.8"</string>
+<string name="sutitle">"Por Akansh Sirohi"</string>
+<string name="instructions">"1) Ative o ponto de acesso deste dispositivo ou conecte-se a qualquer outro ponto de acesso.\n2) Pressione o botão INICIAR e clique no botão Código QR para ver o URL ou código QR a ser digitalizado.\n3) Digitalize o código QR com qualquer aplicativo de leitura QR ou digite  o URL em outro dispositivo e comece a compartilhar arquivos!\n\nNOTA:-\n 1) Você pode usar a configuração do modo privado para selecionar e compartilhar apenas arquivos limitados.\n 2) Este aplicativo funciona completamente offline, nenhuma internet é usada para arquivos  compartilhamento."</string>
+<string name="note">"Outro dispositivo deve estar na mesma rede ou conectado ao ponto de acesso do seu dispositivo."</string>
+<string name="font_ps">"fonts/product_sans.ttf"</string>
+<string name="open_drawer">"Abrir menu"</string>
+<string name="close_drawer">"Fechar menu"</string>
+<string name="credits">"Desenvolvido por: Akansh Sirohi\n\nFeito com ❤️ em INDIA"</string>
+<string name="logger_init_txt">"$ Bem vindo ao ShareX\n"</string>
+<string name="pvt_lbl">"Modo privado ativado"</string>
+<string name="cd_start_stop_btn">"Iniciar ou parar ShareX"</string>
+<string name="cd_bg">"Fundo"</string>
+<string name="cd_show_qr_btn">"Mostrar QR"</string>
+<string name="cd_toggle_logger">"Alternar Log"</string>
+<string name="cd_open_navbar">"Abrir a barra de navegação"</string>
+</resources>
