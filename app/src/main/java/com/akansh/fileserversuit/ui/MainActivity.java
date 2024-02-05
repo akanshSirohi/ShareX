@@ -14,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.TransitionDrawable;
@@ -81,6 +82,7 @@ import java.io.FileOutputStream;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
@@ -103,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog progress;
     private String serverRoot = null;
     private ConstraintLayout settings_view, main_view, qr_view, logger_wrapper;
-    private TextView settDRoot, settRemDev, settTheme, plugin_folder_label;
+    private TextView settDRoot, settRemDev, settTheme, plugin_folder_label, serverBtnTxt;
     private TextView logger;
     private TextView scan_url, ssl_note;
 
@@ -130,6 +132,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        // Testing Hindi Locale
+//        try {
+//            Locale locale = new Locale("hi");
+//            Locale.setDefault(locale);
+//            Configuration config = getBaseContext().getResources().getConfiguration();
+//            config.locale = locale;
+//            getBaseContext().getResources().updateConfiguration(config,
+//                    getBaseContext().getResources().getDisplayMetrics());
+//        } catch (Exception e) {
+//            Log.d(Constants.LOG_TAG, e.toString());
+//        }
         setContentView(R.layout.activity_main);
         logger = findViewById(R.id.logger);
         logger_wrapper = findViewById(R.id.logger_wrapper);
@@ -140,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
         deviceManager = new DeviceManager(this);
         qrDialog = new Dialog(this);
         serverBtn = findViewById(R.id.serverBtn);
+        serverBtnTxt = findViewById(R.id.serverBtnTxt);
         settings_view = findViewById(R.id.settings_view);
         main_view = findViewById(R.id.main_view);
         qr_view = findViewById(R.id.qr_view);
@@ -1142,11 +1156,15 @@ public class MainActivity extends AppCompatActivity {
             serverBtn.setImageResource(R.drawable.ic_stop);
             main_bg.setImageResource(R.drawable.trans_off_to_on);
             second_bg.setImageResource(R.drawable.bg_red);
+            serverBtnTxt.setText(getResources().getText(R.string.app_stop_txt));
+            serverBtnTxt.setTextColor(getResources().getColor(R.color.text_red));
             ((TransitionDrawable) main_bg.getDrawable()).startTransition(200);
         }else if(code==Constants.SERVER_OFF) {
             serverBtn.setImageResource(R.drawable.ic_start);
             main_bg.setImageResource(R.drawable.trans_on_to_off);
             second_bg.setImageResource(R.drawable.bg_green);
+            serverBtnTxt.setText(getResources().getText(R.string.app_start_txt));
+            serverBtnTxt.setTextColor(getResources().getColor(R.color.text_green));
             ((TransitionDrawable) main_bg.getDrawable()).startTransition(200);
         }
     }

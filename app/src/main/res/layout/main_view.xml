@@ -161,4 +161,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <TextView
+        android:id="@+id/serverBtnTxt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/ethnocentric_rg"
+        android:text="@string/app_start_txt"
+        android:textColor="@color/text_green"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@+id/serverBtn"
+        app:layout_constraintEnd_toEndOf="@+id/serverBtn"
+        app:layout_constraintStart_toStartOf="@+id/serverBtn"
+        app:layout_constraintTop_toTopOf="@+id/serverBtn" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,4 +6,7 @@
     <color name="transparent_mask">#B3000000</color>
     <color name="color_white">#FFFFFFFF</color>
     <color name="transparent_mask_2">#9A000000</color>
+
+    <color name="text_green">#29f200</color>
+    <color name="text_red">#f11e00</color>
 </resources>

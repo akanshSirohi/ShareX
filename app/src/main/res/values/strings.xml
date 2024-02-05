@@ -19,4 +19,6 @@
     <string name="cd_toggle_logger">Toggle Log</string>
     <string name="cd_open_navbar">Open Navigation Bar</string>
 
+    <string name="app_start_txt">START</string>
+    <string name="app_stop_txt">STOP</string>
 </resources>
