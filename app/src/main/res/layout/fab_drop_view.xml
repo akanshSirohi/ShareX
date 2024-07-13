@@ -31,7 +31,7 @@
     fab:menu_labels_textColor="#f2f1f1"
     fab:menu_labels_textSize="13sp"
     fab:menu_openDirection="down"
-    fab:menu_labels_customFont="@string/font_ps">
+    fab:menu_labels_customFont="fonts/product_sans.ttf">
 
     <com.github.clans.fab.FloatingActionButton
         android:id="@+id/material_design_floating_action_menu_item1"
