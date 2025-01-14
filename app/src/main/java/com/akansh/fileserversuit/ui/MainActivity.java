@@ -14,7 +14,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.TransitionDrawable;
@@ -37,7 +36,6 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -78,15 +76,11 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -132,17 +126,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        // Testing Hindi Locale
-//        try {
-//            Locale locale = new Locale("hi");
-//            Locale.setDefault(locale);
-//            Configuration config = getBaseContext().getResources().getConfiguration();
-//            config.locale = locale;
-//            getBaseContext().getResources().updateConfiguration(config,
-//                    getBaseContext().getResources().getDisplayMetrics());
-//        } catch (Exception e) {
-//            Log.d(Constants.LOG_TAG, e.toString());
-//        }
         setContentView(R.layout.activity_main);
         logger = findViewById(R.id.logger);
         logger_wrapper = findViewById(R.id.logger_wrapper);
@@ -968,7 +951,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void toggleSettings() {
         qr_view.setVisibility(View.GONE);
-        if(settings_view.getVisibility()==View.GONE) {
+        if(settings_view.getVisibility() == View.GONE) {
             settings_view.setVisibility(View.VISIBLE);
             main_view.setVisibility(View.GONE);
         }else{
