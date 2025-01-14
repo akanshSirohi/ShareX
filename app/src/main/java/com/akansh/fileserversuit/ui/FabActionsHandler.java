@@ -2,7 +2,6 @@ package com.akansh.fileserversuit.ui;
 
 import android.app.Activity;
 import android.content.Context;
-import android.view.View;
 
 import com.akansh.fileserversuit.R;
 import com.github.clans.fab.FloatingActionButton;

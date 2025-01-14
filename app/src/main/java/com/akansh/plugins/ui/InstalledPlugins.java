@@ -23,7 +23,6 @@ import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.common.Utils;
 import com.akansh.fileserversuit.server.ServerService;
-import com.akansh.fileserversuit.ui.MainActivity;
 import com.akansh.plugins.common.InstallStatus;
 import com.akansh.plugins.InstalledPluginsAdapter;
 import com.akansh.plugins.common.Plugin;

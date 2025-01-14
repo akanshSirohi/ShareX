@@ -30,7 +30,6 @@ public class GenerateQR {
     public void execute(String url) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-
             QRGEncoder qrgEncoder = new QRGEncoder(url, null, QRGContents.Type.TEXT, 200);
             qrgEncoder.setColorWhite(Color.parseColor("#000000"));
             qrgEncoder.setColorBlack(Color.parseColor("#ffffff"));

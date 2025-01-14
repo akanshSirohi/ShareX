@@ -3,8 +3,6 @@ package com.akansh.fileserversuit.common;
 import android.os.Environment;
 import android.util.Log;
 
-import com.akansh.fileserversuit.common.Constants;
-
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
