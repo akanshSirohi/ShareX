@@ -3,14 +3,16 @@ package com.akansh.fileserversuit.common;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.widget.ImageView;
 
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 
-import androidmads.library.qrgenearator.QRGContents;
-import androidmads.library.qrgenearator.QRGEncoder;
+import com.akansh.qrsmith.QRSmith;
+
+import com.akansh.fileserversuit.R;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,14 +32,22 @@ public class GenerateQR {
     public void execute(String url) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            QRGEncoder qrgEncoder = new QRGEncoder(url, null, QRGContents.Type.TEXT, 200);
-            qrgEncoder.setColorWhite(Color.parseColor("#000000"));
-            qrgEncoder.setColorBlack(Color.parseColor("#ffffff"));
             try {
-                Bitmap bitmap = qrgEncoder.getBitmap();
-                RoundedBitmapDrawable dr = RoundedBitmapDrawableFactory.create(ctx.getResources(), bitmap);
-                dr.setCornerRadius(15f);
-                qr_view.setImageDrawable(dr);
+                QRSmith.QRCodeOptions options = new QRSmith.QRCodeOptions();
+                options.width = 500;
+                options.height = 500;
+                options.backgroundColor = Color.WHITE;
+                options.foregroundColor = Color.BLACK;
+                options.errorCorrectionLevel = QRSmith.QRErrorCorrectionLevel.H;
+                options.logo = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_logo);
+                options.style = QRSmith.QRCodeStyle.DOTS;
+                options.dotSizeFactor = 0.8f;
+                Bitmap bitmap = QRSmith.generateQRCode(url, options);
+                activity.runOnUiThread(() -> {
+                    RoundedBitmapDrawable dr = RoundedBitmapDrawableFactory.create(ctx.getResources(), bitmap);
+                    dr.setCornerRadius(15f);
+                    qr_view.setImageDrawable(dr);
+                });
             } catch (Exception e) {
                 e.printStackTrace();
             }
