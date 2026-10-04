@@ -1,12 +1,13 @@
 package com.akansh.fileserversuit.common;
 
+import com.akansh.fileserversuit.BuildConfig;
+
 public class Constants {
     public static final boolean DEBUG = true;
     public static final String LOG_TAG = "ASOFT";
     public static final String APP_LOAD_F1 = "app_load_f1";
     public static final String LOAD_HIDDEN_MEDIA = "load_hidden_media";
     public static final String RESTRICT_MODIFY = "restrict_modify";
-    public static final String FORCE_DOWNLOAD = "force_download";
     public static final String PRIVATE_MODE = "private_mode";
     public static final String LOAD_APPS = "load_apps";
     public static final String SERVER_URL = "server_url";
@@ -43,8 +44,8 @@ public class Constants {
 
     // WEB INTERFACE VERSION CONTROL
     public static final String OLD_DIR = "sharex_v2_1";
-    public static final String NEW_DIR = "sharex_v3_0";
-    public static final String WEB_INTERFACE_DIR = "sharex_web_v3_0";
+    public static final String NEW_DIR = BuildConfig.WEB_INTERFACE_DIR;
+    public static final String WEB_INTERFACE_DIR = BuildConfig.WEB_INTERFACE_DIR;
 
     public static final String APPS_CONFIG = "apps.json";
 }

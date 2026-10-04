@@ -29,14 +29,18 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 public final class WebServerSocket {
     private final int port;
     private final String appPackageName;
+    private final java.util.function.Predicate<io.netty.handler.codec.http.HttpRequest> authorization;
+    private final io.netty.handler.ssl.SslContext ssl;
     private final Map<String, SocketUser> socketUsers = new ConcurrentHashMap<>();
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel channel;
 
-    public WebServerSocket(int port, String appPackageName) {
+    public WebServerSocket(int port, String appPackageName, java.util.function.Predicate<io.netty.handler.codec.http.HttpRequest> authorization, io.netty.handler.ssl.SslContext ssl) {
         this.port = port;
         this.appPackageName = appPackageName;
+        this.authorization = authorization;
+        this.ssl = ssl;
     }
 
     public synchronized void start() throws Exception {
@@ -48,8 +52,22 @@ public final class WebServerSocket {
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override protected void initChannel(SocketChannel socket) {
+                            if (ssl != null) socket.pipeline().addLast(ssl.newHandler(socket.alloc()));
                             socket.pipeline().addLast(new HttpServerCodec());
                             socket.pipeline().addLast(new HttpObjectAggregator(64 * 1024));
+                            socket.pipeline().addLast(new io.netty.channel.SimpleChannelInboundHandler<io.netty.handler.codec.http.FullHttpRequest>() {
+                                @Override protected void channelRead0(io.netty.channel.ChannelHandlerContext context, io.netty.handler.codec.http.FullHttpRequest request) {
+                                    if (!authorization.test(request)) {
+                                        context.writeAndFlush(new io.netty.handler.codec.http.DefaultFullHttpResponse(io.netty.handler.codec.http.HttpVersion.HTTP_1_1,
+                                                io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED)).addListener(io.netty.channel.ChannelFutureListener.CLOSE);
+                                        return;
+                                    }
+                                    io.netty.handler.codec.http.DefaultHttpRequest identity = new io.netty.handler.codec.http.DefaultHttpRequest(request.protocolVersion(), request.method(), request.uri());
+                                    identity.headers().set(request.headers());
+                                    context.channel().attr(io.netty.util.AttributeKey.<io.netty.handler.codec.http.HttpRequest>valueOf("sharexIdentity")).set(identity);
+                                    context.fireChannelRead(request.retain());
+                                }
+                            });
                             socket.pipeline().addLast(new WebSocketServerProtocolHandler("/", null, true, 10 * 1024 * 1024));
                             socket.pipeline().addLast(new WebSocketHandler());
                         }
@@ -72,6 +90,8 @@ public final class WebServerSocket {
         }
 
         @Override protected void channelRead0(io.netty.channel.ChannelHandlerContext context, WebSocketFrame frame) {
+            io.netty.handler.codec.http.HttpRequest identity = context.channel().attr(io.netty.util.AttributeKey.<io.netty.handler.codec.http.HttpRequest>valueOf("sharexIdentity")).get();
+            if (identity == null || !authorization.test(identity)) { context.close(); return; }
             if (frame instanceof TextWebSocketFrame && socket != null) socket.onMessage(((TextWebSocketFrame) frame).text());
         }
 

@@ -4,6 +4,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
@@ -14,8 +15,10 @@ import com.akansh.fileserversuit.R;
 public final class SharingStatusView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF bounds = new RectF();
+    private final Path shield = new Path();
     private ValueAnimator orbit;
     private boolean running;
+    private boolean privateMode;
     private float phase;
 
     public SharingStatusView(Context context, AttributeSet attrs) {
@@ -26,8 +29,21 @@ public final class SharingStatusView extends View {
 
     public void setRunning(boolean enabled) {
         running = enabled;
-        setContentDescription(enabled ? "Sharing enabled" : "Sharing disabled");
+        updateContentDescription();
         updateAnimation(); invalidate();
+    }
+
+    public void setPrivateMode(boolean enabled) {
+        if (privateMode == enabled) return;
+        privateMode = enabled;
+        updateContentDescription();
+        invalidate();
+    }
+
+    private void updateContentDescription() {
+        setContentDescription(running
+                ? (privateMode ? "Private sharing enabled" : "Sharing enabled")
+                : "Sharing disabled");
     }
 
     private void updateAnimation() {
@@ -71,6 +87,21 @@ public final class SharingStatusView extends View {
             paint.setColor(colors[i]); canvas.drawArc(bounds, phase + i * 120, 82, false, paint);
         }
         paint.setStrokeCap(Paint.Cap.BUTT); paint.setStrokeWidth(size * 0.025f); paint.setColor(0xFFE7FFF1);
+        if (privateMode) {
+            shield.reset();
+            shield.moveTo(cx, cy - size * 0.23f);
+            shield.quadTo(cx + size * 0.10f, cy - size * 0.17f, cx + size * 0.20f, cy - size * 0.16f);
+            shield.lineTo(cx + size * 0.20f, cy - size * 0.02f);
+            shield.cubicTo(cx + size * 0.20f, cy + size * 0.12f,
+                    cx + size * 0.10f, cy + size * 0.20f, cx, cy + size * 0.25f);
+            shield.cubicTo(cx - size * 0.10f, cy + size * 0.20f,
+                    cx - size * 0.20f, cy + size * 0.12f, cx - size * 0.20f, cy - size * 0.02f);
+            shield.lineTo(cx - size * 0.20f, cy - size * 0.16f);
+            shield.quadTo(cx - size * 0.10f, cy - size * 0.17f, cx, cy - size * 0.23f);
+            shield.close();
+            canvas.drawPath(shield, paint);
+            return;
+        }
         for (int row = 0; row < 2; row++) {
             float top = cy - size * 0.19f + row * size * 0.21f;
             bounds.set(cx - size * 0.21f, top, cx + size * 0.21f, top + size * 0.16f);

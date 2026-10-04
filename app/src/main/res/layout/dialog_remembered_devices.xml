@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="24dp" android:paddingEnd="24dp" android:paddingTop="8dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/remembered_devices_hint" android:textColor="@color/txt_color_secondary" android:textSize="14sp" android:paddingBottom="16dp" />
+    <TextView android:id="@+id/remembered_devices_empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/remembered_devices_empty" android:textColor="@color/txt_color_secondary" android:textSize="14sp" android:paddingTop="16dp" android:paddingBottom="24dp" />
+    <ScrollView android:id="@+id/remembered_devices_scroll" android:layout_width="match_parent" android:layout_height="240dp" android:fillViewport="false">
+        <LinearLayout android:id="@+id/remembered_devices_list" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+    </ScrollView>
+</LinearLayout>

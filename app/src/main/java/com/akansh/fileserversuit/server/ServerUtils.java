@@ -38,7 +38,6 @@ import java.util.Locale;
 import org.json.JSONArray;
 
 public class ServerUtils {
-    private final List<ApplicationInfo> packages;
     private final PackageManager packageManager;
     private final Context ctx;
     Utils utils;
@@ -49,7 +48,6 @@ public class ServerUtils {
         this.ctx=ctx;
         utils=new Utils(ctx);
         packageManager=ctx.getPackageManager();
-        packages = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
     }
 
     public void setSendProgressListener(SendProgressListener sendProgressListener) {
@@ -64,169 +62,87 @@ public class ServerUtils {
         this.updateTransferHistoryListener = updateTransferHistoryListener;
     }
 
-    public String getFilesListCode(String path, boolean allowHiddenMedia) {
-        StringBuilder code=new StringBuilder();
-        try {
-            if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                File f = new File(path);
-                if (f.exists()) {
-                    File[] files = f.listFiles();
-                    Collections.sort(Arrays.asList(files), new FilesComparator());
-                    String name = "";
-                    int len = 0;
-                    for (int i = 0; i < files.length; i++) {
-                        name = files[i].getName();
-                        if (!allowHiddenMedia) {
-                            if (name.startsWith(".")) {
-                                continue;
-                            }
-                        }
-                        len++;
-                        code.append("<tr id=\"row_").append(name).append("\"><td class=\"align-middle icon-col text-center\">");
-                        code.append("<div class=\"form-check\">");
-                        code.append("<input type=\"checkbox\" class=\"form-check-input\" name=\"fChkBoxes\" id=\"").append(name).append("\" onchange=\"notifyChkBoxUI();\">");
-                        code.append("<label class=\"form-check-label\" for=\"").append(name).append("\"></label>");
-                        code.append("</div>");
-                        if (files[i].isDirectory()) {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(name).append("\" onclick=\"openFolder(this.dataset.ctxmap)\">");
-                        } else if (utils.getMimeType(files[i]).startsWith("image")) {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(name).append("\" onclick=\"viewFile(this.dataset.ctxmap)\">");
-                        } else {
-                            code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(name).append("\" onclick=\"openFile(this.dataset.ctxmap)\">");
-                        }
-                        if (files[i].isDirectory()) {
-                            code.append("<i class=\"fa-solid fa-folder-closed\"></i>");
-                        } else if (utils.getMimeType(files[i]).startsWith("image")) {
-                            code.append("<img height=\"50\" loading=\"lazy\" src=\"ShareX?action=thumbImage&location=").append(files[i].getAbsolutePath()).append("\"></img>");
-                        } else {
-                            code.append(utils.getIconCode(files[i]));
-                        }
-
-                        if (name.startsWith(".")) {
-                            code.append("<sub><i class=\"fas fa-mask\"></i></sub>&nbsp;&nbsp;");
-                        } else {
-                            code.append("&nbsp;&nbsp;");
-                        }
-                        code.append(name);
-                        code.append("</td>");
-                        if (!files[i].isDirectory()) {
-                            code.append("<td class=\"align-middle\">");
-                            code.append(fileSize(files[i]));
-                            code.append("</td>");
-                        } else {
-                            code.append("<td class=\"align-middle\">-</td>");
-                        }
-                        code.append("</tr>");
+    public JSONObject getFilesList(String path, boolean allowHiddenMedia, String root) throws Exception {
+        JSONArray items = new JSONArray();
+        boolean privateMode = utils.loadSetting(Constants.PRIVATE_MODE);
+        if (privateMode) {
+            File sharedList = new File(ctx.getApplicationInfo().dataDir, "pFilesList.bin");
+            if (sharedList.exists()) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(sharedList))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        File file = new File(line);
+                        if (line.length() > 2 && file.isFile()) items.put(fileInfo(file, file.getCanonicalPath()));
                     }
-                    if (len == 0) {
-                        code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"fa-regular fa-folder-open\"></i>&nbsp;&nbsp;Empty Folder!</td></tr>");
-                    }
-                } else {
-                    code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"fa-regular fa-folder-open\"></i>&nbsp;&nbsp;Empty Folder!</td></tr>");
-                }
-
-
-            } else {
-                try {
-                    File file = new File("/data/data/" + ctx.getPackageName() + "/", "pFilesList.bin");
-                    if (file.exists()) {
-                        FileReader fr = new FileReader(file);
-                        BufferedReader br = new BufferedReader(fr);
-                        String pth, name;
-                        int len = 0;
-                        File fTemp;
-                        while ((pth = br.readLine()) != null) {
-                            if (pth.length() > 2) {
-                                fTemp = new File(pth);
-                                name = fTemp.getName();
-                                len++;
-                                code.append("<tr id=\"row_").append(fTemp.getAbsolutePath()).append("\"><td class=\"align-middle icon-col\" style=\"padding-left:25px;\">");
-                                code.append("<div class=\"custom-control custom-checkbox\">");
-                                code.append("<input type=\"checkbox\" class=\"custom-control-input\" name=\"fChkBoxes\" id=\"").append(fTemp.getAbsolutePath()).append("\" onchange=\"notifyChkBoxUI();\">");
-                                code.append("<label class=\"custom-control-label\" for=\"").append(fTemp.getAbsolutePath()).append("\"></label>");
-                                code.append("</div>");
-                                if (utils.getMimeType(pth).startsWith("image")) {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(fTemp.getAbsolutePath()).append("\" onclick=\"viewFile_p(this.dataset.ctxmap)\">");
-                                    code.append("<img height=\"50\" src=\"ShareX?action=thumbImage&location=").append(fTemp.getAbsolutePath()).append("\"></img>");
-                                } else {
-                                    code.append("</td><td class=\"align-middle row-highlight ctxMenu ps-3\" data-ctxmap=\"").append(fTemp.getAbsolutePath()).append("\" onclick=\"openFile_p(this.dataset.ctxmap)\">");
-                                    code.append(utils.getIconCode(fTemp));
-                                }
-                                code.append("&nbsp;&nbsp;");
-                                code.append(name);
-                                code.append("</td>");
-                                code.append("<td class=\"align-middle\">");
-                                code.append(fileSize(fTemp));
-                                code.append("</td>");
-                                code.append("</tr>");
-                            }
-                        }
-                        if (len == 0) {
-                            code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"far fa-folder\"></i>&nbsp;&nbsp;No Files Shared!</td></tr>");
-                        }
-                        br.close();
-                        fr.close();
-                    } else {
-                        code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"far fa-folder\"></i>&nbsp;&nbsp;No Files Shared!</td></tr>");
-                    }
-                } catch (Exception e) {
-                    Log.d(Constants.LOG_TAG, "Pivate Files List Error: " + e.toString());
                 }
             }
-        }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,"Error in getFilesListCode: "+e);
-            code.append("<tr><td colspan=\"3\" class=\"align-middle\" style=\"text-align:center;\"><i class=\"fa-solid fa-triangle-exclamation\"></i>&nbsp;&nbsp;Can't read this location!</td></tr>");
+        } else {
+            File directory = new File(path);
+            File[] files = directory.listFiles();
+            if (files == null) throw new java.io.IOException("Can't read this location");
+            Arrays.sort(files, new FilesComparator());
+            File allowedRoot = new File(root).getCanonicalFile();
+            for (File file : files) {
+                if (!allowHiddenMedia && file.getName().startsWith(".")) continue;
+                File canonical = file.getCanonicalFile();
+                if (!canonical.getPath().startsWith(allowedRoot.getPath() + File.separator)) continue;
+                String location = allowedRoot.toPath().relativize(file.toPath()).toString();
+                items.put(fileInfo(file, location));
+            }
         }
-        return code.toString();
+        return new JSONObject().put("items", items).put("privateMode", privateMode);
     }
 
-    public String getAppsListCode() {
-        StringBuilder code = new StringBuilder();
-        if(utils.loadSetting(Constants.LOAD_APPS)) {
-            Comparator<ApplicationInfo> comparator = (obj1, obj2) -> packageManager.getApplicationLabel(obj1).toString().compareToIgnoreCase(packageManager.getApplicationLabel(obj2).toString());
-            Collections.sort(packages, comparator);
+    private JSONObject fileInfo(File file, String location) throws Exception {
+        String mime = file.isDirectory() ? "inode/directory" : utils.getMimeType(file);
+        return new JSONObject().put("name", file.getName()).put("location", location)
+                .put("directory", file.isDirectory()).put("size", file.isDirectory() ? 0 : file.length())
+                .put("modified", file.lastModified()).put("hidden", file.getName().startsWith("."))
+                .put("mime", mime == null ? "application/octet-stream" : mime);
+    }
+
+    public JSONObject getAppsList() throws Exception {
+        JSONArray items = new JSONArray();
+        if (utils.loadSetting(Constants.LOAD_APPS)) {
+            List<ApplicationInfo> applications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+            applications.sort(Comparator.comparing(info -> packageManager.getApplicationLabel(info).toString(), String.CASE_INSENSITIVE_ORDER));
             IconUtils iconUtils = new IconUtils();
             File base = new File(Environment.getExternalStorageDirectory(), "ShareX/.thumbs");
-            if (!base.exists()) {
-                base.mkdirs();
+            if (!base.isDirectory() && !base.mkdirs()) throw new java.io.IOException("Cannot create app thumbnails");
+            for (ApplicationInfo info : applications) {
+                if (!utils.isUserApp(info)) continue;
+                File icon = new File(base, info.packageName + ".png");
+                if (!icon.exists()) iconUtils.writeBitmapToFile(iconUtils.drawableToBitmap(packageManager.getApplicationIcon(info)), icon);
+                items.put(new JSONObject().put("name", packageManager.getApplicationLabel(info).toString())
+                        .put("package", info.packageName).put("size", new File(info.sourceDir).length())
+                        .put("icon", "/ShareX/thumbnail/app/" + info.packageName));
             }
-            for (ApplicationInfo applicationInfo : packages) {
-                if (utils.isUserApp(applicationInfo)) {
-                    String pkg = applicationInfo.packageName;
-                    packageManager.getApplicationLogo(applicationInfo);
-                    File dest = new File(base, pkg + ".png");
-                    if (!dest.exists()) {
-                        Bitmap bm = iconUtils.drawableToBitmap(packageManager.getApplicationIcon(applicationInfo));
-                        iconUtils.writeBitmapToFile(bm, dest);
-                    }
-                    File apk = new File(applicationInfo.sourceDir);
-                    String appName = packageManager.getApplicationLabel(applicationInfo).toString();
-                    code.append("<tr>");
-                    code.append("<td>");
-                    code.append("<div class=\"d-flex\">");
-                    code.append("<div class=\"ps-2 appInfo\">");
-                    code.append("<img src=\"/ShareX/thumbnail/app/").append(pkg).append("\" class=\"app-icon\" />");
-                    code.append("<div class=\"px-3\">");
-                    code.append(appName);
-                    code.append("<br><small>").append(pkg);
-                    code.append("<br><b>Size: </b>");
-                    code.append(fileSize(apk));
-                    code.append("</small></div>");
-                    code.append("</div>");
-                    code.append("<div class=\"apk-dwl-btn pe-2\">");
-                    code.append("<button class=\"btn btn-primary\" onclick=\"getApp('").append(pkg).append("');\"><i class=\"fas fa-download\"></i></button>");
-                    code.append("</div></div>");
-                    code.append("</tr>");
-                }
-            }
-        }else{
-            code.append("<tr>");
-            code.append("<td>");
-            code.append("<div style=\"display: flex;\" class=\"my-3 justify-content-center align-items-center\"><i class=\"fa-solid fa-ban\"></i>&nbsp;Apps Access Denied!</div>");
-            code.append("</td>");
-            code.append("</tr>");
         }
-        return code.toString();
+        return new JSONObject().put("items", items).put("allowed", utils.loadSetting(Constants.LOAD_APPS));
+    }
+
+    public JSONObject getPortalState() throws Exception {
+        Intent battery = ctx.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = battery == null ? -1 : battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = battery == null ? 100 : battery.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+        int plugged = battery == null ? 0 : battery.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0);
+        long total = 0, available = 0;
+        try {
+            android.os.StatFs storage = new android.os.StatFs(utils.loadRoot());
+            total = storage.getTotalBytes();
+            available = storage.getAvailableBytes();
+        } catch (IllegalArgumentException | SecurityException ignored) { }
+
+        return new JSONObject().put("deviceName", android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL)
+                .put("battery", level < 0 ? -1 : level * 100 / Math.max(1, scale)).put("charging", plugged > 0)
+                .put("privateMode", utils.loadSetting(Constants.PRIVATE_MODE))
+                .put("restrictModify", utils.loadSetting(Constants.RESTRICT_MODIFY))
+                .put("appsAllowed", utils.loadSetting(Constants.LOAD_APPS))
+                .put("theme", new ThemesData().getPrefix(utils.loadInt(Constants.WEB_INTERFACE_THEME, 0)))
+                .put("webVersion", Constants.WEB_INTERFACE_DIR)
+                .put("storageTotal", total).put("storageFree", available).put("storageUsed", Math.max(0, total - available))
+                .put("connected", SharingSession.isRunning())
+                .put("sessionElapsedMs", SharingSession.elapsed(android.os.SystemClock.elapsedRealtime()));
     }
 
     public String getPluginsList() {
@@ -325,11 +241,14 @@ public class ServerUtils {
             }
             String mime = utils.getMimeType(file);
             if (mime == null || mime.isEmpty()) mime = "application/octet-stream";
-            String disposition = inline && (mime.startsWith("image/") || mime.startsWith("video/") || mime.equals("application/pdf")) ? "inline" : "attachment";
+            String disposition = inline && (mime.startsWith("image/") || mime.startsWith("video/") || mime.startsWith("audio/") || mime.equals("application/pdf")) ? "inline" : "attachment";
             WebResponse result = WebResponse.file(status, file, start, end - start + 1, true)
                     .header("Content-Type", mime)
                     .header("Content-Disposition", disposition + "; filename=\"" + safeHeaderFilename(file.getName()) + "\"")
-                    .header("Accept-Ranges", "bytes");
+                    .header("Accept-Ranges", "bytes")
+                    .header("Cache-Control", "no-store")
+                    .header("X-Content-Type-Options", "nosniff");
+            if (mime.equals("text/html") || mime.equals("image/svg+xml")) result.header("Content-Security-Policy", "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:");
             if (status == 206) result.header("Content-Range", "bytes " + start + "-" + end + "/" + size);
             if (pushHistory && rangeHeader == null) recordSentHistory(file, mime);
             return result;

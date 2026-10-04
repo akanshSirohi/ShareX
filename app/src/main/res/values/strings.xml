@@ -40,7 +40,7 @@
     <string name="cd_copy_address">Copy sharing address</string>
     <string name="cd_share_address">Share connection address</string>
     <string name="advanced_mode">Advanced Mode</string>
-    <string name="advanced_mode_summary">Show network, security, and diagnostic settings</string>
+    <string name="advanced_mode_summary">Show Plugins and plugin development options, plus live transfer activity and logs on Home. All other settings stay available in either mode.</string>
     <string name="settings_sharing">Sharing</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_network">Connection</string>
@@ -63,7 +63,7 @@
     <string name="skip">Skip</string>
     <string name="sett_title_1">Shared folder</string>
     <string name="sett_sub_title_1">Choose which folder is available to nearby devices.</string>
-    <string name="sett_title_2">Clear Remembered Devices</string>
+    <string name="sett_title_2">Remembered devices</string>
     <string name="sett_sub_title_2">0 Devices Remembered</string>
     <string name="sett_title_3">Sharing page theme</string>
     <string name="sett_sub_title_3">Choose how the file page looks on connected devices.</string>
@@ -73,8 +73,16 @@
     <string name="sett_sub_title_5">Shows default hidden files/folders</string>
     <string name="sett_title_6">Restrict Modification</string>
     <string name="sett_sub_title_6">Files/folders cannot be deleted and renamed</string>
-    <string name="sett_title_7">Force Download</string>
-    <string name="sett_sub_title_7">Enables one click file download without viewing them</string>
+    <string name="web_access_title">Allow browser access?</string>
+    <string name="web_access_description">A browser on your local network wants to connect to ShareX.</string>
+    <string name="web_access_scope_label">THIS BROWSER CAN</string>
+    <string name="web_access_scope_full">Browse, preview, download, upload, and manage files in your shared folder.</string>
+    <string name="web_access_scope_restricted">Browse, preview, download, and upload files. File changes remain restricted.</string>
+    <string name="web_access_scope_private">Preview and download only the files you selected. Uploads go to your ShareX folder.</string>
+    <string name="web_access_remember">Remember this browser</string>
+    <string name="web_access_remember_hint">Allow future connections automatically.</string>
+    <string name="web_access_deny">Deny</string>
+    <string name="web_access_allow">Allow access</string>
     <string name="sett_title_8">Private Mode</string>
     <string name="sett_sub_title_8">Enables private mode and only selected files will be shared</string>
     <string name="sett_title_9">Show Installed Apps</string>
@@ -86,4 +94,19 @@
     <string name="folder_mode_explanation">Devices can browse your shared folder. Turn on Private mode to share selected files only.</string>
     <string name="no_files_selected">No files selected</string>
     <string name="selected_files_count">%1$d files selected</string>
+    <string name="remembered_devices_title">Remembered devices</string>
+    <string name="remembered_devices_hint">Browsers you allow to connect automatically. Remove one or clear all to require approval next time.</string>
+    <string name="remembered_devices_empty">No remembered devices.</string>
+    <string name="remembered_devices_unknown">Remembered browser</string>
+    <string name="remembered_devices_identifier">Browser ID · %1$s</string>
+    <string name="remembered_devices_remove">Remove</string>
+    <string name="remembered_devices_remove_named">Remove %1$s</string>
+    <string name="remembered_devices_clear_all">Clear all</string>
+    <string name="remembered_devices_close">Close</string>
+    <plurals name="remembered_devices_count">
+        <item quantity="one">%d device remembered</item>
+        <item quantity="other">%d devices remembered</item>
+    </plurals>
+    <string name="remembered_devices_last_connected">Last connected · %1$s</string>
+    <string name="remembered_devices_date_unknown">Connection date unavailable</string>
 </resources>

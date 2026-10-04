@@ -64,6 +64,9 @@ public final class WebServer {
         if (requestHandler != null) requestHandler.setRoot(root);
     }
 
+    boolean isAuthorized(io.netty.handler.codec.http.HttpRequest request) { return requestHandler.isSocketAuthorized(request); }
+    SslContext getSslContext() { return sslContext; }
+
     public void setAllowHiddenMedia(boolean allowHiddenMedia) {
         if (requestHandler != null) requestHandler.setAllowHiddenMedia(allowHiddenMedia);
     }
@@ -87,7 +90,8 @@ public final class WebServer {
                             if (sslContext != null) socket.pipeline().addLast("ssl", sslContext.newHandler(socket.alloc()));
                             socket.pipeline().addLast("readTimeout", new ReadTimeoutHandler(120, TimeUnit.SECONDS));
                             socket.pipeline().addLast("writeTimeout", new WriteTimeoutHandler(120, TimeUnit.SECONDS));
-                            socket.pipeline().addLast("http", new HttpServerCodec());
+                            socket.pipeline().addLast("http", new HttpServerCodec(64 * 1024, 8192, 8192));
+                            socket.pipeline().addLast("jsonCompression", new JsonContentCompressor());
                             socket.pipeline().addLast("chunked", new ChunkedWriteHandler());
                             socket.pipeline().addLast(requestExecutorGroup, "requests", requestHandler.newChannelHandler());
                         }
@@ -109,7 +113,7 @@ public final class WebServer {
             return SslContextBuilder.forServer(managerFactory).build();
         } catch (Exception e) {
             Log.e(Constants.LOG_TAG, "SSL Error: " + e.getMessage());
-            return null;
+            throw new IllegalStateException("Unable to initialize HTTPS", e);
         }
     }
 

@@ -28,7 +28,7 @@
 - Lightweight app designed for faster, multiple and parallel file sharing purposes.
 - Send and receive files over wifi or within a network with anyone or on any device.
 - Completely works offline, it uses no data to share your files.
-- 13 built-in web interface themes.
+- Default and Zen Inspired web interface themes, with light and dark modes.
 
 ## Download
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
@@ -84,6 +84,8 @@ See the [GNU General Public License](https://github.com/akanshSirohi/ShareX/blob
 git clone https://github.com/akanshSirohi/ShareX.git
 ```
 3. Run the app with Android Studio.
+
+The web portal source lives in `web/`. See [the portal build guide](web/README.md) for development, static export, and copying the build into Android assets.
 
 ## Quick Open ShareX Url In PC
 1) Open Notepad

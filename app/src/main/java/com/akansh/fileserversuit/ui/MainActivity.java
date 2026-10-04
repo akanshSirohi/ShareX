@@ -25,7 +25,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.InputType;
@@ -65,6 +64,7 @@ import com.akansh.fileserversuit.transfer_history.TransferHistoryActivity;
 import com.akansh.fileserversuit.common.Utils;
 import com.akansh.fileserversuit.server.DeviceManager;
 import com.akansh.fileserversuit.server.ServerService;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.akansh.fileserversuit.server.ThemesData;
 import com.akansh.fileserversuit.server.WebInterfaceSetup;
 import com.akansh.plugins.PluginsManager;
@@ -88,10 +88,6 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final String[] PERMISSIONS = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-    };
 
     private ImageButton serverBtn,hide_logger_btn;
     Utils utils;
@@ -128,16 +124,13 @@ public class MainActivity extends AppCompatActivity {
     private final java.util.concurrent.ExecutorService selectionExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
     private MaterialSwitch privateModeSwitch;
     DeviceManager deviceManager;
-    ActivityResultLauncher<Intent> storagePermissionResultLauncher,
-            rootFolderPickerResultLauncher,
+    ActivityResultLauncher<Intent> rootFolderPickerResultLauncher,
             pluginFolderPickerResultLauncher,
-            batteryActivityResultLauncher,
             mutipleFilesActivityResultLauncher,
             gallerySelectorActivityResultLauncher;
 
     int exit = 0;
     int currentTheme, storageChoice = 0;
-    boolean requestingStorage = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -198,11 +191,11 @@ public class MainActivity extends AppCompatActivity {
         settTheme = findViewById(R.id.sett_subtitle7);
         plugin_folder_label = findViewById(R.id.sett_subtitle11);
         plugin_folder_label.setText(utils.loadPluginDevFolder());
-        String dev_count = deviceManager.getRemDevices() + " devices remembered";
+        String dev_count = rememberedDeviceCount();
         settRemDev.setText(dev_count);
         settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME,0)));
 
-        currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME,0);
+        currentTheme = themesData.normalizeIndex(utils.loadInt(Constants.WEB_INTERFACE_THEME,0));
 
         logger.setOnLongClickListener(v -> true);
         clearLog();
@@ -217,30 +210,16 @@ public class MainActivity extends AppCompatActivity {
             restartServer();
         });
 
-        storagePermissionResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && requestingStorage) {
-                if(Environment.isExternalStorageManager()) {
-                    requestingStorage = false;
-                    initializeApp();
-                }else{
-                    requestStoragePermissions();
-                }
-            }else{
-                requestingStorage = true;
-            }
-        });
-
         rootFolderPickerResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if(result.getResultCode() == Activity.RESULT_OK) {
                 try {
+                    if (result.getData() == null || result.getData().getData() == null) return;
                     Uri uri = result.getData().getData();
-                    String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                    if(decode.split(":")[1].contains("primary")) {
-                        utils.saveStorage(Environment.getExternalStorageDirectory().getAbsolutePath());
-                    }else{
-                        utils.saveStorage(utils.getSDCardRoot());
-                    }
-                    File f = new File(utils.loadRoot(),decode.split(":")[2]);
+                    String documentId = android.provider.DocumentsContract.getTreeDocumentId(uri);
+                    String removablePath = utils.getSDCardRoot();
+                    File removable = removablePath == null || removablePath.isEmpty() ? null : new File(removablePath);
+                    File f = StorageFolder.resolve(documentId, Environment.getExternalStorageDirectory(), removable);
+                    utils.saveStorage(documentId.startsWith("primary:") ? Environment.getExternalStorageDirectory().getAbsolutePath() : removablePath);
                     serverRoot = f.getAbsolutePath();
                     utils.saveRoot(serverRoot);
                     pushLog("Shared folder changed to " + serverRoot, true);
@@ -248,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
                     restartServer();
                 }catch (Exception e) {
                     Log.d(Constants.LOG_TAG,"Err2: "+e);
+                    showSnackbar("Choose an accessible folder on internal storage or an SD card.");
                 }
             }
         });
@@ -279,15 +259,7 @@ public class MainActivity extends AppCompatActivity {
         gallerySelectorActivityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(), result -> addPickedFiles(result, true));
 
-        batteryActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            utils.saveSetting(Constants.ASKED_BATTERY_OPT,true);
-        });
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            initRequestPermissions();
-        } else {
-            initializeApp();
-        }
+        initializeApp();
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
@@ -455,7 +427,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         View.OnClickListener sharingListener = view -> {
-            askIgnoreBatteryOptimizations();
+            if (!utils.isServiceRunning(ServerService.class) && !checkStoragePermissions()) {
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.permissions_storage_title)
+                        .setMessage(R.string.permissions_storage_reason)
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .setPositiveButton(R.string.permissions_storage_action, (dialog, which) -> requestStoragePermissions())
+                        .show();
+                return;
+            }
             if (!utils.isServiceRunning(ServerService.class)) {
                 if(isValidIP()) {
                     pushLog("Starting server...", true);
@@ -473,10 +453,9 @@ public class MainActivity extends AppCompatActivity {
         serverBtn.setOnClickListener(sharingListener);
         serverBtnTxt.setOnClickListener(sharingListener);
 
-        // Copy WebApp from app assets to Internal Storage
-        File f=new File(String.format("/data/data/%s/%s/index.html",getPackageName(),Constants.NEW_DIR));
-        if(!f.exists() || Constants.DEBUG) {
-            WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this, this, utils);
+        // Extract the versioned web archive; debug launches always refresh it.
+        WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this, this, utils);
+        if(!webInterfaceSetup.isInstalled() || com.akansh.fileserversuit.BuildConfig.DEBUG) {
             webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {
                 @Override
                 public void onSetupCompeted(boolean status) {
@@ -528,6 +507,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationView navigationView=findViewById(R.id.navigationView);
         boolean advancedMode = utils.loadSetting(Constants.ADVANCED_MODE);
         navigationView.getMenu().findItem(R.id.clear_log).setVisible(advancedMode);
+        navigationView.getMenu().findItem(R.id.plugins).setVisible(advancedMode);
         navigationView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
@@ -569,12 +549,20 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
         setUp_settingsListener();
+        findViewById(R.id.settings_permissions).setOnClickListener(view ->
+                startActivity(new Intent(this, PermissionsActivity.class)));
+        findViewById(R.id.settings_web_password).setOnClickListener(view -> {
+            if (getSupportFragmentManager().findFragmentByTag(WebPasswordDialog.TAG) == null) {
+                new WebPasswordDialog().show(getSupportFragmentManager(), WebPasswordDialog.TAG);
+            }
+        });
         MaterialSwitch advancedModeSwitch = findViewById(R.id.advanced_mode_switch);
         advancedModeSwitch.setChecked(advancedMode);
         advancedModeSwitch.setOnCheckedChangeListener((buttonView, enabled) -> {
             utils.saveSetting(Constants.ADVANCED_MODE, enabled);
             applyAdvancedMode(enabled);
             navigationView.getMenu().findItem(R.id.clear_log).setVisible(enabled);
+            navigationView.getMenu().findItem(R.id.plugins).setVisible(enabled);
         });
         applyAdvancedMode(advancedMode);
 
@@ -582,25 +570,8 @@ public class MainActivity extends AppCompatActivity {
         pluginsManager.fetchPluginAppsFile();
     }
 
-    public void askIgnoreBatteryOptimizations() {
-        if(!utils.loadSetting(Constants.ASKED_BATTERY_OPT)) {
-            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                    intent.setData(Uri.parse("package:" + getPackageName()));
-                    batteryActivityResultLauncher.launch(intent);
-                }
-            }
-        }
-    }
-
     public boolean checkStoragePermissions() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            return ActivityCompat.checkSelfPermission(this,PERMISSIONS[0]) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this,PERMISSIONS[1]) == PackageManager.PERMISSION_GRANTED;
-        }
-        return true;
+        return PermissionsActivity.hasStorageAccess(this);
     }
 
     public boolean checkCameraPermission() {
@@ -609,51 +580,27 @@ public class MainActivity extends AppCompatActivity {
 
     public void requestCameraPermission() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA},Constants.CAMERA_REQ_CODE);
+            new MaterialAlertDialogBuilder(this).setTitle(R.string.permissions_camera_title)
+                    .setMessage(R.string.permissions_camera_reason)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(R.string.permissions_camera_action, (dialog, which) -> {
+                        if (utils.loadSetting("asked_camera_permission") && !shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                            startActivity(new Intent(this, PermissionsActivity.class));
+                        } else {
+                            utils.saveSetting("asked_camera_permission", true);
+                            requestPermissions(new String[]{Manifest.permission.CAMERA}, Constants.CAMERA_REQ_CODE);
+                        }
+                    }).show();
         }
     }
 
     public void requestStoragePermissions() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                if (!Environment.isExternalStorageManager()) {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                    intent.addCategory("android.intent.category.DEFAULT");
-                    intent.setData(Uri.parse("package:"+getPackageName()));
-                    storagePermissionResultLauncher.launch(intent);
-                    requestingStorage = true;
-                }
-            } catch (Exception e) {
-                if (!Environment.isExternalStorageManager()) {
-                    Intent intent = new Intent();
-                    intent.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                    storagePermissionResultLauncher.launch(intent);
-                }
-            }
-        }
-    }
-
-    public void initRequestPermissions() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            requestPermissions(PERMISSIONS,Constants.STORAGE_REQ_CODE);
-        }else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-            if (!Environment.isExternalStorageManager()) {
-                requestStoragePermissions();
-            } else {
-                initializeApp();
-            }
-        }
+        startActivity(new Intent(this, PermissionsActivity.class));
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == Constants.STORAGE_REQ_CODE) {
-            if (!checkStoragePermissions()) {
-                initRequestPermissions();
-                return;
-            }
-            initializeApp();
-        }else if(requestCode == Constants.CAMERA_REQ_CODE) {
+        if(requestCode == Constants.CAMERA_REQ_CODE) {
             if(checkCameraPermission()) {
                 initQrScanner();
             }
@@ -682,7 +629,7 @@ public class MainActivity extends AppCompatActivity {
         }else if(action.equals(Constants.ACTION_PROGRESS)){
             updateTransferActivity();
         }else if(action.equals(Constants.ACTION_AUTH)) {
-            showAuthDialog(intent.getStringExtra("device_id"));
+            showAuthDialog(intent.getStringExtra("device_id"), intent.getStringExtra("device_name"));
         }else if(action.equals(Constants.ACTION_UPDATE_UI_STOP)) {
             runOnUiThread(()->{
                 changeUI(Constants.SERVER_OFF);
@@ -701,7 +648,6 @@ public class MainActivity extends AppCompatActivity {
         CardView card1 = findViewById(R.id.sett_card1);
         CardView card2 = findViewById(R.id.sett_card2);
         CardView card3 = findViewById(R.id.sett_card3);
-        CardView card4 = findViewById(R.id.sett_card4);
         CardView card6 = findViewById(R.id.sett_card6);
         CardView card7 = findViewById(R.id.sett_card7);
         CardView card8 = findViewById(R.id.sett_card8);
@@ -710,13 +656,13 @@ public class MainActivity extends AppCompatActivity {
         CardView card11 = findViewById(R.id.sett_card11);
         CompoundButton settHFCheck = findViewById(R.id.sett_hideF_checkBox);
         CompoundButton settRMCheck = findViewById(R.id.sett_resMod_checkBox);
-        CompoundButton settFDCheck = findViewById(R.id.sett_frceDwl_checkBox);
         CompoundButton settAppsCheck = findViewById(R.id.sett_apps_checkBox);
         CompoundButton settSslCheck = findViewById(R.id.sett_ssl_checkBox);
         CompoundButton settPluginDevCheck = findViewById(R.id.sett_plugin_debug_checkBox);
         TextView settPort = findViewById(R.id.sett_subtitle8);
         ImageButton sett_plugin_folder = findViewById(R.id.sett_plugin_folder);
-        ImageButton settResetRoot = findViewById(R.id.sett_reset_root);
+        View settResetRoot = findViewById(R.id.sett_reset_root);
+        findViewById(R.id.sett_choose_root).setOnClickListener(view -> card1.performClick());
         ImageButton sett_plugin_debug_link = findViewById(R.id.sett_plugin_debug_link);
 
 
@@ -725,13 +671,19 @@ public class MainActivity extends AppCompatActivity {
             if(utils.isExternalStorageMounted()) {
                 String[] options = {"Internal Storage","SD Card"};
                 String[] storages = {Environment.getExternalStorageDirectory().getAbsolutePath(),utils.getSDCardRoot()};
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Choose Default Storage");
+                com.google.android.material.dialog.MaterialAlertDialogBuilder builder = new com.google.android.material.dialog.MaterialAlertDialogBuilder(MainActivity.this);
+                builder.setTitle(R.string.shared_root_title);
+                storageChoice = Math.max(0, Math.min(options.length - 1, storageChoice));
                 builder.setSingleChoiceItems(options, storageChoice, (dialog, which) -> {
                     storageChoice = which;
                 });
                 builder.setPositiveButton("Set", (dialog, which) -> {
                     dialog.dismiss();
+                    String selectedRoot = storages[storageChoice];
+                    if (selectedRoot == null || !new File(selectedRoot).isDirectory() || !new File(selectedRoot).canRead()) {
+                        showSnackbar("Selected storage is unavailable.");
+                        return;
+                    }
                     utils.saveStorage(storages[storageChoice]);
                     serverRoot = storages[storageChoice];
                     utils.saveRoot(serverRoot);
@@ -780,41 +732,18 @@ public class MainActivity extends AppCompatActivity {
         });
         card3.setOnClickListener(v -> settRMCheck.setChecked(!settRMCheck.isChecked()));
 
-        // ForceD Download Settings
-        settFDCheck.setChecked(utils.loadSetting(Constants.FORCE_DOWNLOAD));
-        settFDCheck.setOnCheckedChangeListener((compoundButton, b) -> utils.saveSetting(Constants.FORCE_DOWNLOAD,b));
-        card4.setOnClickListener(v -> settFDCheck.setChecked(!settFDCheck.isChecked()));
-
-        // Clear Remember Device Settings
-        card6.setOnClickListener(v -> {
-            deviceManager.clearAll();
-            showSnackbar("All remembered devices cleared!");
-            Timer myTimer=new Timer();
-            myTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    MainActivity.this.runOnUiThread(() -> settRemDev.setText(deviceManager.getRemDevices()+" devices remembered"));
-                }
-            },500);
-        });
+        // Inspect remembered browsers before removing one or all.
+        card6.setOnClickListener(v -> RememberedDevicesDialog.show(this, deviceManager, () -> {
+            if (settRemDev != null) settRemDev.setText(rememberedDeviceCount());
+        }));
 
         // Theme Chooser Setting
         card7.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("Choose Theme");
-            builder.setSingleChoiceItems(themesData.getDisplayList(), currentTheme, (dialog, which) -> {
-                currentTheme = which;
-            });
-            builder.setPositiveButton("Set", (dialog, which) -> {
+            ThemePickerDialog.show(this, utils.loadInt(Constants.WEB_INTERFACE_THEME, 0), selected -> {
+                currentTheme = selected;
                 utils.saveInt(Constants.WEB_INTERFACE_THEME, currentTheme);
                 settTheme.setText(themesData.getDisplayItem(currentTheme));
-                dialog.dismiss();
             });
-            builder.setNegativeButton("Cancel", (dialog, which) -> {
-                currentTheme = utils.loadInt(Constants.WEB_INTERFACE_THEME,0);
-                dialog.dismiss();
-            });
-            builder.show();
         });
 
         // Sharex Port Settings
@@ -915,16 +844,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void applyAdvancedMode(boolean enabled) {
-        int[] advancedCards = {R.id.sett_card2, R.id.sett_card3, R.id.sett_card4,
-                R.id.sett_card6, R.id.sett_card8, R.id.sett_card9, R.id.sett_card10,
-                R.id.sett_card11};
+        int[] advancedCards = {R.id.sett_card11};
         for (int cardId : advancedCards) {
             View card = findViewById(cardId);
             if (card != null) card.setVisibility(enabled ? View.VISIBLE : View.GONE);
         }
-        int[] advancedHeadings = {R.id.advanced_details_heading, R.id.settings_network_heading,
-                R.id.settings_security_heading, R.id.settings_system_heading,
-                R.id.settings_advanced_security_heading, R.id.settings_diagnostics_heading};
+        int[] advancedHeadings = {R.id.settings_diagnostics_heading};
         for (int headingId : advancedHeadings) {
             View heading = findViewById(headingId);
             if (heading != null) heading.setVisibility(enabled ? View.VISIBLE : View.GONE);
@@ -942,11 +867,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateRootLabel() {
         if (settDRoot == null || utils == null) return;
-        if (utils.loadSetting(Constants.ADVANCED_MODE)) {
-            settDRoot.setText(getString(R.string.settings_root_advanced_summary, serverRoot));
-        } else {
-            settDRoot.setText(R.string.sett_sub_title_1);
-        }
+        settDRoot.setText(getString(R.string.settings_root_advanced_summary, serverRoot));
     }
 
     private void toggleSettings() {
@@ -1037,9 +958,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startServer() {
+        if (!checkStoragePermissions()) {
+            showSnackbar(getString(R.string.permissions_storage_needed));
+            return;
+        }
         if(!utils.isServiceRunning(ServerService.class)) {
             Intent intent = new Intent(MainActivity.this, ServerService.class);
-            startService(intent);
+            ContextCompat.startForegroundService(this, intent);
         }
     }
 
@@ -1122,6 +1047,8 @@ public class MainActivity extends AppCompatActivity {
     private void privateMode() {
         if (utils == null) return;
         boolean enabled = utils.loadSetting(Constants.PRIVATE_MODE);
+        SharingStatusView statusDial = findViewById(R.id.sharing_status_dial);
+        if (statusDial != null) statusDial.setPrivateMode(enabled);
         if (privateModeSwitch != null && privateModeSwitch.isChecked() != enabled) privateModeSwitch.setChecked(enabled);
         ((TextView) findViewById(R.id.mode_description)).setText(enabled
                 ? R.string.private_mode_explanation : R.string.folder_mode_explanation);
@@ -1344,55 +1271,26 @@ public class MainActivity extends AppCompatActivity {
         snackbar.show();
     }
 
-    public void showAuthDialog(final String device_id) {
-        if(!isAuthDialogOpened) {
-            DialogInterface.OnClickListener dialogClickListener = (dialog, which) -> {
-                isAuthDialogOpened=false;
-                switch (which) {
-                    case DialogInterface.BUTTON_POSITIVE:
-                        deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_TEMP);
-                        break;
-                    case DialogInterface.BUTTON_NEGATIVE:
-                        deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_DENIED);
-                        break;
-                    case DialogInterface.BUTTON_NEUTRAL:
-                        deviceManager.addDevice(device_id,Constants.DEVICE_TYPE_PERMANENT);
-                        break;
-                }
-                Timer myTimer=new Timer();
-                myTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        String count = deviceManager.getRemDevices() + " devices remembered";
-                        MainActivity.this.runOnUiThread(() -> settRemDev.setText(count));
-                    }
-                },500);
-            };
+    private String rememberedDeviceCount() {
+        int count = deviceManager.getRemDevices();
+        return getResources().getQuantityString(R.plurals.remembered_devices_count, count, count);
+    }
 
-            isAuthDialogOpened=true;
-            try {
-                AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
-                        .setMessage("Incoming new device request!\nAre you sure to allow this device?")
-                        .setPositiveButton("Allow", dialogClickListener)
-                        .setNegativeButton("Don't Allow", dialogClickListener)
-                        .setNeutralButton("Always allow this device", dialogClickListener)
-                        .setTitle("Request Confirmation")
-                        .setIcon(R.drawable.ic_logo)
-                        .setCancelable(false).show();
-                TextView textView = dialog.findViewById(android.R.id.message);
-                TextView textView2 = dialog.findViewById(android.R.id.button1);
-                TextView textView3 = dialog.findViewById(android.R.id.button2);
-                TextView textView4 = dialog.findViewById(android.R.id.button3);
-                TextView textView5 = dialog.findViewById(getResources().getIdentifier( "alertTitle", "id", "android" ));
-                Typeface face = Typeface.createFromAsset(getAssets(), "fonts/google_sans.ttf");
-                textView.setTypeface(face);
-                textView2.setTypeface(face, Typeface.BOLD);
-                textView3.setTypeface(face, Typeface.BOLD);
-                textView4.setTypeface(face, Typeface.BOLD);
-                textView5.setTypeface(face, Typeface.BOLD);
-            } catch (Exception e) {
-                Log.d(Constants.LOG_TAG, "Dialog Error: " + e);
-            }
+    public void showAuthDialog(final String device_id) { showAuthDialog(device_id, ""); }
+
+    public void showAuthDialog(final String device_id, final String deviceName) {
+        if (isAuthDialogOpened || isFinishing() || isDestroyed()) return;
+        isAuthDialogOpened = true;
+        try {
+            androidx.appcompat.app.AlertDialog dialog = WebAccessDialog.show(this,
+                    utils.loadSetting(Constants.PRIVATE_MODE), utils.loadSetting(Constants.RESTRICT_MODIFY), type -> {
+                        deviceManager.addDevice(device_id, type, deviceName);
+                        if (settRemDev != null) settRemDev.setText(rememberedDeviceCount());
+                    });
+            dialog.setOnDismissListener(ignored -> isAuthDialogOpened = false);
+        } catch (Exception e) {
+            isAuthDialogOpened = false;
+            Log.e(Constants.LOG_TAG, "Unable to show browser approval", e);
         }
     }
 }

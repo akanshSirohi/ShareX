@@ -7,6 +7,7 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
@@ -40,6 +41,7 @@
             android:name="com.akansh.plugins.ui.PluginsActivity"
             android:exported="false" />
         <activity android:name=".ui.IntroActivity" />
+        <activity android:name=".ui.PermissionsActivity" android:exported="false" />
         <activity android:name=".transfer_history.TransferHistoryActivity" />
         <activity
             android:name=".ui.Splash"

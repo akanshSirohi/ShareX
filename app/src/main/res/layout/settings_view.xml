@@ -4,16 +4,26 @@
         <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:id="@+id/settings_content" ns0:paddingStart="20dp" ns0:paddingEnd="20dp" ns0:paddingBottom="24dp">
             <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="vertical">
                 <TextView ns0:id="@+id/textView15" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="Settings" ns0:textSize="26sp" ns0:textColor="@color/txt_color" ns0:textStyle="bold" ns0:layout_marginTop="16dp" />
-                <com.google.android.material.materialswitch.MaterialSwitch ns0:id="@+id/advanced_mode_switch" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:minHeight="56dp" ns0:text="Advanced mode" ns0:textColor="@color/txt_color" ns0:textSize="15sp" />
+                <com.google.android.material.materialswitch.MaterialSwitch ns0:id="@+id/advanced_mode_switch" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:minHeight="56dp" ns0:text="@string/advanced_mode" ns0:textColor="@color/txt_color" ns0:textSize="15sp" />
+                <TextView ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="@string/advanced_mode_summary" ns0:textSize="14sp" ns0:textColor="@color/txt_color_secondary" ns0:layout_marginBottom="8dp" />
             </LinearLayout>
             <TextView ns0:id="@+id/settings_sharing_heading" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="Sharing" ns0:textSize="14sp" ns0:textColor="@color/txt_color" ns0:textStyle="bold" ns0:layout_marginTop="24dp" ns0:layout_marginBottom="8dp" />
+            <com.google.android.material.card.MaterialCardView ns0:id="@+id/settings_permissions" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginBottom="8dp" ns0:clickable="true" ns0:focusable="true" ns0:foreground="?attr/selectableItemBackground" ns1:cardCornerRadius="12dp" ns1:cardElevation="0dp" ns1:cardBackgroundColor="@color/surface_container">
+                <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:padding="16dp" ns0:minHeight="80dp">
+                    <TextView ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="@string/permissions_title" ns0:textSize="16sp" ns0:textStyle="bold" ns0:textColor="@color/txt_color" />
+                    <TextView ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginTop="4dp" ns0:text="@string/permissions_summary" ns0:textSize="14sp" ns0:textColor="@color/txt_color_secondary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
             <androidx.cardview.widget.CardView ns0:id="@+id/sett_card1" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginBottom="2dp" ns0:clickable="true" ns0:focusable="true" ns0:foreground="?attr/selectableItemBackground" ns1:cardCornerRadius="8dp" ns1:cardElevation="0dp" ns1:cardBackgroundColor="@color/surface_container">
-                <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:minHeight="80dp" ns0:orientation="horizontal" ns0:gravity="center_vertical" ns0:padding="16dp">
-                    <LinearLayout ns0:layout_width="0dp" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:layout_weight="1" ns0:paddingEnd="12dp">
+                <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:minHeight="80dp" ns0:orientation="vertical" ns0:padding="16dp">
+                    <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="vertical">
                         <TextView ns0:id="@+id/sett_title1" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="@string/sett_title_1" ns0:textSize="16sp" ns0:textColor="@color/txt_color" ns0:textStyle="bold" />
                         <TextView ns0:id="@+id/sett_subtitle1" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="@string/sett_sub_title_1" ns0:textSize="14sp" ns0:textColor="@color/txt_color" ns0:layout_marginTop="4dp" />
                     </LinearLayout>
-                    <ImageButton ns0:id="@+id/sett_reset_root" ns0:layout_width="48dp" ns0:layout_height="48dp" ns0:background="?attr/selectableItemBackgroundBorderless" ns0:padding="12dp" ns0:contentDescription="@string/settings_advanced" ns1:srcCompat="@drawable/ic_arrow_reset" ns1:tint="@color/txt_color_secondary" />
+                    <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="horizontal" ns0:layout_marginTop="12dp">
+                        <com.google.android.material.button.MaterialButton ns0:id="@+id/sett_choose_root" style="@style/Widget.ShareX.Button.Secondary" ns0:layout_width="0dp" ns0:layout_height="wrap_content" ns0:layout_weight="1" ns0:minHeight="48dp" ns0:text="@string/shared_folder_choose" />
+                        <com.google.android.material.button.MaterialButton ns0:id="@+id/sett_reset_root" style="@style/Widget.ShareX.Button.Secondary" ns0:layout_width="0dp" ns0:layout_height="wrap_content" ns0:layout_weight="1" ns0:layout_marginStart="8dp" ns0:minHeight="48dp" ns0:text="@string/shared_folder_reset" />
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
             <TextView ns0:id="@+id/settings_appearance_heading" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="Browser" ns0:textSize="14sp" ns0:textColor="@color/txt_color" ns0:textStyle="bold" ns0:layout_marginTop="24dp" ns0:layout_marginBottom="8dp" />
@@ -26,6 +36,12 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
             <TextView ns0:id="@+id/settings_security_heading" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="Security" ns0:textSize="14sp" ns0:textColor="@color/txt_color" ns0:textStyle="bold" ns0:layout_marginTop="24dp" ns0:layout_marginBottom="8dp" />
+            <com.google.android.material.card.MaterialCardView ns0:id="@+id/settings_web_password" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginBottom="8dp" ns0:clickable="true" ns0:focusable="true" ns0:foreground="?attr/selectableItemBackground" ns1:cardCornerRadius="12dp" ns1:cardElevation="0dp" ns1:cardBackgroundColor="@color/surface_container">
+                <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:padding="16dp" ns0:minHeight="80dp">
+                    <TextView ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="@string/web_password_title" ns0:textSize="16sp" ns0:textStyle="bold" ns0:textColor="@color/txt_color" />
+                    <TextView ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginTop="4dp" ns0:text="@string/web_password_summary" ns0:textSize="14sp" ns0:textColor="@color/txt_color_secondary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
             <androidx.cardview.widget.CardView ns0:id="@+id/sett_card6" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginBottom="2dp" ns0:clickable="true" ns0:focusable="true" ns0:foreground="?attr/selectableItemBackground" ns1:cardCornerRadius="8dp" ns1:cardElevation="0dp" ns1:cardBackgroundColor="@color/surface_container">
                 <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:minHeight="80dp" ns0:orientation="horizontal" ns0:gravity="center_vertical" ns0:padding="16dp">
                     <LinearLayout ns0:layout_width="0dp" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:layout_weight="1" ns0:paddingEnd="12dp">
@@ -71,15 +87,6 @@
                     <com.google.android.material.materialswitch.MaterialSwitch ns0:id="@+id/sett_resMod_checkBox" ns0:layout_width="56dp" ns0:layout_height="48dp" ns0:contentDescription="@string/sett_title_6" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-            <androidx.cardview.widget.CardView ns0:id="@+id/sett_card4" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginBottom="2dp" ns0:clickable="true" ns0:focusable="true" ns0:foreground="?attr/selectableItemBackground" ns1:cardCornerRadius="8dp" ns1:cardElevation="0dp" ns1:cardBackgroundColor="@color/surface_container">
-                <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:minHeight="80dp" ns0:orientation="horizontal" ns0:gravity="center_vertical" ns0:padding="16dp">
-                    <LinearLayout ns0:layout_width="0dp" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:layout_weight="1" ns0:paddingEnd="12dp">
-                        <TextView ns0:id="@+id/sett_title4" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="@string/sett_title_7" ns0:textSize="16sp" ns0:textColor="@color/txt_color" ns0:textStyle="bold" />
-                        <TextView ns0:id="@+id/sett_subtitle4" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="@string/sett_sub_title_7" ns0:textSize="14sp" ns0:textColor="@color/txt_color" ns0:layout_marginTop="4dp" />
-                    </LinearLayout>
-                    <com.google.android.material.materialswitch.MaterialSwitch ns0:id="@+id/sett_frceDwl_checkBox" ns0:layout_width="56dp" ns0:layout_height="48dp" ns0:contentDescription="@string/sett_title_7" />
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
             <TextView ns0:id="@+id/settings_system_heading" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="Applications" ns0:textSize="14sp" ns0:textColor="@color/txt_color" ns0:textStyle="bold" ns0:layout_marginTop="24dp" ns0:layout_marginBottom="8dp" />
             <androidx.cardview.widget.CardView ns0:id="@+id/sett_card9" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginBottom="2dp" ns0:clickable="true" ns0:focusable="true" ns0:foreground="?attr/selectableItemBackground" ns1:cardCornerRadius="8dp" ns1:cardElevation="0dp" ns1:cardBackgroundColor="@color/surface_container">
                 <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:minHeight="80dp" ns0:orientation="horizontal" ns0:gravity="center_vertical" ns0:padding="16dp">
@@ -102,7 +109,6 @@
                     <ImageButton ns0:id="@+id/sett_plugin_debug_link" ns0:layout_width="48dp" ns0:layout_height="48dp" ns0:background="?attr/selectableItemBackgroundBorderless" ns0:padding="12dp" ns0:contentDescription="@string/settings_advanced" ns1:srcCompat="@drawable/ic_share" ns1:tint="@color/txt_color_secondary" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
-            <TextView ns0:id="@+id/settings_advanced_security_heading" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="Diagnostics" ns0:textSize="14sp" ns0:textColor="@color/txt_color" ns0:visibility="gone" />
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

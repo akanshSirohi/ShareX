@@ -32,7 +32,13 @@ final class WebResponse {
     }
 
     static WebResponse text(int status, String body) {
-        return new WebResponse(status, body == null ? "" : body, null, null, 0, 0, false, null, null, false);
+        return new WebResponse(status, body == null ? "" : body, null, null, 0, 0, false, null, null, false)
+                .header("Content-Type", "text/plain; charset=utf-8");
+    }
+
+    static WebResponse json(int status, Object body) {
+        return text(status, body.toString()).header("Content-Type", "application/json; charset=utf-8")
+                .header("Cache-Control", "no-store").header("Vary", "Accept-Encoding");
     }
 
     static WebResponse file(int status, File file, long offset, long length, boolean reportProgress) {

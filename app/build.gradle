@@ -1,5 +1,43 @@
 apply plugin: 'com.android.application'
 
+abstract class VerifyWebUiPackaging extends DefaultTask {
+    @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract RegularFileProperty getPortalArchive()
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract DirectoryProperty getApkDirectory()
+
+    @TaskAction
+    void verify() {
+        File portal = portalArchive.get().asFile
+        def apks = apkDirectory.get().asFile.listFiles().findAll { it.name.endsWith('.apk') }
+        if (apks.isEmpty()) throw new GradleException('No APK available for web UI verification')
+        for (File apk : apks) {
+            new java.util.zip.ZipFile(apk).withCloseable { archive ->
+                String entryName = "assets/${portal.name}"
+                def entry = archive.getEntry(entryName)
+                if (entry == null) throw new GradleException("Web UI archive missing from ${apk.name}: ${entryName}")
+                archive.getInputStream(entry).withCloseable { input ->
+                    if (!Arrays.equals(portal.bytes, input.readAllBytes())) {
+                        throw new GradleException("Web UI archive differs in ${apk.name}")
+                    }
+                }
+                logger.lifecycle("Verified web UI archive in ${apk.name}")
+            }
+        }
+    }
+}
+
+// The exported asset folder is the web UI version. Node is only needed when rebuilding the portal.
+def webUiConfig = new groovy.json.JsonSlurper().parseText(
+        providers.fileContents(rootProject.layout.projectDirectory.file('web/web-ui.json')).asText.get())
+def webUiFolder = webUiConfig.assetFolder
+if (!(webUiFolder ==~ /sharex_web_v\d+(?:_\d+)*/)) {
+    throw new GradleException('Invalid web UI assetFolder in web/web-ui.json')
+}
+
 android {
     compileSdk 37
     buildFeatures {
@@ -7,7 +45,13 @@ android {
     }
     ndkVersion "24.0.8215888"
 
+    androidResources {
+        // Keep normal metadata exclusions, but allow Next.js's _next asset directory.
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+
     defaultConfig {
+        buildConfigField 'String', 'WEB_INTERFACE_DIR', '"' + webUiFolder + '"'
         applicationId "com.akansh.fileserversuit"
         minSdkVersion 26
         targetSdkVersion 36
@@ -91,9 +135,50 @@ dependencies {
     implementation 'com.jayway.jsonpath:json-path:3.0.0'
 
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
 }
 repositories {
     mavenCentral()
+}
+
+// Keep Android builds independent of npm while rejecting missing or stale portal exports.
+def verifyWebUiAssets = tasks.register('verifyWebUiAssets') {
+    def portalArchive = file("src/main/assets/${webUiFolder}.zip")
+    inputs.file(rootProject.file('web/web-ui.json'))
+    inputs.file(portalArchive)
+    doLast {
+        if (!portalArchive.isFile()) throw new GradleException('Web UI archive missing. Run npm ci and npm run build:assets in web/.')
+        new java.util.zip.ZipFile(portalArchive).withCloseable { archive ->
+            def manifest = archive.getEntry('build-info.json')
+            if (archive.getEntry('index.html') == null || manifest == null) {
+                throw new GradleException('Web UI archive incomplete. Run npm run build:assets in web/.')
+            }
+            archive.getInputStream(manifest).withCloseable { input ->
+                if (new groovy.json.JsonSlurper().parse(input).assetFolder != webUiFolder) {
+                    throw new GradleException('Web UI version mismatch. Run npm run build:assets in web/.')
+                }
+            }
+        }
+    }
+}
+
+tasks.named('preBuild').configure { dependsOn(verifyWebUiAssets) }
+
+// Archive extraction tests must rerun when the packaged build changes.
+tasks.withType(Test).configureEach {
+    inputs.file(layout.projectDirectory.file("src/main/assets/${webUiFolder}.zip"))
+}
+
+// Check the APK itself to catch missing or altered archives.
+androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+    String variantName = variant.name.capitalize()
+    def verification = tasks.register("verify${variantName}WebUiPackaging", VerifyWebUiPackaging) {
+        portalArchive.set(layout.projectDirectory.file("src/main/assets/${webUiFolder}.zip"))
+        apkDirectory.set(variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK.INSTANCE))
+    }
+    tasks.matching { it.name == "assemble${variantName}" }.configureEach {
+        dependsOn(verification)
+    }
 }

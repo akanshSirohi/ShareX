@@ -15,7 +15,9 @@ import android.widget.TextView;
 
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.common.EdgeToEdge;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.button.MaterialButton;
+import com.akansh.fileserversuit.common.Utils;
+import com.akansh.fileserversuit.common.Constants;
 
 public class IntroActivity extends AppCompatActivity {
 
@@ -23,14 +25,15 @@ public class IntroActivity extends AppCompatActivity {
     private LinearLayout layoutDot;
     private TextView[] dotstv;
     private int[] layouts;
-    private FloatingActionButton btnNext;
-    private FloatingActionButton btnPrev;
+    private MaterialButton btnNext;
+    private MaterialButton btnPrev;
+    private boolean openingMain;
     private MyPagerAdapter myPagerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_intro);
+        setContentView(R.layout.activity_intro_modern);
         EdgeToEdge.apply(this, findViewById(R.id.intro_root));
 
         viewPager = findViewById(R.id.viewPager);
@@ -59,7 +62,7 @@ public class IntroActivity extends AppCompatActivity {
 
         // For Initial Slidera
         layouts = new int[]{R.layout.slider1,R.layout.slider2,R.layout.slider3,R.layout.slider4,R.layout.slider5,R.layout.slider6};
-        myPagerAdapter=new MyPagerAdapter(layouts,getApplicationContext());
+        myPagerAdapter=new MyPagerAdapter(layouts,this);
         viewPager.setAdapter(myPagerAdapter);
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -68,9 +71,9 @@ public class IntroActivity extends AppCompatActivity {
             @Override
             public void onPageSelected(int position) {
                 if(position==layouts.length-1) {
-                    btnNext.setImageResource(R.drawable.ic_check);
+                    btnNext.setText(R.string.intro_start);
                 }else{
-                    btnNext.setImageResource(R.drawable.ic_arrow_right);
+                    btnNext.setText(R.string.intro_next);
                 }
                 setDotStatus(position);
             }
@@ -78,16 +81,20 @@ public class IntroActivity extends AppCompatActivity {
             @Override
             public void onPageScrollStateChanged(int state) {}
         });
-        setDotStatus(0);
+        int page = savedInstanceState == null ? 0 : savedInstanceState.getInt("intro_page", 0);
+        viewPager.setCurrentItem(Math.max(0, Math.min(layouts.length - 1, page)), false);
+        setDotStatus(viewPager.getCurrentItem());
 
     }
 
     private void setDotStatus(int page) {
+        ((TextView)findViewById(R.id.intro_progress)).setText(getString(R.string.intro_progress, page + 1, layouts.length));
+        btnNext.setText(page == layouts.length - 1 ? R.string.intro_start : R.string.intro_next);
         layoutDot.removeAllViews();
         dotstv = new TextView[layouts.length];
         for(int i=0; i<layouts.length; i++) {
             dotstv[i] = new TextView(this);
-            dotstv[i].setText(Html.fromHtml("&#8226"));
+            dotstv[i].setText("•");
             dotstv[i].setTextSize(30);
             dotstv[i].setTextColor(getColor(R.color.txt_color_secondary));
             layoutDot.addView(dotstv[i]);
@@ -103,9 +110,17 @@ public class IntroActivity extends AppCompatActivity {
     }
 
     private void startMain() {
-        Intent intent=new Intent(this, MainActivity.class);
+        if (openingMain || isFinishing()) return;
+        openingMain = true;
+        Intent intent=new Intent(this, PermissionsActivity.class);
+        intent.putExtra(PermissionsActivity.ONBOARDING, true);
         startActivity(intent);
         finish();
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putInt("intro_page", viewPager.getCurrentItem());
+        super.onSaveInstanceState(state);
     }
 
 }

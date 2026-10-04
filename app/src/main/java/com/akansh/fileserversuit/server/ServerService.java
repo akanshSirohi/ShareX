@@ -25,9 +25,15 @@ public class ServerService extends Service {
 
     public Context context = this;
     private static final int NOTIFICATION_ID = 2;
+    public static final String ACTION_REFRESH_NOTIFICATION = "com.akansh.fileserversuit.REFRESH_RUNNING_NOTIFICATION";
     private WebServer webServer;
     private WebServerSocket webServerSocket;
     Utils utils=new Utils(context);
+
+    @Override public void onCreate() {
+        super.onCreate();
+        showForegroundNotification("Preparing local file sharing…");
+    }
 
     @Nullable
     @Override
@@ -37,7 +43,12 @@ public class ServerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(intent.getAction() == null) {
+        if (intent != null && ACTION_REFRESH_NOTIFICATION.equals(intent.getAction())) {
+            if (webServer != null) showForegroundNotification("Running At: " + utils.loadString(Constants.SERVER_URL));
+            return START_STICKY;
+        }
+        if(intent == null || intent.getAction() == null) {
+            if (webServer != null) return START_STICKY;
             try {
                 String host = utils.getIPAddress(true);
                 int port = utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT);
@@ -46,15 +57,17 @@ public class ServerService extends Service {
                 webServer.setRoot(utils.loadRoot());
                 webServer.setAllowHiddenMedia(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
                 TransferStats.reset();
+                SharingSession.start(android.os.SystemClock.elapsedRealtime());
                 webServer.start();
                 String prefix = utils.loadSetting(Constants.SSL) ? "https://" : "http://";
                 String url = prefix + webServer.getHostname() + ":" + webServer.getListeningPort();
                 sendLog(Constants.ACTION_URL, "url", url);
                 utils.saveString(Constants.SERVER_URL, url);
                 showForegroundNotification("Running At: " + url);
-                webServerSocket = new WebServerSocket(port + 1, this.getApplication().getPackageName());
+                webServerSocket = new WebServerSocket(port + 1, this.getApplication().getPackageName(), webServer::isAuthorized, webServer.getSslContext());
                 webServerSocket.start();
             } catch (Exception e) {
+                SharingSession.stop();
                 Toast.makeText(this, "Server Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 sendLog(Constants.ACTION_UPDATE_UI_STOP,"","");
                 sendLog(Constants.ACTION_MSG,"msg","Try to change ShareX port");
@@ -62,15 +75,19 @@ public class ServerService extends Service {
                 stopSelf();
             }
         }else if(intent.getAction().equals(Constants.ACTION_STOP_SERVICE)) {
+            SharingSession.stop();
             sendLog(Constants.ACTION_UPDATE_UI_STOP,"","");
             stopForeground(true);
             stopSelf();
+            return START_NOT_STICKY;
         }
         return Service.START_STICKY;
     }
 
     @Override
     public void onDestroy() {
+        SharingSession.stop();
+        try (DeviceManager devices = new DeviceManager(this)) { devices.clearTmp(); }
         TransferStats.flush();
         stopForeground(true);
         if(webServer!=null) {
@@ -85,6 +102,7 @@ public class ServerService extends Service {
         utils.clearCache();
         utils.clearTemp();
         utils.clearThumbs();
+        super.onDestroy();
     }
 
     public void sendLog(String action,String key,String value) {
@@ -122,14 +140,8 @@ public class ServerService extends Service {
         Intent stopSelf = new Intent(this.getApplicationContext(), ServerService.class);
         stopSelf.setAction(Constants.ACTION_STOP_SERVICE);
 
-        PendingIntent pStopSelf;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            pStopSelf = PendingIntent.getActivity
-                    (getApplicationContext(), 0, stopSelf, PendingIntent.FLAG_MUTABLE);
-        }else{
-            pStopSelf = PendingIntent.getActivity
-                    (getApplicationContext(), 0, stopSelf, PendingIntent.FLAG_UPDATE_CURRENT);
-        }
+        PendingIntent pStopSelf = PendingIntent.getService(getApplicationContext(), 1, stopSelf,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -147,12 +159,14 @@ public class ServerService extends Service {
             }
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
             Notification notification = notificationBuilder.setOngoing(true)
+                    .setOnlyAlertOnce(true)
+                    .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
                     .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle(cTitle)
                     .setContentText(contentText)
                     .setContentIntent(contentIntent)
                     .setWhen(System.currentTimeMillis())
-                    .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                    .setPriority(NotificationCompat.PRIORITY_LOW)
                     .setCategory(Notification.CATEGORY_SERVICE)
                     .addAction(R.drawable.ic_xmark,"Stop", pStopSelf)
                     .build();

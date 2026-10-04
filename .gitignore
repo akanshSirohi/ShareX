@@ -1,3 +1,4 @@
+# Android Studio and local IDE state
 *.iml
 .gradle
 /local.properties
@@ -8,9 +9,54 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .idea/deploymentTargetDropDown.xml
+.idea/deploymentTargetSelector.xml
+/.idea/shelf/
+/.idea/dictionaries/
+
+# OS metadata
 .DS_Store
+Thumbs.db
+Desktop.ini
+
+# Android build outputs and local caches (app/build is also ignored in app/.gitignore)
 /build
 /captures
 .externalNativeBuild
 .cxx
+.kotlin/
 /app/release
+
+# Next.js dependencies, static exports, and generated player assets
+/web/node_modules/
+/web/.next/
+/web/out/
+/web/.cache/
+/web/.turbo/
+/web/coverage/
+/web/playwright-report/
+/web/test-results/
+/web/.env
+/web/.env.*
+!/web/.env.example
+!/web/.env.*.example
+/web/public/build-info.json
+/web/public/players/
+*.tsbuildinfo
+
+# Browser automation artifacts
+/.playwright-cli/
+/web/.playwright-cli/
+/output/playwright/
+
+# Tool logs and JVM crash dumps
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+
+# Interrupted packaging files; keep the completed web UI ZIP in Git
+/app/src/main/assets/sharex_web_v*.zip.pending
+/app/src/main/assets/sharex_web_v*.zip.backup

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/intro_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/bg_color">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingStart="24dp" android:paddingEnd="16dp" android:paddingTop="8dp">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_logo" android:importantForAccessibility="no" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/app_name" android:textColor="@color/txt_color" android:textSize="20sp" android:textStyle="bold" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/skip_intro" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="48dp" android:text="@string/skip" />
+    </LinearLayout>
+    <androidx.viewpager.widget.ViewPager android:id="@+id/viewPager" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView android:id="@+id/intro_progress" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:textColor="@color/txt_color_secondary" android:textSize="12sp" android:accessibilityLiveRegion="polite" />
+    <LinearLayout android:id="@+id/dotLayout" android:layout_width="match_parent" android:layout_height="28dp" android:gravity="center" android:orientation="horizontal" android:importantForAccessibility="no" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingStart="24dp" android:paddingEnd="24dp" android:paddingBottom="16dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btn_prev" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="wrap_content" android:layout_height="56dp" android:text="@string/intro_back" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/btn_next" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/intro_next" app:cornerRadius="12dp" />
+    </LinearLayout>
+</LinearLayout>

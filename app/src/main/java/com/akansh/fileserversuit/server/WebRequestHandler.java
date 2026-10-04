@@ -69,6 +69,9 @@ final class WebRequestHandler {
     private final Context context;
     private final Utils utils;
     private final ServerUtils serverUtils;
+    private final FileOperations fileOperations;
+    private final WebPasswordSettings passwordSettings;
+    private final LoginLimiter loginLimiter = new LoginLimiter();
     private volatile String root = Environment.getExternalStorageDirectory().getAbsolutePath();
     private volatile String pluginDevDir;
     private volatile boolean allowHiddenMedia = true;
@@ -84,6 +87,8 @@ final class WebRequestHandler {
         this.context = context;
         this.utils = utils;
         this.serverUtils = serverUtils;
+        this.fileOperations = new FileOperations(utils);
+        this.passwordSettings = new WebPasswordSettings(context);
     }
 
     void setRoot(String root) { this.root = root; }
@@ -103,6 +108,7 @@ final class WebRequestHandler {
 
     private final class RequestChannelHandler extends ChannelInboundHandlerAdapter {
         private HttpRequest request;
+        private java.io.ByteArrayOutputStream passwordBody;
         private HttpPostRequestDecoder decoder;
         private File uploadDirectory;
         private long uploadId;
@@ -127,6 +133,22 @@ final class WebRequestHandler {
             try {
                 if (message instanceof HttpRequest) {
                     request = (HttpRequest) message;
+                    String path = pathOf(request);
+                    boolean login = path.equals("/ShareX/password") && HttpMethod.POST.equals(request.method());
+                    if (login) {
+                        if (!sameOrigin(request) || !approved(request, false)) {
+                            reply(ctx, WebResponse.text(403, "Browser approval required"));
+                            return;
+                        }
+                        passwordBody = new java.io.ByteArrayOutputStream();
+                    } else if (protectedPath(path) && !isAuthRequest(request) && !isAuthorized(request)) {
+                        reply(ctx, WebResponse.text(401, "Authentication required").header("Cache-Control", "no-store"));
+                        return;
+                    }
+                    if (passwordBody != null && message instanceof io.netty.handler.codec.http.HttpContent) {
+                        readPassword(ctx, (io.netty.handler.codec.http.HttpContent)message);
+                        return;
+                    }
                     if (HttpMethod.POST.equals(request.method()) && pathOf(request).equals("/ShareX/uploadFile")) {
                         beginUpload(request);
                         if (message instanceof LastHttpContent) {
@@ -137,6 +159,8 @@ final class WebRequestHandler {
                         return;
                     }
                     if (message instanceof LastHttpContent) routeAndReply(ctx, request);
+                } else if (message instanceof io.netty.handler.codec.http.HttpContent && passwordBody != null) {
+                    readPassword(ctx, (io.netty.handler.codec.http.HttpContent)message);
                 } else if (message instanceof io.netty.handler.codec.http.HttpContent && decoder != null) {
                     decoder.offer((io.netty.handler.codec.http.HttpContent) message);
                     trackUploadBytes();
@@ -159,12 +183,32 @@ final class WebRequestHandler {
             }
         }
 
+        private void readPassword(ChannelHandlerContext ctx, io.netty.handler.codec.http.HttpContent content) throws Exception {
+            if (passwordBody.size() + content.content().readableBytes() > 2048) {
+                passwordBody = null;
+                reply(ctx, WebResponse.text(413, "Password request too large"));
+                return;
+            }
+            byte[] bytes = new byte[content.content().readableBytes()];
+            content.content().getBytes(content.content().readerIndex(), bytes);
+            passwordBody.write(bytes);
+            if (content instanceof LastHttpContent) {
+                byte[] body = passwordBody.toByteArray(); passwordBody = null;
+                String address = ((java.net.InetSocketAddress)ctx.channel().remoteAddress()).getAddress().getHostAddress();
+                reply(ctx, passwordLogin(request, body, address, ctx.pipeline().get("ssl") != null));
+                java.util.Arrays.fill(body, (byte)0);
+            }
+        }
+
         private void beginUpload(HttpRequest httpRequest) throws Exception {
             boolean privateMode = utils.loadSetting(Constants.PRIVATE_MODE);
             if (privateMode) {
                 uploadDirectory = new File(Environment.getExternalStorageDirectory(), "ShareX");
             } else {
-                uploadDirectory = resolveInside(new File(utils.loadRoot()), currentParent);
+                QueryStringDecoder query = new QueryStringDecoder(httpRequest.uri(), StandardCharsets.UTF_8);
+                List<String> locations = query.parameters().get("location");
+                String location = locations == null || locations.isEmpty() ? currentParent : locations.get(0);
+                uploadDirectory = resolveInside(new File(root), location);
             }
             if (!uploadDirectory.isDirectory() && !uploadDirectory.mkdirs()) throw new IllegalArgumentException("Invalid upload folder");
             DefaultHttpDataFactory factory = new DefaultHttpDataFactory(true);
@@ -179,13 +223,14 @@ final class WebRequestHandler {
         }
 
         private void finishUpload(ChannelHandlerContext ctx) throws Exception {
+            if (!isAuthorized(request)) throw new SecurityException("Session expired");
             int count = 0;
             for (InterfaceHttpData item : decoder.getBodyHttpDatas()) {
                 if (!(item instanceof io.netty.handler.codec.http.multipart.HttpData)) continue;
                 io.netty.handler.codec.http.multipart.HttpData data = (io.netty.handler.codec.http.multipart.HttpData) item;
                 if (!(data instanceof FileUpload)) continue;
                 FileUpload upload = (FileUpload) data;
-                if (!upload.isCompleted() || upload.length() == 0) continue;
+                if (!upload.isCompleted()) continue;
                 String name = safeUploadName(upload.getFilename());
                 File destination = new File(uploadDirectory, name);
                 if (!destination.createNewFile()) destination = uniqueDestination(uploadDirectory, name);
@@ -214,7 +259,7 @@ final class WebRequestHandler {
                 sendLog("msg", "msg", "File received: " + name);
                 count++;
             }
-            String location = utils.loadSetting(Constants.PRIVATE_MODE) ? "storage/ShareX" : "storage" + normalizedParent();
+            String location = "storage/" + new File(root).toPath().relativize(uploadDirectory.toPath());
             sendLog("msg", "msg", "Total files received " + count + " and stored in " + location + " directory");
             TransferStats.finish(uploadId, true);
             cleanupUpload();
@@ -244,35 +289,52 @@ final class WebRequestHandler {
     }
 
     private void routeAndReply(ChannelHandlerContext ctx, HttpRequest request) throws Exception {
+        if (protectedPath(pathOf(request)) && !isAuthRequest(request) && !isAuthorized(request)) {
+            reply(ctx, WebResponse.text(401, "Authentication required").header("Cache-Control", "no-store"));
+            return;
+        }
         if (ctx.pipeline().get("readTimeout") != null) ctx.pipeline().remove("readTimeout");
         if (!HttpMethod.GET.equals(request.method()) && !HttpMethod.HEAD.equals(request.method())) {
             reply(ctx, WebResponse.text(405, "Method not allowed"));
             return;
         }
         QueryStringDecoder query = new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8);
-        WebResponse response = route(query.path(), query.parameters(), request.headers().get(HttpHeaderNames.RANGE));
-        if (HttpMethod.HEAD.equals(request.method()) && response.file != null) response = WebResponse.text(response.status, "");
+        if (isAuthRequest(request)) {
+            reply(ctx, authorizeBrowser(request, ctx.pipeline().get("ssl") != null));
+            return;
+        }
+        WebResponse response = route(query.path(), query.parameters(), request.headers().get(HttpHeaderNames.RANGE), request.headers().get(HttpHeaderNames.USER_AGENT));
+        if (protectedPath(query.path())) response.header("Cache-Control", "no-store");
+        if (HttpMethod.HEAD.equals(request.method())) {
+            long length = response.file != null ? response.length : response.bytes != null ? response.bytes.length
+                    : response.body == null ? 0 : response.body.getBytes(StandardCharsets.UTF_8).length;
+            WebResponse head = WebResponse.text(response.status, "");
+            head.headers.putAll(response.headers);
+            head.header("Content-Length", String.valueOf(length));
+            reply(ctx, head);
+            return;
+        }
         reply(ctx, response);
     }
 
-    private WebResponse route(String uri, Map<String, List<String>> params, String range) throws Exception {
+    private WebResponse route(String uri, Map<String, List<String>> params, String range, String userAgent) throws Exception {
         if (uri.equals("/ShareX")) {
             String action = param(params, "action");
             switch (action) {
                 case "listFiles": {
                     String loc = param(params, "location");
-                    currentParent = loc;
+                    boolean privateMode = utils.loadSetting(Constants.PRIVATE_MODE);
+                    currentParent = privateMode ? "" : loc;
                     File directory = resolveInside(new File(root), loc);
-                    if (!directory.isDirectory()) return WebResponse.text(404, "Can't read this location!");
-                    return WebResponse.text(200, serverUtils.getFilesListCode(directory.getAbsolutePath(), allowHiddenMedia));
+                    if (!privateMode && !directory.isDirectory()) return WebResponse.text(404, "Can't read this location!");
+                    return WebResponse.json(200, serverUtils.getFilesList(directory.getAbsolutePath(), allowHiddenMedia, root));
                 }
                 case "openFile": {
                     File file = resolveRequestedFile(param(params, "location"));
                     if (range == null) sendLog("msg", "msg", "Sending file: " + file.getName());
-                    return utils.loadSetting(Constants.FORCE_DOWNLOAD)
-                            ? serverUtils.downloadFile(file.getPath(), true, true, range)
-                            : serverUtils.serveFile(file.getPath(), true, range);
+                    return serverUtils.serveFile(file.getPath(), true, range);
                 }
+                case "previewFile":
                 case "viewImage":
                     return serverUtils.serveFile(resolveRequestedFile(param(params, "location")).getPath(), false, range);
                 case "thumbImage": {
@@ -281,7 +343,7 @@ final class WebRequestHandler {
                     return serverUtils.serveThumbnail(file.getAbsolutePath());
                 }
                 case "delFiles":
-                    if (utils.loadSetting(Constants.RESTRICT_MODIFY) || utils.loadSetting(Constants.PRIVATE_MODE)) return WebResponse.text(200, "File deletion is restricted!;");
+                    if (utils.loadSetting(Constants.RESTRICT_MODIFY) || utils.loadSetting(Constants.PRIVATE_MODE)) return WebResponse.text(403, "File deletion is restricted!");
                     JSONArray deleteItems = new JSONArray(param(params, "data"));
                     StringBuilder deleted = new StringBuilder();
                     for (int i = 0; i < deleteItems.length(); i++) {
@@ -296,7 +358,7 @@ final class WebRequestHandler {
                 case "downloadFiles":
                     return downloadFiles(new JSONArray(param(params, "data")), param(params, "filename"), range);
                 case "renF":
-                    if (utils.loadSetting(Constants.RESTRICT_MODIFY) || utils.loadSetting(Constants.PRIVATE_MODE)) return WebResponse.text(200, "File/Folder modification restricted!;");
+                    if (utils.loadSetting(Constants.RESTRICT_MODIFY) || utils.loadSetting(Constants.PRIVATE_MODE)) return WebResponse.text(403, "File/Folder modification restricted!");
                     File old = resolveInside(new File(root), param(params, "old_n"));
                     if (old.equals(new File(root).getCanonicalFile())) return WebResponse.text(403, "Cannot rename storage root");
                     String newName = safeUploadName(param(params, "new_n"));
@@ -306,12 +368,41 @@ final class WebRequestHandler {
                     sendLog("msg", "msg", "File/folder renamed \"" + old.getName() + "\" to \"" + renamed.getName() + "\"");
                     return WebResponse.text(200, "File/Folder Renamed Successfully!;");
                 case "newF":
-                    if (utils.loadSetting(Constants.RESTRICT_MODIFY) || utils.loadSetting(Constants.PRIVATE_MODE)) return WebResponse.text(200, "File/Folder modification restricted!;");
+                    if (utils.loadSetting(Constants.RESTRICT_MODIFY) || utils.loadSetting(Constants.PRIVATE_MODE)) return WebResponse.text(403, "File/Folder modification restricted!");
                     File newFolder = new File(resolveInside(new File(root), param(params, "parent")), safeUploadName(param(params, "name")));
                     if (!newFolder.mkdirs()) return WebResponse.text(409, "Unable to create folder");
                     sendLog("msg", "msg", "New folder created at " + newFolder.getAbsolutePath());
                     return WebResponse.text(200, "Folder Created Successfully!;");
-                case "listApps": return WebResponse.text(200, serverUtils.getAppsListCode());
+                case "listFolders": {
+                    if (utils.loadSetting(Constants.PRIVATE_MODE)) return WebResponse.text(403, "Folder browsing is restricted");
+                    File directory = resolveInside(new File(root), param(params, "location"));
+                    if (!directory.isDirectory()) return WebResponse.text(404, "Folder not found");
+                    org.json.JSONObject listing = serverUtils.getFilesList(directory.getPath(), allowHiddenMedia, root);
+                    JSONArray folders = new JSONArray();
+                    JSONArray entries = listing.getJSONArray("items");
+                    for (int i = 0; i < entries.length(); i++) {
+                        if (entries.getJSONObject(i).getBoolean("directory")) folders.put(entries.getJSONObject(i));
+                    }
+                    return WebResponse.json(200, new org.json.JSONObject().put("items", folders));
+                }
+                case "transferFiles": {
+                    if (utils.loadSetting(Constants.PRIVATE_MODE) || utils.loadSetting(Constants.RESTRICT_MODIFY)) return WebResponse.text(403, "File changes are restricted");
+                    JSONArray requested = new JSONArray(param(params, "data"));
+                    File allowedRoot = new File(root).getCanonicalFile();
+                    File destination = resolveInside(allowedRoot, param(params, "destination"));
+                    List<File> sources = new ArrayList<>();
+                    for (int i = 0; i < requested.length(); i++) sources.add(resolveInside(allowedRoot, requested.getString(i)));
+                    try {
+                        return WebResponse.json(202, fileOperations.start(param(params, "mode"), sources, destination, allowedRoot));
+                    } catch (java.util.concurrent.RejectedExecutionException busy) {
+                        return WebResponse.text(503, "File operations are busy. Try again shortly.");
+                    }
+                }
+                case "fileOperationStatus": {
+                    org.json.JSONObject job = fileOperations.status(param(params, "id"));
+                    return job == null ? WebResponse.text(404, "Operation not found") : WebResponse.json(200, job);
+                }
+                case "listApps": return WebResponse.json(200, serverUtils.getAppsList());
                 case "getApp": {
                     String pkg = param(params, "pkg");
                     PackageManager manager = context.getPackageManager();
@@ -321,17 +412,10 @@ final class WebRequestHandler {
                     return serverUtils.serveApp(appName + ".apk", appPath, pkg, range);
                 }
                 case "getInfo": return WebResponse.text(200, serverUtils.getInfo());
+                case "getState": return WebResponse.json(200, serverUtils.getPortalState());
                 case "getUploadLocation": return WebResponse.text(200, utils.loadSetting(Constants.PRIVATE_MODE) ? "storage/ShareX" : "storage" + normalizedParent());
                 case "getPrivateMode": return WebResponse.text(200, String.valueOf(utils.loadSetting(Constants.PRIVATE_MODE)));
-                case "auth": {
-                    DeviceManager manager = new DeviceManager(context);
-                    String id = param(params, "device_id");
-                    if (manager.isDeviceExist(id)) return WebResponse.text(200, "true");
-                    if (manager.isDeviceDenied(id)) return WebResponse.text(200, "denied");
-                    sendLog(Constants.ACTION_AUTH, "device_id", id);
-                    return WebResponse.text(200, "false");
-                }
-                case "getInstalledPlugins": return WebResponse.text(200, serverUtils.getPluginsList());
+                case "getInstalledPlugins": return WebResponse.json(200, new JSONArray(serverUtils.getPluginsList()));
                 default: return WebResponse.text(200, "");
             }
         }
@@ -343,6 +427,99 @@ final class WebRequestHandler {
         }
         if (uri.startsWith("/SharexApp/")) return pluginFile(uri);
         return staticAsset(uri);
+    }
+
+    private static boolean protectedPath(String path) {
+        return path.equals("/ShareX") || path.startsWith("/ShareX/") || path.startsWith("/SharexApp/");
+    }
+    private static boolean isAuthRequest(HttpRequest request) {
+        QueryStringDecoder query = new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8);
+        return query.path().equals("/ShareX") && "auth".equals(param(query.parameters(), "action"))
+                && (HttpMethod.GET.equals(request.method()) || HttpMethod.HEAD.equals(request.method()));
+    }
+    static boolean sameOrigin(HttpRequest request) {
+        String site = request.headers().get("Sec-Fetch-Site");
+        if (site != null && !"same-origin".equals(site) && !"none".equals(site)) return false;
+        String origin = request.headers().get("Origin");
+        if (origin == null) return true;
+        try {
+            java.net.URI uri = java.net.URI.create(origin);
+            return ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                    && uri.getRawAuthority() != null && uri.getRawAuthority().equalsIgnoreCase(request.headers().get("Host"));
+        } catch (RuntimeException invalid) { return false; }
+    }
+    private static String cookie(HttpRequest request, String name) {
+        String header = request.headers().get(HttpHeaderNames.COOKIE);
+        if (header == null || header.length() > 8192) return "";
+        String value = "";
+        for (io.netty.handler.codec.http.cookie.Cookie item : io.netty.handler.codec.http.cookie.ServerCookieDecoder.STRICT.decodeAll(header)) {
+            if (name.equals(item.name())) { if (!value.isEmpty()) return ""; value = item.value(); }
+        }
+        return value;
+    }
+    private static String browserId(HttpRequest request) { return WebSecurity.browserId(cookie(request, "sx_browser")); }
+    private boolean approved(HttpRequest request, boolean permanentOnly) {
+        String id = browserId(request);
+        if (id.isEmpty()) return false;
+        try (DeviceManager manager = new DeviceManager(context)) { return manager.isSecureApproved(id, permanentOnly); }
+    }
+    boolean isAuthorized(HttpRequest request) {
+        return sameOrigin(request) && approved(request, false) && passwordAuthenticated(request);
+    }
+    boolean isSocketAuthorized(HttpRequest request) {
+        String origin = request.headers().get("Origin");
+        // Browser WebSockets use the HTTP portal's origin, not the socket port.
+        if (origin != null && !origin.equals(utils.loadString(Constants.SERVER_URL))) return false;
+        return approved(request, false) && passwordAuthenticated(request);
+    }
+    private boolean passwordAuthenticated(HttpRequest request) {
+        if (!passwordSettings.enabled()) return true;
+        if (passwordSettings.exemptRemembered() && approved(request, true)) return true;
+        return WebSecurity.validSession(cookie(request, "sx_password"), browserId(request), passwordSettings.revision(),
+                System.currentTimeMillis(), passwordSettings.duration(), passwordSettings.secret());
+    }
+    private static String setCookie(String name, String value, long seconds, boolean ssl) {
+        return name + "=" + value + "; Path=/; Max-Age=" + seconds + "; HttpOnly; SameSite=Strict" + (ssl ? "; Secure" : "");
+    }
+    private WebResponse authorizeBrowser(HttpRequest request, boolean ssl) {
+        if (!sameOrigin(request)) return WebResponse.text(403, "Access denied");
+        String id = browserId(request);
+        if (id.isEmpty()) {
+            String token = WebSecurity.randomToken();
+            return WebResponse.text(200, "false").header("Cache-Control", "no-store")
+                    .header("Set-Cookie", setCookie("sx_browser", token, 365L*24*60*60, ssl));
+        }
+        String name = BrowserName.fromUserAgent(request.headers().get(HttpHeaderNames.USER_AGENT));
+        try (DeviceManager manager = new DeviceManager(context)) {
+            if (manager.isSecureApproved(id, false)) {
+                manager.recordConnection(id, name);
+                return WebResponse.text(200, passwordAuthenticated(request) ? "true" : "password").header("Cache-Control", "no-store");
+            }
+            if (manager.isDeviceDenied(id)) return WebResponse.text(200, "denied").header("Cache-Control", "no-store");
+        }
+        Intent approval = new Intent(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
+        approval.setPackage(context.getPackageName());
+        approval.putExtra("action", Constants.ACTION_AUTH);
+        approval.putExtra("device_id", id);
+        approval.putExtra("device_name", name);
+        context.sendBroadcast(approval);
+        return WebResponse.text(200, "false").header("Cache-Control", "no-store");
+    }
+    private WebResponse passwordLogin(HttpRequest request, byte[] body, String address, boolean ssl) throws Exception {
+        if (!sameOrigin(request) || !approved(request, false)) return WebResponse.text(403, "Browser approval required");
+        if (!loginLimiter.allow(address, android.os.SystemClock.elapsedRealtime())) return WebResponse.text(429, "Too many attempts. Try again in a minute.").header("Retry-After", "60");
+        String revision = passwordSettings.revision();
+        char[] password;
+        try { password = new org.json.JSONObject(new String(body, StandardCharsets.UTF_8)).getString("password").toCharArray(); }
+        catch (org.json.JSONException malformed) { return WebResponse.text(400, "Invalid password request"); }
+        boolean valid;
+        try { valid = password.length <= 128 && WebSecurity.verifyPassword(password, passwordSettings.passwordHash()); }
+        finally { java.util.Arrays.fill(password, '\0'); }
+        if (!valid || !revision.equals(passwordSettings.revision())) return WebResponse.text(401, "Incorrect password").header("Cache-Control", "no-store");
+        long duration = passwordSettings.duration();
+        String session = WebSecurity.session(browserId(request), revision, System.currentTimeMillis(), duration, passwordSettings.secret());
+        return WebResponse.text(200, "true").header("Cache-Control", "no-store")
+                .header("Set-Cookie", setCookie("sx_password", session, duration/1000, ssl));
     }
 
     private WebResponse downloadFiles(JSONArray requested, String zipName, String range) throws Exception {
@@ -412,22 +589,22 @@ final class WebRequestHandler {
 
     private WebResponse staticAsset(String uri) throws Exception {
         String assetUri = uri.equals("/") ? "index.html" : uri;
-        if (assetUri.equals("/libs/bootstrap/css/theme_bootstrap.min.css")) assetUri = assetUri.replace("theme", new ThemesData().getPrefix(utils.loadInt(Constants.WEB_INTERFACE_THEME, 0)));
         File file = new File(utils.getFileProperPath(assetUri));
         File assetRoot = new File(utils.getFileProperPath(".")).getCanonicalFile();
         if (!isInside(assetRoot, file.getCanonicalFile())) return WebResponse.text(403, "Access denied");
-        if (!file.isFile()) return WebResponse.text(404, "Not found");
-        if (uri.equals("/")) {
-            TemplateEngine engine = new TemplateEngine(context);
-            if (pluginDevDir != null) engine.setPlugin_dev_dir(pluginDevDir);
-            return WebResponse.text(200, engine.renderHtml(file.getAbsolutePath(), TemplateEngine.RENDER_TYPE.NORMAL)).header("Content-Type", "text/html; charset=utf-8");
-        }
-        return staticFile(file, false);
+        if (file.isDirectory()) file = new File(file, "index.html");
+        if (!isInside(assetRoot, file.getCanonicalFile())) return WebResponse.text(403, "Access denied");
+        return staticFile(file, false).header("Cache-Control", "no-cache");
     }
 
     private WebResponse staticFile(File file, boolean progressEnabled) {
         if (!file.isFile() || !file.canRead()) return WebResponse.text(404, "Not found");
         String mime = utils.getMimeType(file);
+        if (file.getName().endsWith(".html")) mime = "text/html; charset=utf-8";
+        else if (file.getName().endsWith(".js") || file.getName().endsWith(".mjs")) mime = "text/javascript; charset=utf-8";
+        else if (file.getName().endsWith(".css")) mime = "text/css; charset=utf-8";
+        else if (file.getName().endsWith(".json")) mime = "application/json; charset=utf-8";
+        else if (file.getName().endsWith(".wasm")) mime = "application/wasm";
         if (mime == null) mime = "application/octet-stream";
         return WebResponse.file(200, file, 0, file.length(), progressEnabled).header("Content-Type", mime);
     }
@@ -460,7 +637,7 @@ final class WebRequestHandler {
         return target.equals(basePath) || target.startsWith(basePath + File.separator);
     }
 
-    private String param(Map<String, List<String>> params, String key) {
+    private static String param(Map<String, List<String>> params, String key) {
         List<String> values = params.get(key);
         if (values == null || values.isEmpty()) throw new IllegalArgumentException("Missing parameter: " + key);
         return values.get(0);
@@ -506,6 +683,7 @@ final class WebRequestHandler {
 
     void shutdown() {
         zipExecutor.shutdownNow();
+        fileOperations.shutdown();
     }
 
     private void sendLog(String action, String key, String value) {
@@ -531,7 +709,9 @@ final class WebRequestHandler {
         FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 HttpResponseStatus.valueOf(response.status), content);
         applyHeaders(httpResponse, response);
-        httpResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes());
+        if (!httpResponse.headers().contains(HttpHeaderNames.CONTENT_LENGTH)) {
+            httpResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes());
+        }
         httpResponse.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         ctx.writeAndFlush(httpResponse).addListener(ChannelFutureListener.CLOSE);
     }

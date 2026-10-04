@@ -2,63 +2,78 @@ package com.akansh.fileserversuit.server;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.util.Log;
-
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.common.Utils;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import org.json.JSONObject;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class WebInterfaceSetup {
-    String packageName;
-    Context ctx;
-    Activity activity;
-    Utils utils;
-
+    private final Context ctx;
+    private final Activity activity;
+    private final Utils utils;
+    private static final String INSTALLED_MARKER = ".installed";
     public SetupListeners setupListeners;
-    boolean status=false;
 
     public WebInterfaceSetup(String packageName, Context ctx, Activity activity, Utils utils) {
-        this.packageName = packageName;
         this.ctx = ctx;
         this.activity = activity;
         this.utils = utils;
     }
 
+    public boolean isInstalled() {
+        File installed = new File(ctx.getApplicationInfo().dataDir, Constants.NEW_DIR);
+        return new File(installed, INSTALLED_MARKER).isFile()
+                && new File(installed, "index.html").isFile();
+    }
+
     public void setup() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            File pV=new File(String.format("/data/data/%s/%s/index.html",packageName, Constants.OLD_DIR));
-            if(pV.exists()) {
-                this.activity.runOnUiThread(() -> setupListeners.onSetupStarted(true));
-            }else {
-                this.activity.runOnUiThread(() -> setupListeners.onSetupStarted(false));
-            }
-            try {
-                status = copyDirFromAssetManager(Constants.WEB_INTERFACE_DIR, Constants.NEW_DIR);
-                if(!status) {
-                    Log.d(Constants.LOG_TAG,"Failed To Unzip File!");
-                    utils.deleteDirectory(new File(String.format("/data/data/%s/%s",packageName,Constants.NEW_DIR)));
-                }
-                // Delete Prev-Ver Files
-                File p=new File(String.format("/data/data/%s/%s",packageName,Constants.OLD_DIR));
-                if(p.exists()) {
-                    Log.d(Constants.LOG_TAG,"Old Version Found!");
-                    utils.deleteDirectory(p);
-                }
-            }catch (Exception e) {
-                status=false;
-                Log.d(Constants.LOG_TAG,"Failed To Copy Dir!");
-            }
-            this.activity.runOnUiThread(() -> setupListeners.onSetupCompeted(status));
+            File dataDir = new File(ctx.getApplicationInfo().dataDir);
+            boolean updating = hasPreviousVersion(dataDir);
+            activity.runOnUiThread(() -> setupListeners.onSetupStarted(updating));
+            boolean status = install(dataDir);
+            activity.runOnUiThread(() -> setupListeners.onSetupCompeted(status));
+            executor.shutdown();
         });
+    }
+
+    // Delete old versions before extraction. A completion marker makes interrupted installs retryable.
+    boolean install(File dataDir) {
+        File installed = new File(dataDir, Constants.NEW_DIR);
+        try {
+            File[] children = dataDir.listFiles();
+            if (children != null) for (File child : children) {
+                if (isVersionDirectory(child)) {
+                    utils.deleteDirectory(child);
+                    if (child.exists()) throw new IOException("Unable to remove old web UI: " + child.getName());
+                }
+            }
+            return extractArchive(Constants.WEB_INTERFACE_DIR, installed);
+        } catch (Exception e) {
+            Log.e(Constants.LOG_TAG, "Unable to install web UI", e);
+            utils.deleteDirectory(installed);
+            return false;
+        }
+    }
+
+    private boolean isVersionDirectory(File file) {
+        return file.isDirectory() && file.getName().matches("sharex_(web_)?v[0-9]+(_[0-9]+)*(\\.pending|\\.backup)?");
+    }
+
+    private boolean hasPreviousVersion(File parent) {
+        File[] children = parent.listFiles();
+        if (children != null) for (File child : children) if (isVersionDirectory(child)) return true;
+        return false;
     }
 
     public interface SetupListeners {
@@ -66,60 +81,50 @@ public class WebInterfaceSetup {
         void onSetupStarted(boolean updating);
     }
 
-    public boolean copyDirFromAssetManager(String arg_assetDir, String arg_destinationDir) {
-        try {
-            String dest_dir_path = "/data/data/" + packageName + addLeadingSlash(arg_destinationDir);
-            File dest_dir = new File(dest_dir_path);
-            if (!dest_dir.exists()) {
-                dest_dir.mkdirs();
-            }
-            AssetManager asset_manager = ctx.getAssets();
-            String[] files = asset_manager.list(arg_assetDir);
-            for (int i = 0; i < files.length; i++) {
-                String abs_asset_file_path = addTrailingSlash(arg_assetDir) + files[i];
-                String[] sub_files = asset_manager.list(abs_asset_file_path);
-                if (sub_files.length == 0) {
-                    String dest_file_path = addTrailingSlash(dest_dir_path) + files[i];
-                    if (!copyAssetFile(abs_asset_file_path, dest_file_path)) {
-                        return false;
-                    }
+    public boolean extractArchive(String assetFolder, File destination) {
+        try (InputStream archive = ctx.getAssets().open(assetFolder + ".zip")) {
+            extract(archive, destination, assetFolder);
+            return true;
+        } catch (Exception e) {
+            Log.e(Constants.LOG_TAG, "Unable to extract web UI assets", e);
+            utils.deleteDirectory(destination);
+            return false;
+        }
+    }
+
+    static void extract(InputStream archive, File destination, String assetFolder) throws Exception {
+        if (destination.exists()) throw new IOException("Web UI destination must be empty");
+        if (!destination.mkdirs()) throw new IOException("Unable to create web UI directory");
+        String root = destination.getCanonicalPath() + File.separator;
+        Set<String> entries = new HashSet<>();
+        try (ZipInputStream input = new ZipInputStream(new BufferedInputStream(archive))) {
+            ZipEntry entry;
+            byte[] buffer = new byte[64 * 1024];
+            while ((entry = input.getNextEntry()) != null) {
+                String name = entry.getName();
+                File target = new File(destination, name);
+                String canonical = target.getCanonicalPath();
+                if (name.contains("\\") || name.startsWith("/") || name.contains(":")
+                        || !canonical.startsWith(root) || !entries.add(canonical)
+                        || name.equals(INSTALLED_MARKER)) throw new IOException("Invalid web UI archive entry");
+                if (entry.isDirectory()) {
+                    if (!target.isDirectory() && !target.mkdirs()) throw new IOException("Unable to create archive directory");
                 } else {
-                    copyDirFromAssetManager(abs_asset_file_path, addTrailingSlash(arg_destinationDir) + files[i]);
+                    File parent = target.getParentFile();
+                    if (!parent.isDirectory() && !parent.mkdirs()) throw new IOException("Unable to create archive directory");
+                    try (OutputStream output = new FileOutputStream(target)) {
+                        int count;
+                        while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                    }
                 }
+                input.closeEntry();
             }
-            return true;
-        }catch (Exception e) {
-            return false;
         }
-    }
-
-    public boolean copyAssetFile(String assetFilePath, String destinationFilePath) {
-        try {
-            InputStream in = ctx.getAssets().open(assetFilePath);
-            OutputStream out = new FileOutputStream(destinationFilePath);
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = in.read(buf)) > 0)
-                out.write(buf, 0, len);
-            in.close();
-            out.close();
-            return true;
-        }catch (Exception e) {
-            return false;
-        }
-    }
-
-    public String addTrailingSlash(String path) {
-        if (path.charAt(path.length() - 1) != '/') {
-            path += "/";
-        }
-        return path;
-    }
-
-    public String addLeadingSlash(String path) {
-        if (path.charAt(0) != '/') {
-            path = "/" + path;
-        }
-        return path;
+        File index = new File(destination, "index.html");
+        File manifest = new File(destination, "build-info.json");
+        if (!index.isFile() || !manifest.isFile()
+                || !assetFolder.equals(new JSONObject(new String(Files.readAllBytes(manifest.toPath()),
+                StandardCharsets.UTF_8)).optString("assetFolder"))) throw new IOException("Web UI archive is incomplete or stale");
+        Files.write(new File(destination, INSTALLED_MARKER).toPath(), assetFolder.getBytes(StandardCharsets.UTF_8));
     }
 }
