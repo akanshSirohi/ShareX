@@ -27,22 +27,7 @@ public class Splash extends AppCompatActivity {
         }else{
             subText.setText(Html.fromHtml("<font color=\"#ff9933\">HANDCRAFTED</font> IN <font color=\"#138808\">INDIA</font>"));
         }
-        try {
-            View decorView = this.getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LOW_PROFILE;
-            decorView.setSystemUiVisibility(uiOptions);
-            ActionBar actionBar = this.getActionBar();
-            actionBar.hide();
-        }catch (Exception e) {
-            //Do Nothing
-        }
-        try {
-            View decorView = this.getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
-            decorView.setSystemUiVisibility(uiOptions);
-        }catch (Exception e) {
-            //Do Nothing
-        }
+        com.akansh.fileserversuit.common.EdgeToEdge.apply(this, findViewById(android.R.id.content));
         new Handler().postDelayed(() -> {
             Intent intent;
             Utils utils = new Utils(Splash.this);

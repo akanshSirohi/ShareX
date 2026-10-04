@@ -1,12 +1,38 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <color name="colorPrimary">#263238</color>
-    <color name="colorPrimaryDark">#000a12</color>
-    <color name="colorAccent">#D50000</color>
+    <color name="colorPrimary">#2563EB</color>
+    <color name="colorPrimaryDark">#1D4ED8</color>
+    <color name="colorAccent">#2563EB</color>
+    <color name="accent_blue">#2563EB</color>
+    <color name="text_green">#2563EB</color>
+    <color name="text_red">#B42318</color>
+    <color name="share_ready">#2563EB</color>
+    <color name="share_active">#B42318</color>
+    <color name="uploading">#2563EB</color>
+    <color name="downloading">#2563EB</color>
+    <color name="connected">#2563EB</color>
+    <color name="success">#2563EB</color>
+    <color name="warning">#92400E</color>
+    <color name="error">#B42318</color>
+    <color name="private_text">#1D4ED8</color>
+    <color name="authentication_state">#2563EB</color>
+    <color name="bg_color">#F8FAFC</color>
+    <color name="bg_color_sec">#FFFFFF</color>
+    <color name="bg_color_header">#F8FAFC</color>
+    <color name="txt_color">#172033</color>
+    <color name="txt_color_secondary">#536177</color>
+    <color name="surface_container">#FFFFFF</color>
+    <color name="outline_soft">#DDE4EF</color>
+    <color name="share_ready_icon">#FFFFFF</color>
+    <color name="share_active_icon">#FFFFFF</color>
+    <color name="log_surface">#FFFFFF</color>
+    <color name="log_text">#536177</color>
+    <color name="primary_container">#EAF1FF</color>
+    <color name="on_primary">#FFFFFF</color>
     <color name="transparent_mask">#B3000000</color>
-    <color name="color_white">#FFFFFFFF</color>
     <color name="transparent_mask_2">#9A000000</color>
-
-    <color name="text_green">#29f200</color>
-    <color name="text_red">#f11e00</color>
+    <color name="color_white">#FFFFFFFF</color>
+    <color name="graph_receive">#087F8C</color>
+    <color name="receive_accent">#087F8C</color>
+    <color name="receive_container">#E5F4F5</color>
 </resources>

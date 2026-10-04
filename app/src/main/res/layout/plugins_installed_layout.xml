@@ -10,6 +10,8 @@
         android:id="@+id/installedPluginsList"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:padding="@dimen/plugin_content_inset"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,8 +29,8 @@
 
         <ImageView
             android:id="@+id/imageView5"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:tint="@color/txt_color_secondary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -41,11 +43,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:fontFamily="@font/product_sans"
-            android:text="No installed plugin found..."
+            android:fontFamily="@font/google_sans"
+            android:text="No installed plugins yet"
             android:textColor="@color/txt_color"
-            app:layout_constraintEnd_toEndOf="@+id/imageView5"
-            app:layout_constraintStart_toStartOf="@+id/imageView5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView5" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

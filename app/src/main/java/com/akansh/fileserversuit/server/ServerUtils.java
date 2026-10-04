@@ -409,6 +409,7 @@ public class ServerUtils {
         local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
         local.putExtra("action",action);
         local.putExtra(key,value);
+        local.setPackage(ctx.getPackageName());
         ctx.sendBroadcast(local);
     }
 

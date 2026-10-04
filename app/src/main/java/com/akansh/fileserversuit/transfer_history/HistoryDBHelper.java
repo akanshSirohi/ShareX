@@ -95,6 +95,11 @@ public class HistoryDBHelper extends SQLiteOpenHelper {
         return res;
     }
 
+    public Cursor getLatestData() {
+        SQLiteDatabase db=this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM "+TABLE_NAME+" ORDER BY TSTAMP DESC LIMIT 1", null);
+    }
+
     private boolean checkHistoryExistByPath(String file_path) {
         SQLiteDatabase db=this.getReadableDatabase();
         Cursor res=db.rawQuery("SELECT ID FROM "+TABLE_NAME+" WHERE PATH='"+file_path+"'", null);

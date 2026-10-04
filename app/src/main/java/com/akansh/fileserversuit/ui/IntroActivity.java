@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
@@ -15,6 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.akansh.fileserversuit.R;
+import com.akansh.fileserversuit.common.EdgeToEdge;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class IntroActivity extends AppCompatActivity {
@@ -31,12 +31,13 @@ public class IntroActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_intro);
+        EdgeToEdge.apply(this, findViewById(R.id.intro_root));
 
         viewPager = findViewById(R.id.viewPager);
         layoutDot = findViewById(R.id.dotLayout);
         btnNext = findViewById(R.id.btn_next);
         btnPrev = findViewById(R.id.btn_prev);
-        setStatusBarTransparent();
+        findViewById(R.id.skip_intro).setOnClickListener(view -> startMain());
 
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -88,11 +89,11 @@ public class IntroActivity extends AppCompatActivity {
             dotstv[i] = new TextView(this);
             dotstv[i].setText(Html.fromHtml("&#8226"));
             dotstv[i].setTextSize(30);
-            dotstv[i].setTextColor(Color.parseColor("#a9b4bb"));
+            dotstv[i].setTextColor(getColor(R.color.txt_color_secondary));
             layoutDot.addView(dotstv[i]);
         }
         if(dotstv.length>0) {
-            dotstv[page].setTextColor(Color.parseColor("#ffffff"));
+        dotstv[page].setTextColor(getColor(R.color.accent_blue));
         }
         if(page==0) {
             btnPrev.setVisibility(View.INVISIBLE);
@@ -107,12 +108,4 @@ public class IntroActivity extends AppCompatActivity {
         finish();
     }
 
-    private void setStatusBarTransparent() {
-        if(Build.VERSION.SDK_INT >= 21) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-            Window window=getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.TRANSPARENT);
-        }
-    }
 }

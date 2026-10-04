@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:id="@+id/intro_root"
+    android:background="@color/bg_color"
     android:hapticFeedbackEnabled="false"
     tools:context=".ui.IntroActivity">
 
@@ -12,12 +13,26 @@
         android:id="@+id/viewPager"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btn_next"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/skip_intro">
 
     </androidx.viewpager.widget.ViewPager>
+
+    <TextView
+        android:id="@+id/skip_intro"
+        android:layout_width="64dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="@string/skip"
+        android:textColor="@color/accent_blue"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/dotLayout"
@@ -37,7 +52,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginBottom="16dp"
         android:clickable="true"
-        app:backgroundTint="#00FFFFFF"
+        app:backgroundTint="@color/bg_color"
         app:borderWidth="0dp"
         app:elevation="0dp"
         app:hoveredFocusedTranslationZ="0dp"

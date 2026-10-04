@@ -93,6 +93,7 @@ final class WebRequestHandler {
         Intent intent = new Intent(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
         intent.putExtra("action", Constants.ACTION_PROGRESS);
         intent.putExtra("value", value);
+        intent.setPackage(context.getPackageName());
         context.sendBroadcast(intent);
     }
 
@@ -104,6 +105,22 @@ final class WebRequestHandler {
         private HttpRequest request;
         private HttpPostRequestDecoder decoder;
         private File uploadDirectory;
+        private long uploadId;
+        private final Set<FileUpload> uploadParts = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+
+        private void trackUploadBytes() {
+            try {
+                while (decoder.hasNext()) {
+                    InterfaceHttpData part = decoder.next();
+                    if (part instanceof FileUpload) uploadParts.add((FileUpload) part);
+                }
+            } catch (HttpPostRequestDecoder.EndOfDataDecoderException ignored) { }
+            InterfaceHttpData partial = decoder.currentPartialHttpData();
+            if (partial instanceof FileUpload) uploadParts.add((FileUpload) partial);
+            long bytes = 0;
+            for (FileUpload part : uploadParts) bytes += part.length();
+            TransferStats.progress(uploadId, bytes);
+        }
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object message) {
@@ -114,6 +131,7 @@ final class WebRequestHandler {
                         beginUpload(request);
                         if (message instanceof LastHttpContent) {
                             decoder.offer((io.netty.handler.codec.http.HttpContent) message);
+                    trackUploadBytes();
                             finishUpload(ctx);
                         }
                         return;
@@ -121,6 +139,7 @@ final class WebRequestHandler {
                     if (message instanceof LastHttpContent) routeAndReply(ctx, request);
                 } else if (message instanceof io.netty.handler.codec.http.HttpContent && decoder != null) {
                     decoder.offer((io.netty.handler.codec.http.HttpContent) message);
+                    trackUploadBytes();
                     if (message instanceof LastHttpContent) finishUpload(ctx);
                 } else if (message instanceof LastHttpContent && request != null) {
                     routeAndReply(ctx, request);
@@ -156,6 +175,7 @@ final class WebRequestHandler {
             factory.setMaxLimit(10L * 1024 * 1024 * 1024);
             decoder = new HttpPostRequestDecoder(factory, httpRequest, StandardCharsets.UTF_8);
             decoder.setDiscardThreshold(1024 * 1024);
+            uploadId = TransferStats.begin(true, 0, "files");
         }
 
         private void finishUpload(ChannelHandlerContext ctx) throws Exception {
@@ -196,11 +216,15 @@ final class WebRequestHandler {
             }
             String location = utils.loadSetting(Constants.PRIVATE_MODE) ? "storage/ShareX" : "storage" + normalizedParent();
             sendLog("msg", "msg", "Total files received " + count + " and stored in " + location + " directory");
+            TransferStats.finish(uploadId, true);
             cleanupUpload();
             reply(ctx, WebResponse.text(200, count + " Files Uploaded Successsfully!"));
         }
 
         private void cleanupUpload() {
+            TransferStats.finish(uploadId, false);
+            uploadId = 0;
+            uploadParts.clear();
             if (decoder != null) {
                 decoder.destroy();
                 decoder = null;
@@ -488,6 +512,7 @@ final class WebRequestHandler {
         Intent intent = new Intent(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
         intent.putExtra("action", action);
         intent.putExtra(key, value);
+        intent.setPackage(context.getPackageName());
         context.sendBroadcast(intent);
     }
 
@@ -525,14 +550,17 @@ final class WebRequestHandler {
             java.io.RandomAccessFile source = new java.io.RandomAccessFile(response.file, "r");
             ChunkedNioFile file = new ChunkedNioFile(source.getChannel(), response.offset, response.length, 64 * 1024);
             ChannelProgressivePromise promise = ctx.newProgressivePromise();
-            if (response.reportProgress) {
-                promise.addListener(new ChannelProgressiveFutureListener() {
-                    @Override public void operationProgressed(ChannelProgressiveFuture future, long transferred, long total) {
-                        if (total > 0) serverUtils.sendProgressListenerUpdate((int) Math.min(100, transferred * 100 / total));
-                    }
-                    @Override public void operationComplete(ChannelProgressiveFuture future) { }
-                });
-            }
+            long transferId = response.reportProgress
+                    ? TransferStats.begin(false, response.length, response.file.getName()) : 0;
+            promise.addListener(new ChannelProgressiveFutureListener() {
+                @Override public void operationProgressed(ChannelProgressiveFuture future, long transferred, long total) {
+                    if (transferId != 0) TransferStats.progress(transferId, transferred);
+                    if (response.reportProgress && total > 0) serverUtils.sendProgressListenerUpdate((int) Math.min(100, transferred * 100 / total));
+                }
+                @Override public void operationComplete(ChannelProgressiveFuture future) {
+                    TransferStats.finish(transferId, future.isSuccess());
+                }
+            });
             ctx.write(file, promise).addListener(future -> {
                 if (future.isSuccess() && ctx.channel().isActive()) {
                     ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(ChannelFutureListener.CLOSE);
@@ -557,6 +585,7 @@ final class WebRequestHandler {
         try {
             zipExecutor.execute(stream::generate);
         } catch (java.util.concurrent.RejectedExecutionException e) {
+            stream.cancel();
             reply(ctx, WebResponse.text(503, "ZIP downloads are busy. Retry shortly."));
             return;
         }
@@ -587,6 +616,8 @@ final class WebRequestHandler {
         private final AtomicBoolean generationFailed = new AtomicBoolean();
         private long processed;
         private long totalBytes;
+        private long networkBytes;
+        private final long transferId = TransferStats.begin(false, 0, "archive");
 
         ZipStream(ChannelHandlerContext context, WebResponse response) {
             this.context = context;
@@ -708,6 +739,7 @@ final class WebRequestHandler {
         }
 
         void cancel() {
+            TransferStats.finish(transferId, false);
             if (cancelled.compareAndSet(false, true)) {
                 chunks.clear();
                 schedulePump();
@@ -735,12 +767,18 @@ final class WebRequestHandler {
                 if (chunk instanceof byte[]) {
                     ChannelFuture write = context.writeAndFlush(new DefaultHttpContent(Unpooled.wrappedBuffer((byte[]) chunk)));
                     write.addListener(future -> {
-                        if (future.isSuccess()) schedulePump();
-                        else cancel();
+                        if (future.isSuccess()) {
+                            networkBytes += ((byte[]) chunk).length;
+                            TransferStats.progress(transferId, networkBytes);
+                            schedulePump();
+                        } else cancel();
                     });
                 } else if (chunk == FINISHED || generatorFinished.get() && chunks.isEmpty()) {
                     if (generationFailed.get()) context.close();
-                    else context.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(ChannelFutureListener.CLOSE);
+                    else context.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT).addListener(future -> {
+                        TransferStats.finish(transferId, future.isSuccess());
+                        context.close();
+                    });
                 }
             } finally {
                 pumpActive.set(false);
@@ -780,4 +818,3 @@ final class WebRequestHandler {
         }
     }
 }
-

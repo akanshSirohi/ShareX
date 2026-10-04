@@ -37,6 +37,21 @@ public class HistoryDBManager {
         return historyItems;
     }
 
+    public HistoryItem getLatestHistory() {
+        Cursor cursor = historyDBHelper.getLatestData();
+        try {
+            if (!cursor.moveToFirst()) return null;
+            HistoryItem item = new HistoryItem(Integer.parseInt(cursor.getString(2)),
+                    cursor.getString(1), cursor.getString(3), cursor.getString(4),
+                    cursor.getString(5), cursor.getString(6), cursor.getString(7));
+            item.setUid(cursor.getInt(0));
+            item.setTimestamp(cursor.getString(8));
+            return item;
+        } finally {
+            cursor.close();
+        }
+    }
+
     public void restoreHistory(HistoryItem historyItem) {
         HashMap<String,String> values=new HashMap<>();
         values.put("uid",String.valueOf(historyItem.getUid()));

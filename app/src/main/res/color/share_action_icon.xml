@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="@color/share_active_icon" />
+    <item android:color="@color/share_ready_icon" />
+</selector>

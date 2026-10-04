@@ -2,11 +2,12 @@ package com.akansh.fileserversuit.ui;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
+import androidx.core.content.ContextCompat;
+import com.akansh.fileserversuit.R;
 
 import androidx.annotation.Nullable;
 
@@ -31,7 +32,7 @@ public class PointsOverlayLayout extends View {
 
     private void init() {
         paint = new Paint();
-        paint.setColor(Color.parseColor("#ed3237"));
+        paint.setColor(ContextCompat.getColor(getContext(), R.color.accent_blue));
         paint.setStyle(Paint.Style.FILL);
     }
 
@@ -44,7 +45,8 @@ public class PointsOverlayLayout extends View {
         super.draw(canvas);
         if (points != null) {
             for (PointF pointF : points) {
-                canvas.drawCircle(pointF.x, pointF.y, 10, paint);
+                canvas.drawCircle(pointF.x, pointF.y,
+                        getResources().getDimension(R.dimen.space_3), paint);
             }
         }
     }

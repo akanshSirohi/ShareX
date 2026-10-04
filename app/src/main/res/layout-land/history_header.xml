@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<LinearLayout xmlns:ns0="http://schemas.android.com/apk/res/android" xmlns:ns1="http://schemas.android.com/apk/res-auto" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:paddingTop="4dp">
+ <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:orientation="vertical" ns0:paddingHorizontal="20dp">
+  <TextView ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:text="TRANSFER ARCHIVE" ns0:textColor="@color/accent_blue" ns0:textStyle="bold" ns0:textSize="11sp" ns0:letterSpacing="0.12" ns0:visibility="gone" />
+  <LinearLayout ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:gravity="center_vertical" ns0:layout_marginTop="4dp">
+   <TextView ns0:layout_width="0dp" ns0:layout_height="wrap_content" ns0:layout_weight="1" ns0:text="History" ns0:textStyle="bold" ns0:textSize="22sp" ns0:textColor="@color/txt_color" />
+   <TextView ns0:id="@+id/history_lifetime_totals" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:layout_marginTop="0dp" ns0:padding="4dp" ns0:background="@android:color/transparent" ns0:text="Sent 0 B · Received 0 B" ns0:textColor="@color/txt_color" ns0:textSize="12sp" />
+  <ImageButton ns0:id="@+id/btn_clear_hist" ns0:layout_width="48dp" ns0:layout_height="48dp" ns0:padding="14dp" ns0:contentDescription="Clear transfer history" ns0:background="?attr/selectableItemBackgroundBorderless" ns1:srcCompat="@drawable/ic_delete_swipe" ns1:tint="@color/txt_color_secondary" />
+  </LinearLayout>
+  <com.google.android.material.button.MaterialButtonToggleGroup ns0:id="@+id/history_direction" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:layout_marginTop="12dp" ns1:singleSelection="true" ns1:selectionRequired="true" ns1:checkedButton="@id/history_all">
+   <com.google.android.material.button.MaterialButton ns0:id="@+id/history_all" style="?attr/materialButtonOutlinedStyle" ns0:layout_width="0dp" ns0:layout_weight="1" ns0:layout_height="48dp" ns0:text="All" ns0:insetTop="0dp" ns0:insetBottom="0dp" />
+   <com.google.android.material.button.MaterialButton ns0:id="@+id/history_sent" style="?attr/materialButtonOutlinedStyle" ns0:layout_width="0dp" ns0:layout_weight="1" ns0:layout_height="48dp" ns0:text="Sent" ns0:insetTop="0dp" ns0:insetBottom="0dp" />
+   <com.google.android.material.button.MaterialButton ns0:id="@+id/history_received" style="?attr/materialButtonOutlinedStyle" ns0:layout_width="0dp" ns0:layout_weight="1" ns0:layout_height="48dp" ns0:text="Received" ns0:insetTop="0dp" ns0:insetBottom="0dp" />
+  </com.google.android.material.button.MaterialButtonToggleGroup>
+ </LinearLayout>
+ <HorizontalScrollView ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:scrollbars="none" ns0:fillViewport="false">
+  <com.google.android.material.chip.ChipGroup ns0:id="@+id/history_types" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:paddingHorizontal="20dp" ns1:singleLine="true" ns1:singleSelection="true" ns1:selectionRequired="true" ns1:checkedChip="@id/type_all">
+   <com.google.android.material.chip.Chip ns0:id="@+id/type_all" style="@style/Widget.Material3.Chip.Filter" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:text="All files" ns0:checkable="true" />
+<com.google.android.material.chip.Chip ns0:id="@+id/type_image" style="@style/Widget.Material3.Chip.Filter" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:text="Images" ns0:checkable="true" />
+<com.google.android.material.chip.Chip ns0:id="@+id/type_video" style="@style/Widget.Material3.Chip.Filter" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:text="Video" ns0:checkable="true" />
+<com.google.android.material.chip.Chip ns0:id="@+id/type_audio" style="@style/Widget.Material3.Chip.Filter" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:text="Audio" ns0:checkable="true" />
+<com.google.android.material.chip.Chip ns0:id="@+id/type_document" style="@style/Widget.Material3.Chip.Filter" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:text="Documents" ns0:checkable="true" />
+<com.google.android.material.chip.Chip ns0:id="@+id/type_other" style="@style/Widget.Material3.Chip.Filter" ns0:layout_width="wrap_content" ns0:layout_height="wrap_content" ns0:text="Other" ns0:checkable="true" />
+  </com.google.android.material.chip.ChipGroup>
+ </HorizontalScrollView>
+ <TextView ns0:id="@+id/history_record_count" ns0:layout_width="match_parent" ns0:layout_height="wrap_content" ns0:paddingHorizontal="20dp" ns0:paddingVertical="2dp" ns0:text="No transfers" ns0:textSize="12sp" ns0:textColor="@color/txt_color_secondary" ns0:maxLines="1" ns0:ellipsize="end" />
+</LinearLayout>

@@ -413,37 +413,41 @@ public class Utils {
     }
 
     public String filePickerUriResolve(Uri uri) {
+        if (uri == null) return null;
         try {
-            String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-            if (decode.split(":").length < 3) {
-                if (decode.contains("/storage/") && decode.contains("raw/")) {
-                    String path = decode.split("raw/")[1];
-                    if(path != null && path.length() > 1) {
-                        return path;
-                    }
-                }
-            } else {
-                if (!decode.split(":")[2].matches("-?\\d+(\\.\\d+)?")) {
-                    String storage;
-                    if (decode.split(":")[1].contains("primary")) {
-                        storage = Environment.getExternalStorageDirectory().getAbsolutePath();
-                    } else {
-                        storage = getSDCardRoot();
-                    }
-                    File f = new File(storage, decode.split(":")[2]);
-                    return f.getAbsolutePath();
-                } else {
-                    String path = UriResolverUtil.getPath(ctx, uri);
-                    if(path == null) {
-                        Log.d(Constants.LOG_TAG, "Unresolved: " + decode);
-                    }
-                    if(path != null && path.length() > 1 && path.contains("storage")) {
-                        return path;
-                    }
-                }
+            if ("file".equals(uri.getScheme())) {
+                File file = new File(uri.getPath());
+                if (file.isFile() && file.canRead()) return file.getAbsolutePath();
             }
-            return null;
-        }catch (Exception e) {
+            String resolved = null;
+            try { resolved = UriResolverUtil.getPath(ctx, uri); } catch (Exception ignored) { }
+            if (resolved != null) {
+                File file = new File(resolved);
+                if (file.isFile() && file.canRead()) return file.getAbsolutePath();
+            }
+            String name = "Shared file";
+            try (android.database.Cursor cursor = ctx.getContentResolver().query(uri,
+                    new String[]{android.provider.OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) name = cursor.getString(0);
+            }
+            if (name == null || name.trim().isEmpty()) name = "Shared file";
+            name = name.replaceAll("[\\\\/\\r\\n]", "_");
+            if (name.equals(".") || name.equals("..")) name = "Shared file";
+            File directory = new File(ctx.getFilesDir(), "shared-selection/" + java.util.UUID.randomUUID());
+            if (!directory.mkdirs()) return null;
+            File destination = new File(directory, name);
+            try (java.io.InputStream input = ctx.getContentResolver().openInputStream(uri);
+                    FileOutputStream output = new FileOutputStream(destination)) {
+                if (input == null) throw new java.io.IOException("Unreadable file");
+                byte[] buffer = new byte[64 * 1024];
+                int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            } catch (Exception e) {
+                destination.delete(); directory.delete(); throw e;
+            }
+            return destination.getAbsolutePath();
+        } catch (Exception e) {
+            Log.e(Constants.LOG_TAG, "Unable to prepare selected file", e);
             return null;
         }
     }
@@ -483,23 +487,32 @@ public class Utils {
         }
     }
 
-    public void pListWriter(List<String> pmode_send_final_files) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            File file=new File("/data/data/"+ctx.getPackageName()+"/","pFilesList.bin");
-            StringBuffer data=new StringBuffer();
-            for(String path : pmode_send_final_files) {
-                data.append(path);
-                data.append("\n");
+    public synchronized void pListWriter(List<String> paths) {
+        // Atomic replacement prevents a request from reading a partly written whitelist.
+        android.util.AtomicFile file = new android.util.AtomicFile(new File(ctx.getFilesDir().getParentFile(), "pFilesList.bin"));
+        FileOutputStream output = null;
+        try {
+            output = file.startWrite();
+            String data = String.join("\n", new java.util.LinkedHashSet<>(paths));
+            output.write(data.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            file.finishWrite(output);
+        } catch (Exception e) {
+            if (output != null) file.failWrite(output);
+            Log.e(Constants.LOG_TAG, "Unable to save selected files", e);
+        }
+    }
+
+    public List<String> pListReader() {
+        List<String> paths = new java.util.ArrayList<>();
+        File file = new File(ctx.getFilesDir().getParentFile(), "pFilesList.bin");
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(file))) {
+            String path;
+            while ((path = reader.readLine()) != null) {
+                File selected = new File(path);
+                if (selected.isFile() && selected.canRead() && !paths.contains(path)) paths.add(path);
             }
-            try {
-                FileOutputStream fileWriter=new FileOutputStream(file);
-                fileWriter.write(data.toString().getBytes());
-                fileWriter.close();
-            }catch (Exception e) {
-                //Do Nothing...
-            }
-        });
+        } catch (java.io.IOException ignored) { }
+        return paths;
     }
 
     public void junkCleaner() {

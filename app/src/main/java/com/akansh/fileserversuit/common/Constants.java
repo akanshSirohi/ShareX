@@ -17,6 +17,7 @@ public class Constants {
     public static final String SERVER_PORT = "server_port";
     public static final String SSL = "ssl";
     public static final String PLUGIN_DEV = "plugin_dev";
+    public static final String ADVANCED_MODE = "advanced_mode";
     public static final int SERVER_PORT_DEFAULT = 6060;
     public static final int SERVER_ON = 1;
     public static final int SERVER_OFF = 0;

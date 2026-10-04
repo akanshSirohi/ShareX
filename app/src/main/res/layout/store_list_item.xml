@@ -6,29 +6,29 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/bg_color"
+        app:cardBackgroundColor="@color/surface_container"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        card_view:cardCornerRadius="3dp"
-        card_view:cardElevation="2dp"
-        card_view:cardUseCompatPadding="true">
+        card_view:cardCornerRadius="12dp"
+        card_view:cardElevation="0dp"
+        card_view:cardUseCompatPadding="false">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/ripple_bg">
+            android:background="@color/surface_container">
 
             <TextView
                 android:id="@+id/store_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:fontFamily="@font/product_sans"
+                android:fontFamily="@font/google_sans"
                 android:text="Plugin Title"
                 android:textColor="@color/txt_color"
                 android:textSize="16sp"
@@ -37,8 +37,8 @@
 
             <ImageView
                 android:id="@+id/imageView"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:src="@drawable/ic_plugin"
@@ -51,7 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
-                android:fontFamily="@font/product_sans"
+                android:fontFamily="@font/google_sans"
                 android:text="v1.0"
                 android:textColor="@color/txt_color_secondary"
                 android:textSize="14sp"
@@ -63,7 +63,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:fontFamily="@font/product_sans"
+                android:fontFamily="@font/google_sans"
                 android:text="Plugin Author"
                 android:textColor="@color/txt_color_secondary"
                 android:textSize="14sp"
@@ -77,7 +77,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="16dp"
                 android:ellipsize="end"
-                android:fontFamily="@font/product_sans"
+                android:fontFamily="@font/google_sans"
                 android:text="Plugin long description..."
                 android:textColor="@color/txt_color_secondary"
                 android:justificationMode="inter_word"
@@ -94,8 +94,8 @@
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/ripple_bg_"
                 android:drawableLeft="@drawable/ic_install"
-                android:drawableTint="#00C853"
-                android:fontFamily="@font/product_sans"
+                android:drawableTint="@color/accent_blue"
+                android:fontFamily="@font/google_sans"
                 android:text="Install"
                 android:textColor="@color/txt_color"
                 android:visibility="visible"
@@ -106,5 +106,5 @@
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

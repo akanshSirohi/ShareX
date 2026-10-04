@@ -1,0 +1,6 @@
+<resources>
+    <dimen name="home_content_inset">32dp</dimen>
+    <dimen name="utility_content_inset">32dp</dimen>
+    <dimen name="qr_content_inset">32dp</dimen>
+    <dimen name="plugin_content_inset">24dp</dimen>
+</resources>

@@ -45,6 +45,7 @@ public class ServerService extends Service {
                 webServer.setContext(context);
                 webServer.setRoot(utils.loadRoot());
                 webServer.setAllowHiddenMedia(utils.loadSetting(Constants.LOAD_HIDDEN_MEDIA));
+                TransferStats.reset();
                 webServer.start();
                 String prefix = utils.loadSetting(Constants.SSL) ? "https://" : "http://";
                 String url = prefix + webServer.getHostname() + ":" + webServer.getListeningPort();
@@ -70,6 +71,7 @@ public class ServerService extends Service {
 
     @Override
     public void onDestroy() {
+        TransferStats.flush();
         stopForeground(true);
         if(webServer!=null) {
             webServer.closeAllConnections();
@@ -90,6 +92,7 @@ public class ServerService extends Service {
         local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
         local.putExtra("action",action);
         local.putExtra(key,value);
+        local.setPackage(context.getPackageName());
         context.sendBroadcast(local);
     }
 

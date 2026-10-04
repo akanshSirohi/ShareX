@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.R;
+import com.akansh.fileserversuit.common.EdgeToEdge;
 import com.akansh.fileserversuit.common.Utils;
 import com.akansh.plugins.common.PluginInstallStatus;
 import com.akansh.plugins.PluginsManager;
@@ -36,6 +37,8 @@ public class PluginsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plugins);
+        EdgeToEdge.apply(this, findViewById(R.id.plugins_root));
+        findViewById(R.id.plugins_back).setOnClickListener(view -> finish());
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(new ViewPagerFragmentStateAdapter(this));

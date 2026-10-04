@@ -25,9 +25,11 @@ import android.widget.TextView;
 import com.akansh.fileserversuit.BuildConfig;
 import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.common.Constants;
+import com.akansh.fileserversuit.common.EdgeToEdge;
 import com.akansh.fileserversuit.common.SwipeDeleteCallback;
 import com.akansh.fileserversuit.common.Utils;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.navigation.NavigationBarView;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,18 +42,22 @@ public class TransferHistoryActivity extends AppCompatActivity {
     HistoryDBManager historyDBManager;
     Utils utils;
     private int datasetLenth=0;
+    private int directionFilter = -1;
+    private String typeFilter = "all";
+    private final android.os.Handler totalsHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable totalsTicker = new Runnable() {
+        @Override public void run() { updateTotals(); totalsHandler.postDelayed(this, 1000); }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transfer_history);
+        EdgeToEdge.apply(this, findViewById(R.id.transfer_root));
         historyDBManager=new HistoryDBManager(this);
         history_list = findViewById(R.id.history_list);
         ArrayList<HistoryItem> historyItems=historyDBManager.getHistory();
         datasetLenth = historyItems.size();
-        if(datasetLenth>0) {
-            showSnackbar("Swipe right to remove item from history...");
-        }
         transferHistoryAdapter=new TransferHistoryAdapter(this,historyItems);
         history_list.setLayoutManager(new LinearLayoutManager(this));
         utils=new Utils(this);
@@ -115,7 +121,7 @@ public class TransferHistoryActivity extends AppCompatActivity {
                         TextView textView = dialog.findViewById(android.R.id.message);
                         TextView textView2 = dialog.findViewById(android.R.id.button1);
                         TextView textView3 = dialog.findViewById(android.R.id.button2);
-                        Typeface face = Typeface.createFromAsset(getAssets(), "fonts/product_sans.ttf");
+                        Typeface face = Typeface.createFromAsset(getAssets(), "fonts/google_sans.ttf");
                         textView.setTypeface(face);
                         textView2.setTypeface(face,Typeface.BOLD);
                         textView3.setTypeface(face,Typeface.BOLD);
@@ -153,26 +159,80 @@ public class TransferHistoryActivity extends AppCompatActivity {
 
         ImageButton btn_clear_hist = findViewById(R.id.btn_clear_hist);
         btn_clear_hist.setOnClickListener(v -> {
-            if(transferHistoryAdapter.getItemCount()==0) {
+            if(historyDBManager.getItemsCount()==0) {
                 showSnackbar("No history found!");
             }else{
-                historyDBManager.clearHistory();
-                checkEmptyList();
-                showSnackbar("Transfer history cleared!");
+                new AlertDialog.Builder(this)
+                        .setTitle("Clear transfer history?")
+                        .setMessage("This removes transfer records. Files on your device stay in place.")
+                        .setNegativeButton("Cancel", null)
+                        .setPositiveButton("Clear", (dialog, which) -> {
+                            historyDBManager.clearHistory();
+                            transferHistoryAdapter.updateDataset(historyDBManager.getHistory());
+                            checkEmptyList();
+                            showSnackbar("Transfer history cleared");
+                        })
+                        .show();
             }
         });
 
         history_list.setAdapter(transferHistoryAdapter);
+        com.google.android.material.button.MaterialButtonToggleGroup direction = findViewById(R.id.history_direction);
+        com.google.android.material.chip.ChipGroup types = findViewById(R.id.history_types);
+        direction.addOnButtonCheckedListener((group, id, checked) -> {
+            if (!checked) return;
+            directionFilter = id == R.id.history_sent ? Constants.ITEM_TYPE_SENT
+                    : id == R.id.history_received ? Constants.ITEM_TYPE_RECEIVED : -1;
+            checkEmptyList();
+        });
+        types.setOnCheckedStateChangeListener((group, ids) -> {
+            int id = ids.isEmpty() ? R.id.type_all : ids.get(0);
+            typeFilter = id == R.id.type_image ? "image" : id == R.id.type_video ? "video"
+                    : id == R.id.type_audio ? "audio" : id == R.id.type_document ? "document"
+                    : id == R.id.type_other ? "other" : "all";
+            checkEmptyList();
+        });
+        if (savedInstanceState != null) {
+            direction.check(savedInstanceState.getInt("direction_id", R.id.history_all));
+            types.check(savedInstanceState.getInt("type_id", R.id.type_all));
+        }
+        NavigationBarView bottomNavigation = findViewById(R.id.bottom_nav);
+        bottomNavigation.setSelectedItemId(R.id.trans_hist);
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.trans_hist) return true;
+            Intent intent = new Intent(TransferHistoryActivity.this, com.akansh.fileserversuit.ui.MainActivity.class);
+            if (item.getItemId() == R.id.settings) intent.putExtra("open_settings", true);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+            return true;
+        });
         init();
     }
 
     @Override
     protected void onResume() {
-        if(historyDBManager.getItemsCount()!=datasetLenth) {
-            transferHistoryAdapter.updateDataset(historyDBManager.getHistory());
-        }
         checkEmptyList();
+        totalsHandler.post(totalsTicker);
         super.onResume();
+    }
+
+    @Override protected void onPause() {
+        totalsHandler.removeCallbacks(totalsTicker);
+        super.onPause();
+    }
+
+    @Override protected void onSaveInstanceState(@NonNull Bundle state) {
+        super.onSaveInstanceState(state);
+        state.putInt("direction_id", ((com.google.android.material.button.MaterialButtonToggleGroup) findViewById(R.id.history_direction)).getCheckedButtonId());
+        state.putInt("type_id", ((com.google.android.material.chip.ChipGroup) findViewById(R.id.history_types)).getCheckedChipId());
+    }
+
+    private void updateTotals() {
+        long[] totals = com.akansh.fileserversuit.server.TransferStats.lifetimeTotals();
+        ((TextView) findViewById(R.id.history_lifetime_totals)).setText("Sent "
+                + android.text.format.Formatter.formatShortFileSize(this, totals[0]) + " · Received "
+                + android.text.format.Formatter.formatShortFileSize(this, totals[1]));
     }
 
     private void init() {
@@ -180,8 +240,19 @@ public class TransferHistoryActivity extends AppCompatActivity {
     }
 
     public void checkEmptyList() {
+        ArrayList<HistoryItem> all = historyDBManager.getHistory();
+        ArrayList<HistoryItem> filtered = new ArrayList<>();
+        for (HistoryItem item : all) {
+            if ((directionFilter == -1 || item.getItem_type() == directionFilter)
+                    && (typeFilter.equals("all") || typeFilter.equals(TransferHistoryAdapter.category(item)))) filtered.add(item);
+        }
+        transferHistoryAdapter.updateDataset(filtered);
+        ((TextView) findViewById(R.id.history_record_count)).setText(filtered.size() + " of " + all.size()
+                + " transfers · Swipe right to remove a record");
+        ((TextView) findViewById(R.id.history_empty_title)).setText(all.isEmpty() ? "No transfers yet" : "No matching transfers");
+        updateTotals();
         ConstraintLayout constraintLayout=findViewById(R.id.blank_screen);
-        if(historyDBManager.getItemsCount()==0) {
+        if(filtered.isEmpty()) {
             constraintLayout.setVisibility(View.VISIBLE);
             history_list.setVisibility(View.GONE);
         }else{
@@ -193,7 +264,8 @@ public class TransferHistoryActivity extends AppCompatActivity {
     public void showSnackbar(String msg) {
         ConstraintLayout constraintLayout=findViewById(R.id.transfer_root);
         Snackbar snackbar = Snackbar.make(constraintLayout, msg, Snackbar.LENGTH_LONG);
-        snackbar.setBackgroundTint(Color.parseColor("#000a12"));
+        snackbar.setBackgroundTint(getColor(R.color.surface_container));
+        snackbar.setTextColor(getColor(R.color.txt_color));
         snackbar.show();
     }
 
@@ -204,8 +276,10 @@ public class TransferHistoryActivity extends AppCompatActivity {
         snackbar.setAction("Undo", v -> {
             historyDBManager.restoreHistory(historyItem);
             transferHistoryAdapter.updateDataset(historyDBManager.getHistory());
+            checkEmptyList();
         });
-        snackbar.setBackgroundTint(Color.parseColor("#000a12"));
+        snackbar.setBackgroundTint(getColor(R.color.surface_container));
+        snackbar.setTextColor(getColor(R.color.txt_color));
         snackbar.show();
     }
 
@@ -219,7 +293,9 @@ public class TransferHistoryActivity extends AppCompatActivity {
         } else {
             uri = Uri.fromFile(file);
         }
-        i.setDataAndType(uri, type);
+        i.setType(type);
+        i.putExtra(Intent.EXTRA_STREAM, uri);
+        i.setClipData(android.content.ClipData.newRawUri("Shared file", uri));
         startActivity(Intent.createChooser(i,"Sharing file..."));
     }
 

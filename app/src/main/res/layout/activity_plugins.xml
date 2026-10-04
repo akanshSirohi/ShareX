@@ -4,12 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/plugins_root"
     tools:context="com.akansh.plugins.ui.PluginsActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout3"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:background="@color/bg_color_sec"
         android:paddingBottom="16dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -22,13 +23,27 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="24dp"
-            android:fontFamily="@font/product_sans"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/google_sans"
             android:text="Plugins"
             android:textColor="@color/txt_color"
-            android:textSize="34sp"
+            android:textSize="24sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/plugins_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/back_to_sharing"
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="@id/textView15"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/textView15"
+            app:srcCompat="@drawable/ic_arrow_left"
+            app:tint="@color/txt_color" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
