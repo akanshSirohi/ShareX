@@ -1,435 +1,147 @@
 package com.akansh.fileserversuit.server;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.util.Log;
 
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.common.Utils;
-import com.akansh.fileserversuit.common.ZipUtils;
 import com.akansh.fileserversuit.transfer_history.HistoryDBManager;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.json.JSONArray;
-
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.security.KeyStore;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.nanohttpd.fileupload.NanoFileUpload;
-import org.nanohttpd.protocols.http.IHTTPSession;
-import org.nanohttpd.protocols.http.NanoHTTPD;
-import org.nanohttpd.protocols.http.response.Response;
-import org.nanohttpd.protocols.http.response.Status;
-import static org.nanohttpd.protocols.http.response.Response.newFixedLengthResponse;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.KeyManagerFactory;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 
-public class WebServer extends NanoHTTPD {
-
+public final class WebServer {
+    private final String hostname;
+    private final int port;
+    private Context context;
     private Utils utils;
-    private TemplateEngine templateEngine;
-    private String root=Environment.getExternalStorageDirectory().getAbsolutePath();
-    private boolean allowHiddenMedia=true;
-    private HistoryDBManager historyDBManager;
-    private Context ctx;
     private ServerUtils serverUtils;
-    private String c_parent = "";
-    private ThemesData themesData;
+    private WebRequestHandler requestHandler;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
+    private DefaultEventExecutorGroup requestExecutorGroup;
+    private Channel channel;
+    private SslContext sslContext;
 
     WebServer(String hostname, int port) {
-        super(hostname, port);
+        this.hostname = hostname;
+        this.port = port;
     }
 
-    void setContext(Context context) {
-        utils=new Utils(context);
-        templateEngine=new TemplateEngine(context);
-        if(utils.loadSetting(Constants.PLUGIN_DEV)) {
-            templateEngine.setPlugin_dev_dir(utils.loadPluginDevFolder());
-        }
-        historyDBManager=new HistoryDBManager(context);
-        ctx=context;
-        themesData = new ThemesData();
-        serverUtils = new ServerUtils(ctx);
-        serverUtils.setSendProgressListener(progress -> {
-            Intent local = new Intent();
-            local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
-            local.putExtra("action",Constants.ACTION_PROGRESS);
-            local.putExtra("value",progress);
-            ctx.sendBroadcast(local);
-        });
-
-        // Init SSL
-        try {
-            if(utils.loadSetting(Constants.SSL)) {
-                KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                InputStream keyStoreStream = context.getAssets().open("keystore.bks");
-                keyStore.load(keyStoreStream, "sharex_akansh".toCharArray());
-                KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-                keyManagerFactory.init(keyStore, "sharex_akansh".toCharArray());
-                makeSecure(NanoHTTPD.makeSSLSocketFactory(keyStore, keyManagerFactory), null);
-            }
-        }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,"SSL Error: "+e.getMessage());
-        }
-
-        serverUtils.setUpdateTransferHistoryListener(historyItem -> historyDBManager.addTransferHistory(historyItem.getItem_type(),historyItem.getFile_name(),historyItem.getSize(),historyItem.getDate(),historyItem.getTime(),historyItem.getType(),historyItem.getPath()));
+    synchronized void setContext(Context context) {
+        this.context = context.getApplicationContext();
+        utils = new Utils(this.context);
+        serverUtils = new ServerUtils(this.context);
+        requestHandler = new WebRequestHandler(this.context, utils, serverUtils);
+        if (utils.loadSetting(Constants.PLUGIN_DEV)) requestHandler.setPluginDevDir(utils.loadPluginDevFolder());
+        serverUtils.setSendProgressListener(progress -> requestHandler.reportProgress(progress));
+        serverUtils.setUpdateTransferHistoryListener(item -> new HistoryDBManager(this.context).addTransferHistory(
+                item.getItem_type(), item.getFile_name(), item.getSize(), item.getDate(), item.getTime(), item.getType(), item.getPath()));
+        sslContext = createSslContext();
     }
 
     public void setRoot(String root) {
-        this.root = root;
+        if (requestHandler != null) requestHandler.setRoot(root);
     }
 
     public void setAllowHiddenMedia(boolean allowHiddenMedia) {
-        this.allowHiddenMedia = allowHiddenMedia;
+        if (requestHandler != null) requestHandler.setAllowHiddenMedia(allowHiddenMedia);
     }
 
-    @Override
-    public Response handle(IHTTPSession session) {
+    public synchronized void start() throws Exception {
+        if (requestHandler == null) throw new IllegalStateException("Server context was not set");
+        if (channel != null && channel.isActive()) return;
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
+        requestExecutorGroup = new DefaultEventExecutorGroup(Math.max(2, Math.min(8, Runtime.getRuntime().availableProcessors())));
         try {
-            String range = null;
-            for (String key : session.getHeaders().keySet()) {
-                if (key.equals("range")) {
-                    range = session.getHeaders().get(key);
-                }
-            }
-            String uri = session.getUri();
-            String path;
-            if (uri.equals("/ShareX")) {
-                Map<String, List<String>> params = session.getParameters();
-                String action = Objects.requireNonNull(params.get("action")).get(0);
-                if (action.equals("listFiles")) {
-                    String loc = Objects.requireNonNull(params.get("location")).get(0);
-                    c_parent = loc;
-                    return newFixedLengthResponse(serverUtils.getFilesListCode(root + loc, allowHiddenMedia));
-                } else if (action.equals("openFile")) {
-                    String loc;
-                    if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        loc = root + Objects.requireNonNull(params.get("location")).get(0);
-                    } else {
-                        loc = Objects.requireNonNull(params.get("location")).get(0);
-                    }
-                    File f = new File(loc);
-                    if (range == null) {
-                        sendLog("msg", "msg", "Sending file: " + f.getName());
-                    }
-                    if (utils.loadSetting(Constants.FORCE_DOWNLOAD)) {
-                        return serverUtils.downloadFile(loc, true, true, range);
-                    } else {
-                        return serverUtils.serveFile(loc, true, range);
-                    }
-                } else if (action.equals("viewImage")) {
-                    String loc;
-                    if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        loc = root + Objects.requireNonNull(params.get("location")).get(0);
-                    } else {
-                        loc = Objects.requireNonNull(params.get("location")).get(0);
-                    }
-                    return serverUtils.serveFile(loc, false, range);
-                } else if (action.equals("thumbImage")) {
-                    String loc = Objects.requireNonNull(params.get("location")).get(0);
-                    return serverUtils.serveThumbnail(loc);
-                } else if (action.equals("delFiles")) {
-                    if (!utils.loadSetting(Constants.RESTRICT_MODIFY) && !utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        JSONArray jsonArray = new JSONArray(Objects.requireNonNull(params.get("data")).get(0));
-                        StringBuilder names = new StringBuilder();
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            String file = jsonArray.getString(i);
-                            File f = new File(root + file);
-                            utils.deleteFileOrDir(f);
-                            names.append("'").append(f.getName()).append("' ");
+            ServerBootstrap bootstrap = new ServerBootstrap()
+                    .group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_REUSEADDR, true)
+                    .childOption(ChannelOption.TCP_NODELAY, true)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel socket) {
+                            if (sslContext != null) socket.pipeline().addLast("ssl", sslContext.newHandler(socket.alloc()));
+                            socket.pipeline().addLast("readTimeout", new ReadTimeoutHandler(120, TimeUnit.SECONDS));
+                            socket.pipeline().addLast("writeTimeout", new WriteTimeoutHandler(120, TimeUnit.SECONDS));
+                            socket.pipeline().addLast("http", new HttpServerCodec());
+                            socket.pipeline().addLast("chunked", new ChunkedWriteHandler());
+                            socket.pipeline().addLast(requestExecutorGroup, "requests", requestHandler.newChannelHandler());
                         }
-                        sendLog("msg", "msg", "Deleted File/Folder: " + names);
-                        return newFixedLengthResponse(jsonArray.length() + " files deleted successfully!;");
-                    } else {
-                        return newFixedLengthResponse("File deletion is restricted!;");
-                    }
-
-                } else if (action.equals("downloadFiles")) {
-                    Log.d(Constants.LOG_TAG, "Download Files Hitted!");
-                    JSONArray jsonArray = new JSONArray(Objects.requireNonNull(params.get("data")).get(0));
-                    boolean serveOne = false;
-                    File f;
-                    if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        f = new File(root + jsonArray.getString(0));
-                    } else {
-                        f = new File(jsonArray.getString(0));
-                        if (!f.exists()) {
-                            f = new File(root + jsonArray.getString(0));
-                        }
-                    }
-                    if (jsonArray.length() == 1 && !f.isDirectory()) {
-                        serveOne = true;
-                    }
-                    if (!serveOne) {
-                        sendLog("msg", "msg", "Zipping files to download...");
-                        String fileName = "ShareX_zip_" + Objects.requireNonNull(params.get("filename")).get(0) + ".zip";
-                        File base = new File(Environment.getExternalStorageDirectory() + "/ShareX/.temp", fileName);
-                        String loc;
-                        boolean b = utils.loadSetting(Constants.PRIVATE_MODE);
-                        if (!base.exists()) {
-                            ArrayList<File> filesList = new ArrayList<>();
-                            File file;
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                if (!b) {
-                                    file = new File(root + jsonArray.getString(i));
-                                } else {
-                                    file = new File(jsonArray.getString(i));
-                                }
-                                if (file.exists()) {
-                                    pushHistory(file, Constants.ITEM_TYPE_SENT);
-                                    filesList.add(file);
-                                }
-                            }
-                            sendLog("msg", "msg", "Adding " + filesList + " to zip file...");
-                            ZipUtils zipUtils = new ZipUtils();
-                            loc = zipUtils.zip(filesList, fileName);
-                        } else {
-                            loc = base.getAbsolutePath();
-                        }
-                        sendLog("msg", "msg", "Zipping completed...");
-                        sendLog("msg", "msg", "Sending zip file...");
-                        return serverUtils.downloadFile(loc, false, false, range);
-                    } else {
-                        sendLog("msg", "msg", "Sending " + f.getName() + " to download...");
-                        return serverUtils.downloadFile(f.getAbsolutePath(), true, true, range);
-                    }
-                } else if (action.equals("renF")) {
-                    if (!utils.loadSetting(Constants.RESTRICT_MODIFY) && !utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        File old = new File(root + Objects.requireNonNull(params.get("old_n")).get(0));
-                        File new_n = new File(root + Objects.requireNonNull(params.get("parent")).get(0), Objects.requireNonNull(params.get("new_n")).get(0));
-                        old.renameTo(new_n);
-                        sendLog("msg", "msg", "File/folder renamed \"" + old.getName() + "\" to \"" + new_n.getName() + "\"");
-                        return newFixedLengthResponse("File/Folder Renamed Successfully!;");
-                    } else {
-                        return newFixedLengthResponse("File/Folder modification restricted!;");
-                    }
-                } else if (action.equals("newF")) {
-                    if (!utils.loadSetting(Constants.RESTRICT_MODIFY) && !utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        File f = new File(root + Objects.requireNonNull(params.get("parent")).get(0), Objects.requireNonNull(params.get("name")).get(0));
-                        f.mkdirs();
-                        sendLog("msg", "msg", "New folder created at " + f.getAbsolutePath());
-                        return newFixedLengthResponse("Folder Created Successfully!;");
-                    } else {
-                        return newFixedLengthResponse("File/Folder modification restricted!;");
-                    }
-                } else if (action.equals("listApps")) {
-                    return newFixedLengthResponse(serverUtils.getAppsListCode());
-                } else if (action.equals("getApp")) {
-                    String pkg = Objects.requireNonNull(params.get("pkg")).get(0);
-                    PackageManager packageManager = ctx.getPackageManager();
-                    String appName = packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, PackageManager.GET_META_DATA)).toString();
-                    String appPath = packageManager.getApplicationInfo(pkg, PackageManager.GET_META_DATA).sourceDir;
-                    sendLog("msg", "msg", "Sending App: " + appName);
-                    return serverUtils.serveApp(appName + ".apk", appPath, pkg);
-                } else if (action.equals("getInfo")) {
-                    return newFixedLengthResponse(serverUtils.getInfo());
-                } else if (action.equals("getUploadLocation")) {
-                    if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        if (c_parent.isEmpty()) {
-                            c_parent = "/";
-                        } else if (c_parent.startsWith("//")) {
-                            c_parent = c_parent.replace("//", "/");
-                        }
-                        return newFixedLengthResponse("storage" + c_parent);
-                    } else {
-                        return newFixedLengthResponse("storage/ShareX");
-                    }
-                } else if (action.equals("getPrivateMode")) {
-                    return newFixedLengthResponse(String.valueOf(utils.loadSetting(Constants.PRIVATE_MODE)));
-                } else if (action.equals("auth")) {
-                    final DeviceManager deviceManager = new DeviceManager(ctx);
-                    final String device_id = Objects.requireNonNull(params.get("device_id")).get(0);
-                    if (deviceManager.isDeviceExist(device_id)) {
-                        return newFixedLengthResponse("true");
-                    } else if (deviceManager.isDeviceDenied(device_id)) {
-                        return newFixedLengthResponse("denied");
-                    } else {
-                        sendLog(Constants.ACTION_AUTH, "device_id", device_id);
-                        return newFixedLengthResponse("false");
-                    }
-                } else if (action.equals("getInstalledPlugins")) {
-                    return newFixedLengthResponse(serverUtils.getPluginsList());
-                }
-                return newFixedLengthResponse("");
-            } else if (uri.equals("/ShareX/uploadFile")) {
-                try {
-                    if (utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        File folder = new File(Environment.getExternalStorageDirectory() + "/ShareX");
-                        if (!folder.exists()) {
-                            folder.mkdirs();
-                        }
-                    }
-                    DiskFileItemFactory factory = new DiskFileItemFactory();
-                    if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        factory.setRepository(new File(utils.loadRoot() + c_parent));
-                    } else {
-                        factory.setRepository(new File(Environment.getExternalStorageDirectory() + "/ShareX"));
-                    }
-                    List<FileItem> files = new NanoFileUpload(factory).parseRequest(session);
-                    int len = 0;
-                    for (FileItem file : files) {
-                        try {
-                            String fileName = file.getName();
-                            if (fileName != null) {
-                                File received;
-                                if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                                    received = new File(utils.loadRoot() + c_parent + "/" + fileName);
-                                } else {
-                                    received = new File(Environment.getExternalStorageDirectory() + "/ShareX/" + fileName);
-                                }
-                                file.write(received);
-                                String mime = utils.getMimeType(received);
-                                if (mime.startsWith("image")) {
-                                    utils.verifyImage(received);
-                                } else if (mime.startsWith("video")) {
-                                    utils.verifyVideo(received);
-                                }
-                                pushHistory(received, Constants.ITEM_TYPE_RECEIVED);
-                                sendLog("msg", "msg", "File received: " + fileName);
-                                len++;
-                            }
-                        } catch (Exception exception) {
-                            // handle
-                        }
-                    }
-                    if (!utils.loadSetting(Constants.PRIVATE_MODE)) {
-                        String loc = utils.loadRoot().replace("/emulated/0", "") + c_parent;
-                        if (loc.startsWith("/")) {
-                            loc = loc.substring(1);
-                        }
-                        if (loc.endsWith("/")) {
-                            loc = loc.substring(0, loc.length() - 1);
-                        }
-                        sendLog("msg", "msg", "Total files received " + len + " and stored in " + loc + " directory");
-                    } else {
-                        sendLog("msg", "msg", "Total files received " + len + " and stored in storage/ShareX directory");
-                    }
-                    return newFixedLengthResponse(len + " Files Uploaded Successsfully!");
-                } catch (Exception ex) {
-                    Log.d("server", ex.toString());
-                }
-                return newFixedLengthResponse("Error!");
-            } else if (uri.startsWith("/ShareX/thumbnail/app")) {
-                String pkg = uri.split("/")[uri.split("/").length - 1];
-                File iconP = new File(Environment.getExternalStorageDirectory() + "/ShareX/.thumbs", pkg + ".png");
-                if (iconP.exists()) {
-                    FileInputStream fis = new FileInputStream(iconP);
-                    String mime = utils.getMimeType(iconP.getAbsolutePath());
-                    long bytes = utils.getTotalBytes(iconP.getAbsolutePath());
-                    return newFixedLengthResponse(Status.OK, mime, fis, bytes);
-                } else {
-                    return newFixedLengthResponse("");
-                }
-            } else if (uri.startsWith("/SharexApp/")) {
-                if(!utils.loadSetting(Constants.PLUGIN_DEV) && (uri.endsWith("/debug") || uri.endsWith("/debug/"))) {
-                    return newFixedLengthResponse(Status.BAD_REQUEST, NanoHTTPD.MIME_PLAINTEXT, "400 Bad Request! Please enable plugin development mode in settings first!");
-                }
-                boolean plugin_debug = utils.loadSetting(Constants.PLUGIN_DEV) && (uri.contains("/debug") || uri.contains("/debug/"));
-                String plugin_uid = "";
-                if(!plugin_debug) {
-                    plugin_uid = Utils.extractPluginUID(uri);
-                }else{
-                    plugin_uid = "debug";
-                }
-
-                // Simple redirector for base only
-                Pattern pattern = Pattern.compile("\\.([^.]+)$");
-                Matcher matcher = pattern.matcher(uri);
-                if(!matcher.find() && uri.endsWith(plugin_uid) && !uri.endsWith("/")) {
-                    Response response = newFixedLengthResponse(Status.REDIRECT, NanoHTTPD.MIME_PLAINTEXT ,"");
-                    response.addHeader("Location", uri + "/");
-                    return response;
-                }
-
-                final String entry_point = "index.html";
-                if((!plugin_debug && !serverUtils.getPluginStatus(plugin_uid)) || plugin_uid == null) {
-                    return newFixedLengthResponse(Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "403 Access Denied!");
-                }
-                String[] plugin_uri_parts = uri.split(plugin_uid);
-                String replace_base = plugin_uri_parts.length == 1 ? plugin_uid : ".";
-                String plugin_uri = plugin_uri_parts.length == 1 ? "/" : plugin_uri_parts[1];
-                path = utils.getPluginFileProperPath(plugin_uri, plugin_uid);
-                if(path.endsWith("/")) {
-                    path = path + entry_point;
-                }else{
-                    File f = new File(path);
-                    if(!f.exists()) {
-                        File try_path = new File(path + ".html");
-                        if(!try_path.exists()) {
-                            return newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "404 Not Found");
-                        }else{
-                            path = path + ".html";
-                        }
-                    }else if (f.isDirectory()) {
-                        path = path.endsWith("/") ? path : path + "/";
-                        path = utils.getPluginFileProperPath( path + entry_point, plugin_uid);
-                    }
-                }
-                if(!(new File(path).exists())) {
-                    return newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "404 Not Found");
-                }
-                if(path.endsWith(".html")) {
-                    templateEngine.setPlugin_uid(plugin_uid);
-                    templateEngine.setBase_url(replace_base);
-                    String html = templateEngine.renderHtml(path, TemplateEngine.RENDER_TYPE.PLUGIN);
-                    return newFixedLengthResponse(Status.OK, "text/html", html);
-                }
-                FileInputStream fis = new FileInputStream(path);
-                String mime = utils.getMimeType(path);
-                long bytes = utils.getTotalBytes(path);
-                return newFixedLengthResponse(Status.OK, mime, fis, bytes);
-            } else {
-                if (uri.equals("/")) {
-                    path = utils.getFileProperPath("index.html");
-                    String html = templateEngine.renderHtml(path,TemplateEngine.RENDER_TYPE.NORMAL);
-                    return newFixedLengthResponse(Status.OK, "text/html", html);
-                } else if (uri.equals("/libs/bootstrap/css/theme_bootstrap.min.css")) {
-                    uri = uri.replace("theme", themesData.getPrefix(utils.loadInt(Constants.WEB_INTERFACE_THEME, 0)));
-                    path = utils.getFileProperPath(uri);
-                } else {
-                    path = utils.getFileProperPath(uri);
-                }
-                FileInputStream fis = new FileInputStream(path);
-                String mime = utils.getMimeType(path);
-                long bytes = utils.getTotalBytes(path);
-                return newFixedLengthResponse(Status.OK, mime, fis, bytes);
-            }
+                    });
+            channel = bootstrap.bind(new InetSocketAddress(hostname, port)).sync().channel();
         } catch (Exception e) {
-            return newFixedLengthResponse("Error Occured: " + e);
+            stop();
+            throw e;
         }
     }
 
-    public void sendLog(String action,String key,String value) {
-        Intent local = new Intent();
-        local.setAction(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
-        local.putExtra("action",action);
-        local.putExtra(key,value);
-        ctx.sendBroadcast(local);
+    private SslContext createSslContext() {
+        if (utils == null || !utils.loadSetting(Constants.SSL)) return null;
+        try (InputStream stream = context.getAssets().open("keystore.bks")) {
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(stream, "sharex_akansh".toCharArray());
+            KeyManagerFactory managerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            managerFactory.init(keyStore, "sharex_akansh".toCharArray());
+            return SslContextBuilder.forServer(managerFactory).build();
+        } catch (Exception e) {
+            Log.e(Constants.LOG_TAG, "SSL Error: " + e.getMessage());
+            return null;
+        }
     }
 
-    public void pushHistory(File f,int itemType) {
-        Calendar c = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
-        SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
-        String mime=utils.getMimeType(f);
-        if(mime==null) {
-            mime="folder";
+    public int getListeningPort() {
+        return channel == null ? port : ((InetSocketAddress) channel.localAddress()).getPort();
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public synchronized void closeAllConnections() {
+        if (channel != null) channel.close().syncUninterruptibly();
+    }
+
+    public synchronized void stop() {
+        if (channel != null) {
+            channel.close().syncUninterruptibly();
+            channel = null;
         }
-        historyDBManager.addTransferHistory(itemType,f.getName(),serverUtils.fileSize(f),df.format(c.getTime()),tf.format(c.getTime()),mime,f.getAbsolutePath());
+        if (requestExecutorGroup != null) {
+            requestExecutorGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS).syncUninterruptibly();
+            requestExecutorGroup = null;
+        }
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS).syncUninterruptibly();
+            workerGroup = null;
+        }
+        if (bossGroup != null) {
+            bossGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS).syncUninterruptibly();
+            bossGroup = null;
+        }
+        if (requestHandler != null) requestHandler.shutdown();
     }
 }

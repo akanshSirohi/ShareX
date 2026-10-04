@@ -19,6 +19,7 @@
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
@@ -56,7 +57,12 @@
         <service
             android:name=".server.ServerService"
             android:enabled="true"
-            android:exported="true" />
+            android:foregroundServiceType="specialUse"
+            android:exported="true">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-started local network file server" />
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

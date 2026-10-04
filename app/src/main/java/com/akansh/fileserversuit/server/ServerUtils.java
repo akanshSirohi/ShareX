@@ -21,17 +21,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.target.Target;
 
 import org.json.JSONObject;
-import org.nanohttpd.protocols.http.response.Response;
-import org.nanohttpd.protocols.http.response.Status;
-import static org.nanohttpd.protocols.http.response.Response.newFixedLengthResponse;
-
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -61,6 +54,10 @@ public class ServerUtils {
 
     public void setSendProgressListener(SendProgressListener sendProgressListener) {
         this.sendProgressListener = sendProgressListener;
+    }
+
+    public void sendProgressListenerUpdate(int progress) {
+        if (sendProgressListener != null) sendProgressListener.onProgressUpdate(progress);
     }
 
     public void setUpdateTransferHistoryListener(UpdateTransferHistoryListener updateTransferHistoryListener) {
@@ -284,191 +281,126 @@ public class ServerUtils {
         return output;
     }
 
-    public long[] calculateRange(long fileLength, String rangeHeader) {
-        String rangeValue = rangeHeader.trim().substring("bytes=".length());
-        long start, end;
-        if (rangeValue.startsWith("-")) {
-            end = fileLength - 1;
-            start = fileLength - 1
-                    - Long.parseLong(rangeValue.substring("-".length()));
-        } else {
-            String[] range = rangeValue.split("-");
-            start = Long.parseLong(range[0]);
-            end = range.length > 1 ? Long.parseLong(range[1])
-                    : fileLength - 1;
-        }
-        if (end > fileLength - 1) {
-            end = fileLength - 1;
-        }
-        return new long[]{start,end};
-    }
-
-    public Response serveThumbnail(String path) {
-        Response response;
+    public WebResponse serveThumbnail(String path) {
         try {
-            int thumbnailSize = 100;
-            Bitmap thumbnail = Glide.with(this.ctx)
-                    .asBitmap()
-                    .load(path)
-                    .centerCrop()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(thumbnailSize, thumbnailSize)
-                    .submit(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-                    .get();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            thumbnail.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            InputStream is = new ByteArrayInputStream(baos.toByteArray());
-            int fileLength = is.available();
-            ProgressInputStream pis = new ProgressInputStream(is, fileLength);
-            response = newFixedLengthResponse(Status.OK, "image/jpeg", pis, fileLength);
-            return response;
-        }catch (Exception e) {
-            return newFixedLengthResponse(e.getMessage());
+            Bitmap thumbnail = Glide.with(ctx).asBitmap().load(path).centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL).override(100, 100)
+                    .submit(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL).get();
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            thumbnail.compress(Bitmap.CompressFormat.JPEG, 100, output);
+            return WebResponse.bytes(200, output.toByteArray()).header("Content-Type", "image/jpeg");
+        } catch (Exception e) {
+            return WebResponse.text(404, "Thumbnail not found");
         }
     }
 
-    public Response serveFile(String path, boolean pushHistory, String rangeHeader) {
-        Response response;
-        try {
-            if(utils.loadSetting(Constants.PRIVATE_MODE)) {
-                File f=new File(path);
-                if (!isInPrivateFiles(f.getName())) {
-                    return newFixedLengthResponse("");
-                }
-            }
-            String m = utils.getMimeType(new File(path));
-            String name = new File(path).getName();
-            if(m==null) {
-                m = "";
-            }
-            long b = utils.getTotalBytes(path);
-            FileInputStream fis = new FileInputStream(path);
-            if(rangeHeader==null) {
-                ProgressInputStream pis = new ProgressInputStream(fis, (int) b);
-                pis.addListener(percent -> {
-                    if (sendProgressListener != null) {
-                        sendProgressListener.onProgressUpdate((int) percent);
-                    }
-                });
-                response = newFixedLengthResponse(Status.OK, m, pis, b);
-                if (pushHistory) {
-                    Calendar c = Calendar.getInstance();
-                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
-                    SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
-                    updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), m, new File(path).getAbsolutePath()));
-                }
-            }else{
-                long fileLength = utils.getTotalBytes(path);
-                long[] ranges = calculateRange(fileLength, rangeHeader);
-                if (ranges[0] <= ranges[1]) {
-                    long contentLength = ranges[1] - ranges[0] + 1;
-                    fis.skip(ranges[0]);
-                    ProgressInputStream pis = new ProgressInputStream(fis, (int) fileLength);
-                    pis.addListener(percent -> {
-                        if (sendProgressListener != null) {
-                            sendProgressListener.onProgressUpdate((int) percent);
-                        }
-                    });
-                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT, m, pis,fileLength);
-                    response.addHeader("Content-Length", contentLength + "");
-                    response.addHeader("Content-Range", "bytes " + ranges[0] + "-" + ranges[1] + "/" + fileLength);
+    public WebResponse serveFile(String path, boolean pushHistory, String rangeHeader) {
+        return transferFile(path, true, true, pushHistory, rangeHeader);
+    }
 
-                } else {
-                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE, m, rangeHeader);
+    public WebResponse downloadFile(String path, boolean privateCheck, boolean pushHistory, String rangeHeader) {
+        return transferFile(path, false, privateCheck, pushHistory, rangeHeader);
+    }
+
+    private WebResponse transferFile(String path, boolean inline, boolean privateCheck, boolean pushHistory, String rangeHeader) {
+        File file = new File(path);
+        try {
+            if (!file.isFile() || !file.canRead()) return WebResponse.text(404, "File not found");
+            if (privateCheck && utils.loadSetting(Constants.PRIVATE_MODE) && !isInPrivateFiles(file.getAbsolutePath())) {
+                return WebResponse.text(403, "Access denied");
+            }
+            long size = file.length();
+            long start = 0;
+            long end = size - 1;
+            int status = 200;
+            if (rangeHeader != null) {
+                long[] range = parseRange(size, rangeHeader);
+                if (range == null) {
+                    return WebResponse.text(416, "Invalid or unsatisfiable byte range")
+                            .header("Content-Range", "bytes */" + size).header("Accept-Ranges", "bytes");
                 }
+                start = range[0];
+                end = range[1];
+                status = 206;
             }
-            if(m.startsWith("image") || m.startsWith("video") || name.endsWith("pdf")) {
-                response.addHeader("Content-Disposition", "inline; filename=\"" + name + "\"");
-                response.addHeader("Content-Transfer-Encoding","binary");
-                response.addHeader("Accept-Ranges","bytes");
-                response.addHeader("Content-type", m);
-            }else{
-                response.addHeader("Accept-Ranges","bytes");
-                response.addHeader("Content-type","application/octet-stream");
-                response.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
-            }
-            return response;
-        }catch (Exception e) {
-            return newFixedLengthResponse(e.getMessage());
+            String mime = utils.getMimeType(file);
+            if (mime == null || mime.isEmpty()) mime = "application/octet-stream";
+            String disposition = inline && (mime.startsWith("image/") || mime.startsWith("video/") || mime.equals("application/pdf")) ? "inline" : "attachment";
+            WebResponse result = WebResponse.file(status, file, start, end - start + 1, true)
+                    .header("Content-Type", mime)
+                    .header("Content-Disposition", disposition + "; filename=\"" + safeHeaderFilename(file.getName()) + "\"")
+                    .header("Accept-Ranges", "bytes");
+            if (status == 206) result.header("Content-Range", "bytes " + start + "-" + end + "/" + size);
+            if (pushHistory && rangeHeader == null) recordSentHistory(file, mime);
+            return result;
+        } catch (Exception e) {
+            return WebResponse.text(500, "Unable to read file");
         }
     }
 
-    public Response downloadFile(String path,boolean pCheck,boolean pushHistory,String rangeHeader) {
-        Response response;
+    private long[] parseRange(long fileLength, String value) {
         try {
-            if(pCheck) {
-                if (utils.loadSetting(Constants.PRIVATE_MODE)) {
-                    File f = new File(path);
-                    if (!isInPrivateFiles(f.getName())) {
-                        return newFixedLengthResponse("");
-                    }
-                }
+            if (fileLength <= 0 || value == null || !value.startsWith("bytes=") || value.indexOf(',') >= 0) return null;
+            String spec = value.substring(6).trim();
+            int dash = spec.indexOf('-');
+            if (dash < 0 || dash != spec.lastIndexOf('-')) return null;
+            String left = spec.substring(0, dash).trim();
+            String right = spec.substring(dash + 1).trim();
+            long start;
+            long end;
+            if (left.isEmpty()) {
+                long suffix = Long.parseLong(right);
+                if (suffix <= 0) return null;
+                start = Math.max(0, fileLength - suffix);
+                end = fileLength - 1;
+            } else {
+                start = Long.parseLong(left);
+                end = right.isEmpty() ? fileLength - 1 : Long.parseLong(right);
+                if (start >= fileLength || start > end) return null;
+                end = Math.min(end, fileLength - 1);
             }
-            String name = new File(path).getName();
-            if(rangeHeader==null) {
-                long b = utils.getTotalBytes(path);
-                FileInputStream fis = new FileInputStream(path);
-                ProgressInputStream pis = new ProgressInputStream(fis, (int) b);
-                pis.addListener(percent -> {
-                    if (sendProgressListener != null) {
-                        sendProgressListener.onProgressUpdate((int) percent);
-                    }
-                });
-                response = newFixedLengthResponse(Status.OK, "application/octet-stream", pis, b);
-                if (pushHistory) {
-                    Calendar c = Calendar.getInstance();
-                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
-                    SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
-                    updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), utils.getMimeType(new File(path)), new File(path).getAbsolutePath()));
-                }
-            }else{
-                long fileLength = utils.getTotalBytes(path);
-                long[] ranges = calculateRange(fileLength, rangeHeader);
-                if (ranges[0] <= ranges[1]) {
-                    long contentLength = ranges[1] - ranges[0] + 1;
-                    FileInputStream fis = new FileInputStream(path);
-                    fis.skip(ranges[0]);
-                    ProgressInputStream pis = new ProgressInputStream(fis, (int) fileLength);
-                    pis.addListener(percent -> {
-                        if (sendProgressListener != null) {
-                            sendProgressListener.onProgressUpdate((int) percent);
-                        }
-                    });
-                    response = newFixedLengthResponse(Status.PARTIAL_CONTENT, "application/octet-stream", pis,fileLength);
-                    response.addHeader("Content-Length", contentLength + "");
-                    response.addHeader("Content-Range", "bytes " + ranges[0] + "-" + ranges[1] + "/" + fileLength);
-                } else {
-                    response = newFixedLengthResponse(Status.RANGE_NOT_SATISFIABLE, "application/octet-stream", rangeHeader);
-                }
-            }
-            response.addHeader("Content-type", "application/octet-stream");
-            response.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
-            response.addHeader("Content-Transfer-Encoding","binary");
-            response.addHeader("Accept-Ranges","bytes");
-            return response;
-        }catch (Exception e) {
-            return newFixedLengthResponse(e.getMessage());
+            return new long[]{start, end};
+        } catch (RuntimeException ignored) {
+            return null;
         }
     }
 
-    public Response serveApp(String name,String path,String pkg) {
-        if(!utils.loadSetting(Constants.LOAD_APPS)) {
-            return newFixedLengthResponse("Access Denied!");
+    private String safeHeaderFilename(String name) {
+        return name.replace("\\", "_").replace("\"", "_").replace("\r", "_").replace("\n", "_");
+    }
+
+    private void recordSentHistory(File file, String mime) {
+        if (updateTransferHistoryListener == null) return;
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+        SimpleDateFormat time = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+        updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, file.getName(), fileSize(file), date.format(c.getTime()), time.format(c.getTime()), mime, file.getAbsolutePath()));
+    }
+
+    public WebResponse serveApp(String name, String path, String pkg, String rangeHeader) {
+        if (!utils.loadSetting(Constants.LOAD_APPS)) return WebResponse.text(403, "Access Denied!");
+        File file = new File(path);
+        if (!file.isFile() || !file.canRead()) return WebResponse.text(404, "App not found");
+        long start = 0;
+        long end = file.length() - 1;
+        int status = 200;
+        if (rangeHeader != null) {
+            long[] range = parseRange(file.length(), rangeHeader);
+            if (range == null) return WebResponse.text(416, "Invalid or unsatisfiable byte range")
+                    .header("Content-Range", "bytes */" + file.length()).header("Accept-Ranges", "bytes");
+            start = range[0];
+            end = range[1];
+            status = 206;
         }
-        Response response;
-        try {
-            FileInputStream str = new FileInputStream(path);
-            Utils utils = new Utils(ctx);
-            long b = utils.getTotalBytes(path);
-            response = newFixedLengthResponse(Status.OK,"application/vnd.android.package-archive", str, b);
-            response.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
-            Calendar c = Calendar.getInstance();
-            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
-            SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
-            updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(new File(path)), df.format(c.getTime()), tf.format(c.getTime()), "Application",pkg));
-        }catch (Exception e) {
-            return newFixedLengthResponse(e.getMessage());
-        }
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+        SimpleDateFormat tf = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+        if (rangeHeader == null && updateTransferHistoryListener != null) updateTransferHistoryListener.onUpdateTransferHistory(new HistoryItem(Constants.ITEM_TYPE_SENT, name, fileSize(file), df.format(c.getTime()), tf.format(c.getTime()), "Application", pkg));
+        WebResponse response = WebResponse.file(status, file, start, end - start + 1, true)
+                .header("Content-Type", "application/vnd.android.package-archive")
+                .header("Content-Disposition", "attachment; filename=\"" + safeHeaderFilename(name) + "\"")
+                .header("Accept-Ranges", "bytes");
+        if (status == 206) response.header("Content-Range", "bytes " + start + "-" + end + "/" + file.length());
         return response;
     }
 
@@ -512,25 +444,15 @@ public class ServerUtils {
 
     @SuppressLint("SdCardPath")
     public boolean isInPrivateFiles(String path) {
-        try {
-            File file=new File("/data/data/"+ctx.getPackageName()+"/","pFilesList.bin");
-            FileReader fr = new FileReader(file);
-            BufferedReader br = new BufferedReader(fr);
+        File file = new File("/data/data/" + ctx.getPackageName() + "/", "pFilesList.bin");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            File target = new File(path).getCanonicalFile();
             String line;
-            while ((line = br.readLine()) != null) {
-                if (line.length() > 2) {
-                    File f=new File(line);
-                    String x=f.getName();
-                    if(x.equals(path)) {
-                        return true;
-                    }
-                }
+            while ((line = reader.readLine()) != null) {
+                if (line.length() > 2 && target.equals(new File(line).getCanonicalFile())) return true;
             }
-            br.close();
-            fr.close();
-        }catch (Exception e) {
-            Log.d(Constants.LOG_TAG,"Error is_in_p_func: "+e);
-            return false;
+        } catch (Exception e) {
+            Log.d(Constants.LOG_TAG, "Error is_in_p_func: " + e);
         }
         return false;
     }

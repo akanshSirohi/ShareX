@@ -532,46 +532,31 @@ public class MainActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
-            switch (itemId) {
-                case R.id.plugins:
-                    Intent plugins_intent=new Intent(MainActivity.this, PluginsActivity.class);
-                    startActivity(plugins_intent);
-                    break;
-                case R.id.settings:
-                    toggleSettings();
-                    break;
-                case R.id.scan_qr:
-                    if(checkCameraPermission()) {
-                        initQrScanner();
-                    }else{
-                        requestCameraPermission();
-                    }
-                    break;
-                case R.id.trans_hist:
-                    Intent tranferHistoryIntent=new Intent(MainActivity.this, TransferHistoryActivity.class);
-                    startActivity(tranferHistoryIntent);
-                    break;
-                case R.id.clear_log:
-                    clearLog();
-                    break;
-                case R.id.privacy_policy:
-                    try {
-                        Intent i = new Intent(Intent.ACTION_VIEW);
-                        i.setData(Uri.parse(Constants.PRIVACY_POLICY_URL));
-                        startActivity(i);
-                    }catch (Exception e) {
-                        //Do Nothing
-                    }
-                    break;
-                case R.id.feedback:
-                    Intent email = new Intent(Intent.ACTION_SENDTO,Uri.fromParts("mailto",Constants.FEEDBACK_MAIL,null));
-                    email.putExtra(Intent.EXTRA_SUBJECT, "ShareX Feedback");
-                    email.putExtra(Intent.EXTRA_TEXT, "Any feedback, query or suggestion...");
-                    startActivity(Intent.createChooser(email, "Send Feedback"));
-                    break;
-                case R.id.about:
-                    showAbout();
-                    break;
+            if (itemId == R.id.plugins) {
+                Intent pluginsIntent = new Intent(MainActivity.this, PluginsActivity.class);
+                startActivity(pluginsIntent);
+            } else if (itemId == R.id.settings) {
+                toggleSettings();
+            } else if (itemId == R.id.scan_qr) {
+                if (checkCameraPermission()) initQrScanner(); else requestCameraPermission();
+            } else if (itemId == R.id.trans_hist) {
+                Intent transferHistoryIntent = new Intent(MainActivity.this, TransferHistoryActivity.class);
+                startActivity(transferHistoryIntent);
+            } else if (itemId == R.id.clear_log) {
+                clearLog();
+            } else if (itemId == R.id.privacy_policy) {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(Constants.PRIVACY_POLICY_URL));
+                    startActivity(intent);
+                } catch (Exception ignored) { }
+            } else if (itemId == R.id.feedback) {
+                Intent email = new Intent(Intent.ACTION_SENDTO, Uri.fromParts("mailto", Constants.FEEDBACK_MAIL, null));
+                email.putExtra(Intent.EXTRA_SUBJECT, "ShareX Feedback");
+                email.putExtra(Intent.EXTRA_TEXT, "Any feedback, query or suggestion...");
+                startActivity(Intent.createChooser(email, "Send Feedback"));
+            } else if (itemId == R.id.about) {
+                showAbout();
             }
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;

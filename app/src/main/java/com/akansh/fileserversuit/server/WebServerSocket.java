@@ -7,137 +7,167 @@ import com.akansh.fileserversuit.common.SocketActions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.nanohttpd.protocols.http.IHTTPSession;
-import org.nanohttpd.protocols.websockets.NanoWSD;
-import org.nanohttpd.protocols.websockets.WebSocket;
 
-import java.util.HashMap;
+import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
-public class WebServerSocket extends NanoWSD {
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 
-    HashMap<String, SocketUser> socketUsers;
-    String appPackageName;
+public final class WebServerSocket {
+    private final int port;
+    private final String appPackageName;
+    private final Map<String, SocketUser> socketUsers = new ConcurrentHashMap<>();
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
+    private Channel channel;
 
     public WebServerSocket(int port, String appPackageName) {
-        super(port);
-        socketUsers = new HashMap<>();
+        this.port = port;
         this.appPackageName = appPackageName;
     }
 
-    @Override
-    protected WebSocket openWebSocket(IHTTPSession ihttpSession) {
-        WSDSocket wsdSocket = new WSDSocket(ihttpSession, appPackageName);
-        wsdSocket.setWsdSocketListener(new WSDSocket.WsdSocketListener() {
-            @Override
-            public void onNewUser(SocketUser socketUser, WSDSocket socket) {
-                socketUser.setWsdSocket(socket);
-                socketUsers.remove(socketUser.getUuid());
-                socketUsers.put(socketUser.getUuid(), socketUser);
-                try {
-                    JSONObject newUserObject = new JSONObject();
-                    newUserObject.put("action", SocketActions.USER_ARRIVE);
-                    newUserObject.put("user", socketUser.getJSONObject());
-                    for (Map.Entry<String, SocketUser> entry : socketUsers.entrySet()) {
-                        SocketUser connectedUser = entry.getValue();
-                        if(connectedUser.getPlugin_package().equals(socket.package_name) && !connectedUser.getUuid().equals(socket.uuid)) {
-                            connectedUser.getWsdSocket().send(newUserObject.toString());
+    public synchronized void start() throws Exception {
+        if (channel != null && channel.isActive()) return;
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
+        try {
+            channel = new ServerBootstrap().group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override protected void initChannel(SocketChannel socket) {
+                            socket.pipeline().addLast(new HttpServerCodec());
+                            socket.pipeline().addLast(new HttpObjectAggregator(64 * 1024));
+                            socket.pipeline().addLast(new WebSocketServerProtocolHandler("/", null, true, 10 * 1024 * 1024));
+                            socket.pipeline().addLast(new WebSocketHandler());
                         }
-                    }
-                }catch (Exception e) {
-                    Log.d(Constants.LOG_TAG, "User Arrive Error: "+e.getMessage());
-                }
-            }
+                    }).bind(new InetSocketAddress(port)).sync().channel();
+        } catch (Exception e) {
+            stop();
+            throw e;
+        }
+    }
 
-            @Override
-            public void onUpdateUserData(String public_data, WSDSocket socket) {
-                if(socketUsers.containsKey(socket.uuid)) {
-                    SocketUser socketUser = socketUsers.get(socket.uuid);
-                    if(socketUser != null) {
-                        socketUser.updatePublic_data(public_data);
-                        socketUsers.put(socket.uuid, socketUser);
-                    }
-                }
-            }
+    private final class WebSocketHandler extends io.netty.channel.SimpleChannelInboundHandler<WebSocketFrame> {
+        private WSDSocket socket;
 
-            @Override
-            public void onAllUsersRequest(WSDSocket socket) {
+        @Override public void userEventTriggered(io.netty.channel.ChannelHandlerContext context, Object event) throws Exception {
+            if (event == WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE) {
+                socket = new WSDSocket(context, appPackageName);
+                socket.setWsdSocketListener(createListener());
+            }
+            super.userEventTriggered(context, event);
+        }
+
+        @Override protected void channelRead0(io.netty.channel.ChannelHandlerContext context, WebSocketFrame frame) {
+            if (frame instanceof TextWebSocketFrame && socket != null) socket.onMessage(((TextWebSocketFrame) frame).text());
+        }
+
+        @Override public void channelInactive(io.netty.channel.ChannelHandlerContext context) throws Exception {
+            if (socket != null) socket.onClose();
+            super.channelInactive(context);
+        }
+    }
+
+    private WSDSocket.WsdSocketListener createListener() {
+        return new WSDSocket.WsdSocketListener() {
+            @Override public void onNewUser(SocketUser user, WSDSocket socket) {
+                user.setWsdSocket(socket);
+                socketUsers.put(user.getUuid(), user);
                 try {
-                    JSONArray users_array = getAllUsersByPackage(socket.package_name);
-                    JSONObject users_response_obj = new JSONObject();
-                    users_response_obj.put("action", SocketActions.RETURN_ALL_USERS);
-                    users_response_obj.put("all_users", users_array);
-                    socket.send(users_response_obj.toString());
-                }catch (Exception e) {}
+                    JSONObject update = new JSONObject();
+                    update.put("action", SocketActions.USER_ARRIVE);
+                    update.put("user", user.getJSONObject());
+                    for (SocketUser connected : socketUsers.values()) {
+                        if (connected.getPlugin_package().equals(socket.package_name) && !connected.getUuid().equals(socket.uuid)) connected.getWsdSocket().send(update.toString());
+                    }
+                } catch (Exception e) { Log.d(Constants.LOG_TAG, "User Arrive Error: " + e.getMessage()); }
             }
 
-            @Override
-            public void onRemoveUser(String uuid) {
+            @Override public void onUpdateUserData(String data, WSDSocket socket) {
+                SocketUser user = socketUsers.get(socket.uuid);
+                if (user != null) user.updatePublic_data(data);
+            }
+
+            @Override public void onAllUsersRequest(WSDSocket socket) {
+                try {
+                    JSONObject response = new JSONObject();
+                    response.put("action", SocketActions.RETURN_ALL_USERS);
+                    response.put("all_users", getAllUsersByPackage(socket.package_name));
+                    socket.send(response.toString());
+                } catch (Exception ignored) { }
+            }
+
+            @Override public void onRemoveUser(String uuid) {
+                if (uuid == null) return;
                 socketUsers.remove(uuid);
                 try {
-                    JSONObject response_obj = new JSONObject();
-                    response_obj.put("action", SocketActions.USER_LEFT);
-                    response_obj.put("uuid", uuid);
-                    for (Map.Entry<String, SocketUser> entry : socketUsers.entrySet()) {
-                        SocketUser socketUser = entry.getValue();
-                        socketUser.getWsdSocket().send(response_obj.toString());
-                    }
-                }catch (Exception e){}
+                    JSONObject response = new JSONObject();
+                    response.put("action", SocketActions.USER_LEFT);
+                    response.put("uuid", uuid);
+                    for (SocketUser user : socketUsers.values()) user.getWsdSocket().send(response.toString());
+                } catch (Exception ignored) { }
             }
 
-            @Override
-            public void onSendMessageToOther(String receiver_uuid, String message, String sender_package_name) {
+            @Override public void onSendMessageToOther(String receiver, String message, String senderPackage) {
+                SocketUser user = socketUsers.get(receiver);
+                if (user == null || !user.getPlugin_package().equals(senderPackage)) return;
                 try {
-                    if(socketUsers.containsKey(receiver_uuid)) {
-                        SocketUser socketUser = socketUsers.get(receiver_uuid);
-                        if(socketUser != null) {
-                            // Verify if they are both on same app
-                            if(socketUser.getPlugin_package().equals(sender_package_name)) {
-                                JSONObject jsonObject = new JSONObject();
-                                jsonObject.put("action", SocketActions.MSG_ARRIVE);
-                                jsonObject.put("message", message);
-                                socketUser.getWsdSocket().send(jsonObject.toString());
-                            }
-                        }
-                    }
-                }catch (Exception e){
-                    Log.d(Constants.LOG_TAG, "Error: "+e.getMessage());
-                }
+                    JSONObject response = new JSONObject();
+                    response.put("action", SocketActions.MSG_ARRIVE);
+                    response.put("message", message);
+                    user.getWsdSocket().send(response.toString());
+                } catch (Exception e) { Log.d(Constants.LOG_TAG, "Message Error: " + e.getMessage()); }
             }
 
-            @Override
-            public void onGetPublicDataOfUser(String uuid, WSDSocket socket) {
+            @Override public void onGetPublicDataOfUser(String uuid, WSDSocket requester) {
+                SocketUser user = socketUsers.get(uuid);
+                if (user == null || !user.getPlugin_package().equals(requester.package_name)) return;
                 try {
-                    if(socketUsers.containsKey(uuid)) {
-                        SocketUser socketUser = socketUsers.get(uuid);
-                        if(socketUser != null) {
-                            if(socketUser.getPlugin_package().equals(socket.package_name)) {
-                                JSONObject jsonObject = new JSONObject();
-                                JSONObject public_data = new JSONObject(socketUser.getPublic_data());
-                                jsonObject.put("action", SocketActions.RETURN_PUBLIC_DATA_OF_USER);
-                                jsonObject.put("public_data", public_data);
-                                socket.send(jsonObject.toString());
-                            }
-                        }
-                    }
-                }catch (Exception e){}
+                    JSONObject response = new JSONObject();
+                    response.put("action", SocketActions.RETURN_PUBLIC_DATA_OF_USER);
+                    response.put("public_data", new JSONObject(user.getPublic_data()));
+                    requester.send(response.toString());
+                } catch (Exception ignored) { }
             }
-        });
-        return wsdSocket;
+        };
     }
 
-    public JSONArray getAllUsersByPackage(String package_name) {
-        JSONArray jsonArray = new JSONArray();
-        for (Map.Entry<String, SocketUser> entry : socketUsers.entrySet()) {
-            if(entry.getValue().getPlugin_package().equals(package_name)) {
-                jsonArray.put(entry.getValue().getJSONObject());
-            }
-        }
-        return jsonArray;
+    private JSONArray getAllUsersByPackage(String packageName) {
+        JSONArray users = new JSONArray();
+        for (SocketUser user : socketUsers.values()) if (user.getPlugin_package().equals(packageName)) users.put(user.getJSONObject());
+        return users;
     }
 
-    @Override
     public synchronized void closeAllConnections() {
-        super.closeAllConnections();
+        if (channel != null) channel.close().syncUninterruptibly();
+    }
+
+    public synchronized void stop() {
+        if (channel != null) {
+            channel.close().syncUninterruptibly();
+            channel = null;
+        }
+        socketUsers.clear();
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS).syncUninterruptibly();
+            workerGroup = null;
+        }
+        if (bossGroup != null) {
+            bossGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS).syncUninterruptibly();
+            bossGroup = null;
+        }
     }
 }

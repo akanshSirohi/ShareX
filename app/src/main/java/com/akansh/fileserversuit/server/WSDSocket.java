@@ -3,144 +3,98 @@ package com.akansh.fileserversuit.server;
 import com.akansh.fileserversuit.common.SocketActions;
 
 import org.json.JSONObject;
-import org.nanohttpd.protocols.http.IHTTPSession;
-import org.nanohttpd.protocols.websockets.CloseCode;
-import org.nanohttpd.protocols.websockets.WebSocket;
-import org.nanohttpd.protocols.websockets.WebSocketFrame;
 
-import java.io.IOException;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
-class WSDSocket extends WebSocket {
-    public String package_name, uuid;
+final class WSDSocket {
+    public String package_name;
+    public String uuid;
+    private final ChannelHandlerContext context;
+    private final JsonDBHandler jsonDBHandler;
+    private WsdSocketListener wsdSocketListener;
 
-    enum UserActions {
-        ADD, REMOVE, UPDATE
-    }
-
-    public WsdSocketListener wsdSocketListener;
-    private JsonDBHandler jsonDBHandler;
-
-    public WSDSocket(IHTTPSession handshakeRequest, String appPackageName) {
-        super(handshakeRequest);
+    WSDSocket(ChannelHandlerContext context, String appPackageName) {
+        this.context = context;
         jsonDBHandler = new JsonDBHandler(appPackageName);
         jsonDBHandler.setJsonDBHandlerListener((action, data) -> {
-            JSONObject jsonObject = new JSONObject();
+            JSONObject result = new JSONObject();
             try {
-                jsonObject.put("action", action);
-                jsonObject.put("data", data);
-                send(jsonObject.toString());
-            } catch (Exception e) {}
+                result.put("action", action);
+                result.put("data", data);
+                send(result.toString());
+            } catch (Exception ignored) { }
         });
     }
 
-    public void setWsdSocketListener(WsdSocketListener wsdSocketListener) {
-        this.wsdSocketListener = wsdSocketListener;
+    void setWsdSocketListener(WsdSocketListener listener) { wsdSocketListener = listener; }
+    void send(String message) { if (context.channel().isActive()) context.writeAndFlush(new TextWebSocketFrame(message)); }
+
+    void onClose() {
+        if (wsdSocketListener != null) wsdSocketListener.onRemoveUser(uuid);
     }
 
-    @Override
-    protected void onOpen() {}
-
-    @Override
-    protected void onClose(CloseCode closeCode, String s, boolean b) {
-        if(this.wsdSocketListener != null) {
-            this.wsdSocketListener.onRemoveUser(this.uuid);
-        }
-    }
-
-    @Override
-    protected void onMessage(WebSocketFrame webSocketFrame) {
+    void onMessage(String text) {
         try {
-            JSONObject jsonObject = new JSONObject(webSocketFrame.getTextPayload());
+            JSONObject jsonObject = new JSONObject(text);
             String action = jsonObject.getString("action");
             switch (action) {
                 case SocketActions.INIT_USER:
-                    handleSocketUser(jsonObject, UserActions.ADD);
+                    handleSocketUser(jsonObject, true);
                     break;
                 case SocketActions.UPDATE_USER_DATA:
-                    handleSocketUser(jsonObject, UserActions.UPDATE);
+                    handleSocketUser(jsonObject, false);
                     break;
                 case SocketActions.GET_ALL_USERS:
-                    if(this.wsdSocketListener != null) {
-                        this.wsdSocketListener.onAllUsersRequest(this);
-                    }
+                    if (wsdSocketListener != null) wsdSocketListener.onAllUsersRequest(this);
                     break;
-                case SocketActions.SEND_MSG:
-                    if(this.wsdSocketListener != null) {
-                        JSONObject contents = jsonObject.getJSONObject("data");
-                        this.wsdSocketListener.onSendMessageToOther(contents.getString("uuid"), contents.getString("msg"), package_name);
-                    }
+                case SocketActions.SEND_MSG: {
+                    JSONObject data = jsonObject.getJSONObject("data");
+                    if (wsdSocketListener != null) wsdSocketListener.onSendMessageToOther(data.getString("uuid"), data.getString("msg"), package_name);
                     break;
-                case SocketActions.GET_PUBLIC_DATA_OF_USER:
-                    if(this.wsdSocketListener != null) {
-                        JSONObject contents = jsonObject.getJSONObject("data");
-                        String uuid = contents.getString("uuid");
-                        this.wsdSocketListener.onGetPublicDataOfUser(uuid, this);
-                    }
+                }
+                case SocketActions.GET_PUBLIC_DATA_OF_USER: {
+                    JSONObject data = jsonObject.getJSONObject("data");
+                    if (wsdSocketListener != null) wsdSocketListener.onGetPublicDataOfUser(data.getString("uuid"), this);
                     break;
-                case SocketActions.CREATE_JSON_FILE:
-                    if(this.wsdSocketListener != null) {
-                        JSONObject contents = jsonObject.getJSONObject("data");
-                        String file_name = contents.getString("filename");
-                        String file_data = contents.getJSONObject("data").toString();
-                        boolean res = jsonDBHandler.createJsonFile(file_name, file_data);
-                        JSONObject response_obj = new JSONObject();
-                        response_obj.put("action", SocketActions.RETURN_CREATE_JSON_FILE);
-                        response_obj.put("result", res);
-                        send(response_obj.toString());
-                    }
+                }
+                case SocketActions.CREATE_JSON_FILE: {
+                    JSONObject data = jsonObject.getJSONObject("data");
+                    boolean result = jsonDBHandler.createJsonFile(data.getString("filename"), data.getJSONObject("data").toString());
+                    JSONObject response = new JSONObject();
+                    response.put("action", SocketActions.RETURN_CREATE_JSON_FILE);
+                    response.put("result", result);
+                    send(response.toString());
                     break;
-                case SocketActions.READ_JSON_FILE:
-                    if(this.wsdSocketListener != null) {
-                        JSONObject contents = jsonObject.getJSONObject("data");
-                        String file_name = contents.getString("filename");
-                        String file_data = jsonDBHandler.readJsonFile(file_name);
-                        JSONObject response_obj = new JSONObject();
-                        response_obj.put("action", SocketActions.RETURN_READ_JSON_FILE);
-                        response_obj.put("data", file_data);
-                        send(response_obj.toString());
-                    }
+                }
+                case SocketActions.READ_JSON_FILE: {
+                    String fileName = jsonObject.getJSONObject("data").getString("filename");
+                    JSONObject response = new JSONObject();
+                    response.put("action", SocketActions.RETURN_READ_JSON_FILE);
+                    response.put("data", jsonDBHandler.readJsonFile(fileName));
+                    send(response.toString());
                     break;
+                }
                 default:
-                    if(action.startsWith("db_action_")) {
-                        String db_action = action.replace("db_action_", "");
-                        jsonDBHandler.handleActions(db_action, jsonObject.getJSONObject("data").toString());
-                    }
+                    if (action.startsWith("db_action_")) jsonDBHandler.handleActions(action.substring("db_action_".length()), jsonObject.getJSONObject("data").toString());
                     break;
             }
-        } catch (Exception e) {}
+        } catch (Exception ignored) { }
     }
 
-    @Override
-    protected void onPong(WebSocketFrame webSocketFrame) {}
-
-    @Override
-    protected void onException(IOException e) {}
-
-    public void handleSocketUser(JSONObject jsonObject, UserActions action) {
-        try {
-            JSONObject jsonData = jsonObject.getJSONObject("data");
-            switch (action) {
-                case ADD:
-                    if(this.wsdSocketListener != null) {
-                        SocketUser socketUser = new SocketUser(jsonData.getString("uuid"), jsonData.getJSONObject("public_data").toString(), jsonObject.getString("package_name"));
-                        this.package_name = jsonObject.getString("package_name");
-                        this.uuid = jsonData.getString("uuid");
-                        this.wsdSocketListener.onNewUser(socketUser, this);
-                        jsonDBHandler.setPlugin_package(this.package_name);
-                    }
-                    break;
-                case UPDATE:
-                    if(this.wsdSocketListener != null) {
-                        this.wsdSocketListener.onUpdateUserData(jsonData.getJSONObject("public_data").toString(), this);
-                    }
-                    break;
-            }
-        } catch (Exception e) {
-
+    private void handleSocketUser(JSONObject object, boolean add) throws Exception {
+        JSONObject data = object.getJSONObject("data");
+        if (add) {
+            package_name = object.getString("package_name");
+            uuid = data.getString("uuid");
+            jsonDBHandler.setPlugin_package(package_name);
+            if (wsdSocketListener != null) wsdSocketListener.onNewUser(new SocketUser(uuid, data.getJSONObject("public_data").toString(), package_name), this);
+        } else if (wsdSocketListener != null) {
+            wsdSocketListener.onUpdateUserData(data.getJSONObject("public_data").toString(), this);
         }
     }
 
-    public interface WsdSocketListener {
+    interface WsdSocketListener {
         void onNewUser(SocketUser socketUser, WSDSocket socket);
         void onUpdateUserData(String public_data, WSDSocket socket);
         void onAllUsersRequest(WSDSocket socket);

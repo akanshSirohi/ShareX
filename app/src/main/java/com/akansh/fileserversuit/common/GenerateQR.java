@@ -11,6 +11,9 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 
 import com.akansh.qrsmith.QRSmith;
+import com.akansh.qrsmith.model.QRCodeOptions;
+import com.akansh.qrsmith.model.QRErrorCorrectionLevel;
+import com.akansh.qrsmith.model.QRStyles;
 
 import com.akansh.fileserversuit.R;
 
@@ -33,15 +36,15 @@ public class GenerateQR {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             try {
-                QRSmith.QRCodeOptions options = new QRSmith.QRCodeOptions();
-                options.width = 500;
-                options.height = 500;
-                options.backgroundColor = Color.WHITE;
-                options.foregroundColor = Color.BLACK;
-                options.errorCorrectionLevel = QRSmith.QRErrorCorrectionLevel.H;
-                options.logo = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_logo);
-                options.style = QRSmith.QRCodeStyle.DOTS;
-                options.dotSizeFactor = 0.8f;
+                QRCodeOptions options = new QRCodeOptions.Builder()
+                        .setWidth(500)
+                        .setHeight(500)
+                        .setBackgroundColor(Color.WHITE)
+                        .setForegroundColor(Color.BLACK)
+                        .setErrorCorrectionLevel(QRErrorCorrectionLevel.H)
+                        .setLogo(BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_logo))
+                        .setPatternStyle(QRStyles.PatternStyle.S_DOT)
+                        .build();
                 Bitmap bitmap = QRSmith.generateQRCode(url, options);
                 activity.runOnUiThread(() -> {
                     RoundedBitmapDrawable dr = RoundedBitmapDrawableFactory.create(ctx.getResources(), bitmap);

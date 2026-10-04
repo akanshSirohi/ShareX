@@ -20,7 +20,6 @@ import com.akansh.fileserversuit.R;
 import com.akansh.fileserversuit.common.Constants;
 import com.akansh.fileserversuit.common.Utils;
 
-import java.io.IOException;
 
 public class ServerService extends Service {
 
@@ -53,8 +52,8 @@ public class ServerService extends Service {
                 utils.saveString(Constants.SERVER_URL, url);
                 showForegroundNotification("Running At: " + url);
                 webServerSocket = new WebServerSocket(port + 1, this.getApplication().getPackageName());
-                webServerSocket.start(-1);
-            } catch (IOException e) {
+                webServerSocket.start();
+            } catch (Exception e) {
                 Toast.makeText(this, "Server Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 sendLog(Constants.ACTION_UPDATE_UI_STOP,"","");
                 sendLog(Constants.ACTION_MSG,"msg","Try to change ShareX port");
