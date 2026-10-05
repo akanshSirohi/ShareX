@@ -17,6 +17,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class WebInterfaceSetup {
+    // Enable to replace the bundled web UI on every app launch, even at the same version.
+    public static final boolean debugWebUI = false;
     private final Context ctx;
     private final Activity activity;
     private final Utils utils;
@@ -30,9 +32,26 @@ public class WebInterfaceSetup {
     }
 
     public boolean isInstalled() {
-        File installed = new File(ctx.getApplicationInfo().dataDir, Constants.NEW_DIR);
-        return new File(installed, INSTALLED_MARKER).isFile()
-                && new File(installed, "index.html").isFile();
+        return isInstallationCurrent(new File(ctx.getApplicationInfo().dataDir), Constants.NEW_DIR);
+    }
+
+    public boolean needsSetup() {
+        return shouldInstall(new File(ctx.getApplicationInfo().dataDir), Constants.NEW_DIR, debugWebUI);
+    }
+
+    static boolean shouldInstall(File dataDir, String assetFolder, boolean debugWebUI) {
+        return debugWebUI || !isInstallationCurrent(dataDir, assetFolder);
+    }
+
+    private static boolean isInstallationCurrent(File dataDir, String assetFolder) {
+        File installed = new File(dataDir, assetFolder);
+        File marker = new File(installed, INSTALLED_MARKER);
+        if (!marker.isFile() || !new File(installed, "index.html").isFile()) return false;
+        try {
+            return assetFolder.equals(new String(Files.readAllBytes(marker.toPath()), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public void setup() {

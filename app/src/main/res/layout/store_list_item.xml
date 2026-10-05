@@ -1,110 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/surface_container"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/outline_soft"
+    app:strokeWidth="1dp">
 
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/surface_container"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        card_view:cardCornerRadius="12dp"
-        card_view:cardElevation="0dp"
-        card_view:cardUseCompatPadding="false">
+        android:padding="16dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/surface_container">
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/plugin_icon_surface"
+            android:padding="10dp"
+            android:src="@drawable/ic_plugin"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/colorPrimary" />
 
-            <TextView
-                android:id="@+id/store_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:fontFamily="@font/google_sans"
-                android:text="Plugin Title"
-                android:textColor="@color/txt_color"
-                android:textSize="16sp"
-                app:layout_constraintStart_toEndOf="@+id/imageView"
-                app:layout_constraintTop_toTopOf="@+id/imageView" />
+        <TextView
+            android:id="@+id/store_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:fontFamily="@font/google_sans"
+            android:maxLines="2"
+            android:text="Plugin Title"
+            android:textColor="@color/txt_color"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/store_version"
+            app:layout_constraintStart_toEndOf="@id/imageView"
+            app:layout_constraintTop_toTopOf="@id/imageView" />
 
-            <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:src="@drawable/ic_plugin"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:tint="@color/txt_color" />
+        <TextView
+            android:id="@+id/store_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="@font/google_sans"
+            android:text="v1.0"
+            android:textColor="@color/txt_color_secondary"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/store_title" />
 
-            <TextView
-                android:id="@+id/store_version"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:fontFamily="@font/google_sans"
-                android:text="v1.0"
-                android:textColor="@color/txt_color_secondary"
-                android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="@+id/store_title"
-                app:layout_constraintStart_toEndOf="@+id/store_title" />
+        <TextView
+            android:id="@+id/store_author"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="@font/google_sans"
+            android:text="Plugin Author"
+            android:textColor="@color/txt_color_secondary"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/store_title"
+            app:layout_constraintTop_toBottomOf="@id/store_title" />
 
-            <TextView
-                android:id="@+id/store_author"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:fontFamily="@font/google_sans"
-                android:text="Plugin Author"
-                android:textColor="@color/txt_color_secondary"
-                android:textSize="14sp"
-                app:layout_constraintStart_toStartOf="@+id/store_title"
-                app:layout_constraintTop_toBottomOf="@+id/store_title" />
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/store_header_bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="imageView,store_author" />
 
-            <TextView
-                android:id="@+id/store_description"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:ellipsize="end"
-                android:fontFamily="@font/google_sans"
-                android:text="Plugin long description..."
-                android:textColor="@color/txt_color_secondary"
-                android:justificationMode="inter_word"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="@+id/store_author"
-                app:layout_constraintTop_toBottomOf="@+id/store_author" />
+        <TextView
+            android:id="@+id/store_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/google_sans"
+            android:maxLines="3"
+            android:text="Plugin description"
+            android:textColor="@color/txt_color_secondary"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/store_header_bottom" />
 
-            <Button
-                android:id="@+id/store_install_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/ripple_bg_"
-                android:drawableLeft="@drawable/ic_install"
-                android:drawableTint="@color/accent_blue"
-                android:fontFamily="@font/google_sans"
-                android:text="Install"
-                android:textColor="@color/txt_color"
-                android:visibility="visible"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@+id/store_description"
-                app:layout_constraintTop_toBottomOf="@+id/store_description"
-                app:layout_constraintVertical_bias="0.0" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/store_install_btn"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:textAllCaps="false"
+            android:layout_marginTop="10dp"
+            android:contentDescription="Install plugin"
+            android:drawablePadding="8dp"
+            android:fontFamily="@font/google_sans"
+            android:minWidth="112dp"
+            android:text="Install"
+            android:textColor="@color/colorPrimary"
+            android:textSize="14sp"
+            app:icon="@drawable/ic_install"
+            app:iconTint="@color/colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/store_description" />
 
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

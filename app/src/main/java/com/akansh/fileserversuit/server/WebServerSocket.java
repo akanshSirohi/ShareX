@@ -31,16 +31,27 @@ public final class WebServerSocket {
     private final String appPackageName;
     private final java.util.function.Predicate<io.netty.handler.codec.http.HttpRequest> authorization;
     private final io.netty.handler.ssl.SslContext ssl;
+    private final java.util.function.Function<io.netty.handler.codec.http.HttpRequest, String> developmentPackage;
+    private final java.util.function.BiPredicate<io.netty.handler.codec.http.HttpRequest, String> pluginAuthorization;
     private final Map<String, SocketUser> socketUsers = new ConcurrentHashMap<>();
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private Channel channel;
 
-    public WebServerSocket(int port, String appPackageName, java.util.function.Predicate<io.netty.handler.codec.http.HttpRequest> authorization, io.netty.handler.ssl.SslContext ssl) {
+    public WebServerSocket(int port, String appPackageName, java.util.function.Predicate<io.netty.handler.codec.http.HttpRequest> authorization, io.netty.handler.ssl.SslContext ssl,
+            java.util.function.Function<io.netty.handler.codec.http.HttpRequest, String> developmentPackage) {
+        this(port, appPackageName, authorization, null, ssl, developmentPackage);
+    }
+
+    public WebServerSocket(int port, String appPackageName, java.util.function.Predicate<io.netty.handler.codec.http.HttpRequest> authorization,
+            java.util.function.BiPredicate<io.netty.handler.codec.http.HttpRequest, String> pluginAuthorization,
+            io.netty.handler.ssl.SslContext ssl, java.util.function.Function<io.netty.handler.codec.http.HttpRequest, String> developmentPackage) {
         this.port = port;
         this.appPackageName = appPackageName;
         this.authorization = authorization;
+        this.pluginAuthorization = pluginAuthorization;
         this.ssl = ssl;
+        this.developmentPackage = developmentPackage;
     }
 
     public synchronized void start() throws Exception {
@@ -68,7 +79,10 @@ public final class WebServerSocket {
                                     context.fireChannelRead(request.retain());
                                 }
                             });
-                            socket.pipeline().addLast(new WebSocketServerProtocolHandler("/", null, true, 10 * 1024 * 1024));
+                            socket.pipeline().addLast(new WebSocketServerProtocolHandler(
+                                    io.netty.handler.codec.http.websocketx.WebSocketServerProtocolConfig.newBuilder()
+                                            .websocketPath("/").checkStartsWith(true).allowExtensions(true)
+                                            .maxFramePayloadLength(10 * 1024 * 1024).build()));
                             socket.pipeline().addLast(new WebSocketHandler());
                         }
                     }).bind(new InetSocketAddress(port)).sync().channel();
@@ -83,7 +97,8 @@ public final class WebServerSocket {
 
         @Override public void userEventTriggered(io.netty.channel.ChannelHandlerContext context, Object event) throws Exception {
             if (event == WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE) {
-                socket = new WSDSocket(context, appPackageName);
+                io.netty.handler.codec.http.HttpRequest identity = context.channel().attr(io.netty.util.AttributeKey.<io.netty.handler.codec.http.HttpRequest>valueOf("sharexIdentity")).get();
+                socket = new WSDSocket(context, appPackageName, developmentPackage.apply(identity));
                 socket.setWsdSocketListener(createListener());
             }
             super.userEventTriggered(context, event);
@@ -91,8 +106,21 @@ public final class WebServerSocket {
 
         @Override protected void channelRead0(io.netty.channel.ChannelHandlerContext context, WebSocketFrame frame) {
             io.netty.handler.codec.http.HttpRequest identity = context.channel().attr(io.netty.util.AttributeKey.<io.netty.handler.codec.http.HttpRequest>valueOf("sharexIdentity")).get();
-            if (identity == null || !authorization.test(identity)) { context.close(); return; }
-            if (frame instanceof TextWebSocketFrame && socket != null) socket.onMessage(((TextWebSocketFrame) frame).text());
+            if (identity == null || !(frame instanceof TextWebSocketFrame) || socket == null) { context.close(); return; }
+            String development = developmentPackage.apply(identity);
+            String requestedPackage = socket.package_name;
+            String text = ((TextWebSocketFrame) frame).text();
+            if (requestedPackage == null) {
+                try {
+                    JSONObject message = new JSONObject(text);
+                    if (SocketActions.INIT_USER.equals(message.getString("action"))) requestedPackage = message.getString("package_name");
+                } catch (Exception ignored) { }
+            }
+            boolean allowed = development != null ? authorization.test(identity)
+                    : pluginAuthorization != null ? pluginAuthorization.test(identity, requestedPackage)
+                    : authorization.test(identity);
+            if (!allowed) { context.close(); return; }
+            socket.onMessage(text);
         }
 
         @Override public void channelInactive(io.netty.channel.ChannelHandlerContext context) throws Exception {
@@ -105,7 +133,7 @@ public final class WebServerSocket {
         return new WSDSocket.WsdSocketListener() {
             @Override public void onNewUser(SocketUser user, WSDSocket socket) {
                 user.setWsdSocket(socket);
-                socketUsers.put(user.getUuid(), user);
+                if (socketUsers.putIfAbsent(user.getUuid(), user) != null) { socket.close(); return; }
                 try {
                     JSONObject update = new JSONObject();
                     update.put("action", SocketActions.USER_ARRIVE);
@@ -130,14 +158,17 @@ public final class WebServerSocket {
                 } catch (Exception ignored) { }
             }
 
-            @Override public void onRemoveUser(String uuid) {
+            @Override public void onRemoveUser(String uuid, WSDSocket socket) {
                 if (uuid == null) return;
-                socketUsers.remove(uuid);
+                SocketUser departed = socketUsers.get(uuid);
+                if (departed == null || departed.getWsdSocket() != socket || !socketUsers.remove(uuid, departed)) return;
                 try {
                     JSONObject response = new JSONObject();
                     response.put("action", SocketActions.USER_LEFT);
                     response.put("uuid", uuid);
-                    for (SocketUser user : socketUsers.values()) user.getWsdSocket().send(response.toString());
+                    for (SocketUser user : socketUsers.values()) {
+                        if (user.getPlugin_package().equals(departed.getPlugin_package())) user.getWsdSocket().send(response.toString());
+                    }
                 } catch (Exception ignored) { }
             }
 
@@ -173,6 +204,10 @@ public final class WebServerSocket {
 
     public synchronized void closeAllConnections() {
         if (channel != null) channel.close().syncUninterruptibly();
+    }
+
+    int getListeningPort() {
+        return channel == null ? port : ((InetSocketAddress) channel.localAddress()).getPort();
     }
 
     public synchronized void stop() {

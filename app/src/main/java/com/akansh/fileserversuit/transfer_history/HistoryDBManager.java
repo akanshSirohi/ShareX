@@ -6,7 +6,7 @@ import android.database.Cursor;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class HistoryDBManager {
+public class HistoryDBManager implements AutoCloseable {
     HistoryDBHelper historyDBHelper;
 
     public HistoryDBManager(Context ctx) {
@@ -27,12 +27,13 @@ public class HistoryDBManager {
 
     public ArrayList<HistoryItem> getHistory() {
         ArrayList<HistoryItem> historyItems=new ArrayList<>();
-        Cursor cursor=historyDBHelper.getData();
-        while(cursor.moveToNext()) {
-            HistoryItem item=new HistoryItem(Integer.parseInt(cursor.getString(2)),cursor.getString(1),cursor.getString(3),cursor.getString(4),cursor.getString(5),cursor.getString(6),cursor.getString(7));
-            item.setUid(cursor.getInt(0));
-            item.setTimestamp(cursor.getString(8));
-            historyItems.add(item);
+        try (Cursor cursor=historyDBHelper.getData()) {
+            while(cursor.moveToNext()) {
+                HistoryItem item=new HistoryItem(Integer.parseInt(cursor.getString(2)),cursor.getString(1),cursor.getString(3),cursor.getString(4),cursor.getString(5),cursor.getString(6),cursor.getString(7));
+                item.setUid(cursor.getInt(0));
+                item.setTimestamp(cursor.getString(8));
+                historyItems.add(item);
+            }
         }
         return historyItems;
     }
@@ -77,4 +78,6 @@ public class HistoryDBManager {
     public void clearHistory() {
         historyDBHelper.delete();
     }
+
+    @Override public void close() { historyDBHelper.close(); }
 }

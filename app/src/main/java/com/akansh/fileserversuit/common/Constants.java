@@ -11,14 +11,12 @@ public class Constants {
     public static final String PRIVATE_MODE = "private_mode";
     public static final String LOAD_APPS = "load_apps";
     public static final String SERVER_URL = "server_url";
-    public static final String IS_LOGGER_VISIBLE = "is_logger_visible";
     public static final String ASKED_BATTERY_OPT = "asked_battery_opt";
-    public static final String LOGGER_HEIGHT = "logger_height";
+    public static final String SHOW_TRANSFER_GRAPH = "show_transfer_graph";
     public static final String WEB_INTERFACE_THEME = "web_interface_theme";
     public static final String SERVER_PORT = "server_port";
     public static final String SSL = "ssl";
     public static final String PLUGIN_DEV = "plugin_dev";
-    public static final String ADVANCED_MODE = "advanced_mode";
     public static final int SERVER_PORT_DEFAULT = 6060;
     public static final int SERVER_ON = 1;
     public static final int SERVER_OFF = 0;
@@ -35,6 +33,7 @@ public class Constants {
     public static final String ACTION_MSG = "msg";
     public static final String ACTION_PROGRESS = "progress";
     public static final String ACTION_AUTH = "auth";
+    public static final String ACTION_PLUGIN_AUTH = "plugin_auth";
     public static final String ACTION_UPDATE_UI_STOP = "update_ui_stop";
 
     public static final String BROADCAST_SERVICE_TO_ACTIVITY = "service.to.activity.transfer";

@@ -3,6 +3,7 @@ package com.akansh.plugins;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Base64;
+import android.util.AtomicFile;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -19,12 +20,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import okhttp3.Call;
@@ -124,6 +125,59 @@ public class PluginsManager {
         return new PluginInstallStatus("Unable To Parse Plugin!",true, InstallStatus.UNKNOWN);
     }
 
+    /** Installs a selected ZIP only after the UI has obtained the user's trust confirmation. */
+    public synchronized PluginInstallStatus installPluginZip(android.net.Uri uri) {
+        File archive = null, staged = null, backup = null, destination = null;
+        boolean committed = false;
+        try {
+            archive = File.createTempFile("plugin-import-", ".zip", ctx.getCacheDir());
+            try (java.io.InputStream input = ctx.getContentResolver().openInputStream(uri);
+                 java.io.OutputStream output = new FileOutputStream(archive)) {
+                if (input == null) throw new IOException("Cannot read selected ZIP");
+                byte[] bytes = new byte[8192];
+                long total = 0;
+                int count;
+                while ((count = input.read(bytes)) != -1) {
+                    total += count;
+                    if (total > PluginArchive.MAX_ZIP_BYTES) throw new IOException("Plugin ZIP must be at most 25 MB");
+                    output.write(bytes, 0, count);
+                }
+            }
+            JSONObject config = PluginArchive.inspect(archive);
+            String packageName = config.getString("package");
+            String uid = packageName.replace('.', '-');
+            staged = java.nio.file.Files.createTempDirectory(plugins_dir.toPath(), ".import-").toFile();
+            PluginArchive.extract(archive, staged);
+            destination = new File(plugins_dir, uid);
+            boolean updating = destination.exists();
+            if (updating) {
+                backup = new File(plugins_dir, ".backup-" + java.util.UUID.randomUUID());
+                if (!destination.renameTo(backup)) throw new IOException("Cannot prepare plugin update");
+            }
+            if (!staged.renameTo(destination)) throw new IOException("Cannot install plugin files");
+            Plugin plugin = new Plugin(uid, config.getString("name"), packageName, config.getString("description"),
+                    config.getString("author"), config.getString("version"), config.getInt("versionCode"));
+            try (PluginsDBHelper database = new PluginsDBHelper(ctx)) {
+                boolean saved = database.getPluginUIDByPackageName(packageName) == null
+                        ? database.insertPlugin(plugin) : database.updatePlugin(plugin);
+                if (!saved) throw new IOException("Cannot register plugin");
+            }
+            committed = true;
+            return new PluginInstallStatus(updating ? "Plugin updated from ZIP" : "Plugin installed from ZIP", false,
+                    updating ? InstallStatus.UPDATE : InstallStatus.INSTALL);
+        } catch (Exception error) {
+            return new PluginInstallStatus("Cannot install ZIP: " + error.getMessage(), true, InstallStatus.UNKNOWN);
+        } finally {
+            if (!committed && destination != null && staged != null && !staged.exists()) utils.deleteDirectory(destination);
+            if (backup != null && backup.exists()) {
+                if (committed) utils.deleteDirectory(backup);
+                else if (!backup.renameTo(destination)) Log.e(Constants.LOG_TAG, "Cannot restore plugin backup");
+            }
+            if (staged != null && staged.exists()) utils.deleteDirectory(staged);
+            if (archive != null) archive.delete();
+        }
+    }
+
 
     public boolean uninstallPlugin(String uid) {
         try (PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx)) {
@@ -139,77 +193,112 @@ public class PluginsManager {
     }
 
     public void fetchPluginAppsFile() {
+        fetchPluginAppsFile(false, null);
+    }
+
+    public interface CatalogFetchListener {
+        void onCatalogFetched(boolean success);
+    }
+
+    public void fetchPluginAppsFile(boolean forceRefresh, CatalogFetchListener listener) {
         new Thread(() -> {
             File appsConfig = new File(plugins_dir, Constants.APPS_CONFIG);
             File tstamp_file = new File(plugins_dir, "last_fetch_timestamp.txt");
-            boolean tstamp_flg = true;
+            boolean cacheFresh = false;
             try {
                 long unixTimestamp = System.currentTimeMillis() / 1000L;
-                if(!tstamp_file.exists()) {
-                    tstamp_file.createNewFile();
-                    FileWriter fileWriter = new FileWriter(tstamp_file);
-                    fileWriter.write(String.valueOf(unixTimestamp));
-                    fileWriter.close();
-                    Log.d(Constants.LOG_TAG,"Timestamp file is created!");
-                }else{
+                if (appsConfig.exists() && tstamp_file.exists()) {
                     String tstamp = FileUtils.readFileToString(tstamp_file, "UTF-8");
                     long last_fetch_timestamp = Long.parseLong(tstamp);
-                    long timeDifferenceMillis = Math.abs(unixTimestamp - last_fetch_timestamp) * 1000L;
-                    if (timeDifferenceMillis >= 24 * 60 * 60 * 1000L) {
-                        FileWriter fileWriter = new FileWriter(tstamp_file);
-                        fileWriter.write(String.valueOf(unixTimestamp));
-                        fileWriter.close();
-                        Log.d(Constants.LOG_TAG,"Timestamp is older than 24 hours and renewed!");
-                    } else {
-                        tstamp_flg = false;
-                        Log.d(Constants.LOG_TAG,"Timestamp is not older than 24 hours");
-                    }
+                    long age = unixTimestamp - last_fetch_timestamp;
+                    cacheFresh = age >= 0 && age < 24 * 60 * 60;
+                    // A corrupt cache must not suppress the next fetch.
+                    validatePluginCatalog(FileUtils.readFileToString(appsConfig, "UTF-8"));
                 }
             }catch (Exception e) {
-                Log.d(Constants.LOG_TAG, "Unable to check timestamp!");
+                cacheFresh = false;
+                Log.d(Constants.LOG_TAG, "Unable to read plugin catalog cache", e);
             }
-            if(!appsConfig.exists() || tstamp_flg) {
-                Log.d(Constants.LOG_TAG,"Fetched file from github");
-                String appListJsonUrl = "https://api.github.com/repos/akanshSirohi/ShareX-Plugins/contents/" + Constants.APPS_CONFIG;
-                OkHttpClient client = new OkHttpClient.Builder()
-                        .connectTimeout(10, TimeUnit.SECONDS)
-                        .build();
-                Request request = new Request.Builder()
-                        .url(appListJsonUrl)
-                        .build();
-                client.newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {}
+            if (cacheFresh && !forceRefresh) {
+                notifyCatalogFetched(listener, true);
+                return;
+            }
+            String appListJsonUrl = "https://api.github.com/repos/akanshSirohi/ShareX-Plugins/contents/" + Constants.APPS_CONFIG;
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .callTimeout(20, TimeUnit.SECONDS)
+                    .build();
+            Request request = new Request.Builder()
+                    .url(appListJsonUrl)
+                    .build();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e(Constants.LOG_TAG, "Plugin catalog download failed", e);
+                    notifyCatalogFetched(listener, false);
+                }
 
-                    @Override
-                    public void onResponse(Call call, Response response) {
+                @Override
+                public void onResponse(Call call, Response response) {
+                    try (Response catalogResponse = response) {
+                        if (!catalogResponse.isSuccessful() || catalogResponse.body() == null) {
+                            throw new IOException("Plugin catalog HTTP " + catalogResponse.code());
+                        }
+                        String resp = response.body().string();
+                        JSONObject pluginConfigObject = new JSONObject(resp);
+                        String encoded_resp = pluginConfigObject.getString("content");
+                        encoded_resp = encoded_resp.replace("\n", "");
+                        byte[] decodedBytes = Base64.decode(encoded_resp, Base64.DEFAULT);
+
+                        // decodedString contains the contents of the apps.json file
+                        String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
+                        validatePluginCatalog(decodedString);
+                        // Preserve the previous catalog if writing the replacement fails.
+                        AtomicFile catalog = new AtomicFile(appsConfig);
+                        FileOutputStream output = null;
                         try {
-                            String resp = response.body().string();
-                            JSONObject pluginConfigObject = new JSONObject(resp);
-                            String encoded_resp = pluginConfigObject.getString("content");
-                            encoded_resp = encoded_resp.replace("\n", "");
-                            byte[] decodedBytes = Base64.decode(encoded_resp, Base64.DEFAULT);
-
-                            // decodedString contains the contents of the apps.json file
-                            String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
-
-                            // Delete if exists to update to new version
-                            if (appsConfig.exists()) {
-                                appsConfig.delete();
-                            }
-                            // Save or update file to local storage
-                            appsConfig.createNewFile();
-                            FileOutputStream fOut = new FileOutputStream(appsConfig);
-                            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-                            myOutWriter.append(decodedString);
-                            myOutWriter.close();
-                            fOut.flush();
-                            fOut.close();
-                        } catch (Exception e) {}
+                            output = catalog.startWrite();
+                            output.write(decodedString.getBytes(StandardCharsets.UTF_8));
+                            catalog.finishWrite(output);
+                        } catch (Exception e) {
+                            catalog.failWrite(output);
+                            throw e;
+                        }
+                        // Only a successful fetch advances the cache timestamp.
+                        try (FileWriter writer = new FileWriter(tstamp_file)) {
+                            writer.write(String.valueOf(System.currentTimeMillis() / 1000L));
+                        }
+                        notifyCatalogFetched(listener, true);
+                    } catch (Exception e) {
+                        Log.e(Constants.LOG_TAG, "Unable to save plugin catalog", e);
+                        notifyCatalogFetched(listener, false);
                     }
-                });
-            }
+                }
+            });
         }).start();
+    }
+
+    private static void validatePluginCatalog(String json) throws JSONException {
+        JSONArray plugins = new JSONArray(json);
+        for (int i = 0; i < plugins.length(); i++) {
+            JSONObject plugin = plugins.getJSONObject(i);
+            plugin.getString("name");
+            plugin.getString("package");
+            plugin.getString("description");
+            plugin.getString("author");
+            plugin.getString("version");
+            plugin.getInt("versionCode");
+        }
+    }
+
+    private void notifyCatalogFetched(CatalogFetchListener listener, boolean success) {
+        if (listener != null) {
+            activity.runOnUiThread(() -> {
+                if (!activity.isFinishing() && !activity.isDestroyed()) {
+                    listener.onCatalogFetched(success);
+                }
+            });
+        }
     }
 
     public void downloadPlugin(String packageName, InstallStatus status) {

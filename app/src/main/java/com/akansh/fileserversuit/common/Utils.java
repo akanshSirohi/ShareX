@@ -146,7 +146,7 @@ public class Utils {
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
-        if(pluginUID == "debug") {
+        if("debug".equals(pluginUID)) {
             return loadPluginDevFolder() + "/" + path;
         }else{
             return "/data/data/" + ctx.getPackageName() + "/plugins/" + pluginUID + "/" + path;
@@ -184,7 +184,6 @@ public class Utils {
     public boolean loadSetting(String constant) {
         boolean def = false;
         if (
-                constant.equals(Constants.IS_LOGGER_VISIBLE) ||
                 constant.equals(Constants.RESTRICT_MODIFY) ||
                 constant.equals(Constants.LOAD_APPS)
         ) {

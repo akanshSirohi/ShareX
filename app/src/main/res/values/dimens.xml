@@ -16,7 +16,8 @@
     <dimen name="button_height">44dp</dimen>
     <dimen name="icon_button_size">40dp</dimen>
     <dimen name="list_row_min_height">56dp</dimen>
-    <dimen name="home_content_inset">20dp</dimen>
+    <dimen name="home_content_inset">8dp</dimen>
+    <dimen name="home_section_margin">12dp</dimen>
     <dimen name="utility_content_inset">12dp</dimen>
     <dimen name="qr_content_inset">24dp</dimen>
     <dimen name="plugin_content_inset">8dp</dimen>

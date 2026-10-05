@@ -43,9 +43,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
+import androidx.viewpager2.widget.ViewPager2;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
@@ -60,14 +61,12 @@ import com.akansh.fileserversuit.common.GenerateQR;
 import com.akansh.fileserversuit.common.EdgeToEdge;
 import com.akansh.fileserversuit.common.WifiApManager;
 import com.akansh.fileserversuit.common.Constants;
-import com.akansh.fileserversuit.transfer_history.TransferHistoryActivity;
 import com.akansh.fileserversuit.common.Utils;
 import com.akansh.fileserversuit.server.DeviceManager;
 import com.akansh.fileserversuit.server.ServerService;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.akansh.fileserversuit.server.ThemesData;
 import com.akansh.fileserversuit.server.WebInterfaceSetup;
-import com.akansh.plugins.PluginsManager;
 import com.akansh.plugins.ui.PluginsActivity;
 import com.bumptech.glide.Glide;
 import com.dlazaro66.qrcodereaderview.QRCodeReaderView;
@@ -80,7 +79,6 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.io.File;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -89,7 +87,7 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
 
 
-    private ImageButton serverBtn,hide_logger_btn;
+    private ImageButton serverBtn;
     Utils utils;
     String url = "";
 
@@ -107,10 +105,14 @@ public class MainActivity extends AppCompatActivity {
 
     private ProgressDialog progress;
     private String serverRoot = null;
-    private ConstraintLayout settings_view, main_view, qr_view;
-    private View logger_wrapper;
+    private ConstraintLayout qr_view;
+    public static final String EXTRA_DESTINATION = "destination";
+    private ViewPager2 mainPager;
+    private View homePageView, settingsPageView;
+    private boolean sharingPagesReady, activityResumed, restoringQRCode;
+    private final java.util.Set<String> pluginPermissionDialogs = new java.util.HashSet<>();
+    private final List<Runnable> pendingPageActions = new ArrayList<>();
     private TextView settDRoot, settRemDev, settTheme, plugin_folder_label, serverBtnTxt;
-    private SessionLogView logger;
     private TextView scan_url, ssl_note;
 
     private ImageView main_bg,second_bg;
@@ -125,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
     private MaterialSwitch privateModeSwitch;
     DeviceManager deviceManager;
     ActivityResultLauncher<Intent> rootFolderPickerResultLauncher,
-            pluginFolderPickerResultLauncher,
             mutipleFilesActivityResultLauncher,
             gallerySelectorActivityResultLauncher;
 
@@ -135,82 +136,70 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        boolean openSettings = getIntent().getBooleanExtra("open_settings", false);
         setContentView(R.layout.activity_main);
-        EdgeToEdge.apply(this, findViewById(R.id.root_container));
-        logger = findViewById(R.id.logger);
-        logger_wrapper = findViewById(R.id.logger_wrapper);
-        hide_logger_btn = findViewById(R.id.hide_logger_btn);
-
+        EdgeToEdge.apply(this, findScreenView(R.id.root_container));
         utils = new Utils(this);
         serverRoot = utils.loadRoot();
         deviceManager = new DeviceManager(this);
         qrDialog = new Dialog(this);
-        serverBtn = findViewById(R.id.serverBtn);
-        serverBtnTxt = findViewById(R.id.serverBtnTxt);
-        settings_view = findViewById(R.id.settings_view);
-        main_view = findViewById(R.id.main_view);
-        qr_view = findViewById(R.id.qr_view);
-        settings_view.setVisibility(openSettings ? View.VISIBLE : View.GONE);
-        main_view.setVisibility(openSettings ? View.GONE : View.VISIBLE);
-        qr_view.setVisibility(View.GONE);
-        main_bg = findViewById(R.id.main_bg);
-        second_bg = findViewById(R.id.second_bg);
-        scan_url = findViewById(R.id.scan_url);
-        ssl_note = findViewById(R.id.ssl_note);
-        drawerLayout = findViewById(R.id.root_container);
-
-        bottomNavigation = findViewById(R.id.bottom_nav);
-        if (openSettings) bottomNavigation.setSelectedItemId(R.id.settings);
+        drawerLayout = findScreenView(R.id.root_container);
+        qr_view = findScreenView(R.id.qr_view);
+        scan_url = findScreenView(R.id.scan_url);
+        ssl_note = findScreenView(R.id.ssl_note);
+        bottomNavigation = findScreenView(R.id.bottom_nav);
+        mainPager = findScreenView(R.id.main_pager);
+        restoringQRCode = savedInstanceState != null && savedInstanceState.getBoolean("show_qr");
+        registerFilePickers();
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() { handleBackNavigation(); }
+        });
+        mainPager.setOffscreenPageLimit(2);
+        mainPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override public void onPageSelected(int position) {
+                exit = 0;
+                syncNavigation(position);
+            }
+        });
         bottomNavigation.setOnItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.home) {
-                main_view.setVisibility(View.VISIBLE);
-                settings_view.setVisibility(View.GONE);
-                qr_view.setVisibility(View.GONE);
-                return true;
-            }
-            if (item.getItemId() == R.id.settings) {
-                main_view.setVisibility(View.GONE);
-                settings_view.setVisibility(View.VISIBLE);
-                qr_view.setVisibility(View.GONE);
-                return true;
-            }
-            if (item.getItemId() == R.id.trans_hist) {
-                startActivity(new Intent(MainActivity.this, TransferHistoryActivity.class));
-                return true;
-            }
-            return false;
+            navigateToDestination(item.getItemId(), false);
+            return true;
         });
+        bottomNavigation.setOnItemReselectedListener(item -> { });
+        mainPager.setAdapter(new MainPagerAdapter(this));
+        int destination = savedInstanceState == null ? destinationFromIntent(getIntent())
+                : savedInstanceState.getInt(EXTRA_DESTINATION, R.id.home);
+        navigateToDestination(destination, false);
+    }
 
-        ImageButton nav_btn = findViewById(R.id.nav_btn);
-        nav_btn.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+    // Both sharing pages stay attached so the activity can coordinate the shared server session.
+    void onSharingPageCreated(int position, View view) {
+        if (position == MainPagerAdapter.HOME) homePageView = view;
+        if (position == MainPagerAdapter.SETTINGS) settingsPageView = view;
+        if (sharingPagesReady || homePageView == null || settingsPageView == null) return;
+        sharingPagesReady = true;
+        bindSharingPageControls();
+        synchronizeSharingUI();
+        if (restoringQRCode && utils.isServiceRunning(ServerService.class) && !url.isEmpty()) toggleQRView();
+        restoringQRCode = false;
+        for (Runnable action : new ArrayList<>(pendingPageActions)) action.run();
+        pendingPageActions.clear();
+        if (activityResumed) resumeSharingUI();
+    }
 
-        //Settings Components
-        settDRoot = findViewById(R.id.sett_subtitle1);
-        settRemDev = findViewById(R.id.sett_subtitle6);
-        settTheme = findViewById(R.id.sett_subtitle7);
-        plugin_folder_label = findViewById(R.id.sett_subtitle11);
-        plugin_folder_label.setText(utils.loadPluginDevFolder());
-        String dev_count = rememberedDeviceCount();
-        settRemDev.setText(dev_count);
-        settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME,0)));
+    private <T extends View> T findScreenView(int id) {
+        T view = super.findViewById(id);
+        if (view == null && homePageView != null) view = homePageView.findViewById(id);
+        if (view == null && settingsPageView != null) view = settingsPageView.findViewById(id);
+        return view;
+    }
 
-        currentTheme = themesData.normalizeIndex(utils.loadInt(Constants.WEB_INTERFACE_THEME,0));
+    private void whenSharingPagesReady(Runnable action) {
+        if (sharingPagesReady) action.run();
+        else pendingPageActions.add(action);
+    }
 
-        logger.setOnLongClickListener(v -> true);
-        clearLog();
-
-        pmode_send_files.addAll(utils.pListReader());
-        privateModeSwitch = findViewById(R.id.private_mode_toggle);
-        privateModeSwitch.setChecked(utils.loadSetting(Constants.PRIVATE_MODE));
-        privateModeSwitch.setOnCheckedChangeListener((button, enabled) -> {
-            if (utils.loadSetting(Constants.PRIVATE_MODE) == enabled) return;
-            utils.saveSetting(Constants.PRIVATE_MODE, enabled);
-            privateMode();
-            restartServer();
-        });
-
-        rootFolderPickerResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+    private void registerFilePickers() {
+        rootFolderPickerResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> whenSharingPagesReady(() -> {
             if(result.getResultCode() == Activity.RESULT_OK) {
                 try {
                     if (result.getData() == null || result.getData().getData() == null) return;
@@ -230,34 +219,48 @@ public class MainActivity extends AppCompatActivity {
                     showSnackbar("Choose an accessible folder on internal storage or an SD card.");
                 }
             }
-        });
-
-        pluginFolderPickerResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
-            @Override
-            public void onActivityResult(ActivityResult result) {
-                if(result.getResultCode() == Activity.RESULT_OK) {
-                    try {
-                        Uri uri = result.getData().getData();
-                        String decode = URLDecoder.decode(uri.toString(), "UTF-8");
-                        String root = "";
-                        if(decode.split(":")[1].contains("primary")) {
-                            root = Environment.getExternalStorageDirectory().getAbsolutePath();
-                        }else{
-                            root = utils.getSDCardRoot();
-                        }
-                        File f = new File(root, decode.split(":")[2]);
-                        plugin_folder_label.setText(f.getAbsolutePath());
-                        utils.savePluginDevFolder(f.getAbsolutePath());
-                        restartServer();
-                    } catch (Exception e) {}
-                }
-            }
-        });
+        }));
 
         mutipleFilesActivityResultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), result -> addPickedFiles(result, false));
+                new ActivityResultContracts.StartActivityForResult(), result -> whenSharingPagesReady(() -> addPickedFiles(result, false)));
         gallerySelectorActivityResultLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(), result -> addPickedFiles(result, true));
+                new ActivityResultContracts.StartActivityForResult(), result -> whenSharingPagesReady(() -> addPickedFiles(result, true)));
+
+    }
+
+    private void bindSharingPageControls() {
+        serverBtn = findScreenView(R.id.serverBtn);
+        serverBtnTxt = findScreenView(R.id.serverBtnTxt);
+        main_bg = findScreenView(R.id.main_bg);
+        second_bg = findScreenView(R.id.second_bg);
+        scan_url = findScreenView(R.id.scan_url);
+        ssl_note = findScreenView(R.id.ssl_note);
+        drawerLayout = findScreenView(R.id.root_container);
+
+        ImageButton nav_btn = findScreenView(R.id.nav_btn);
+        nav_btn.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+
+        //Settings Components
+        settDRoot = findScreenView(R.id.sett_subtitle1);
+        settRemDev = findScreenView(R.id.sett_subtitle6);
+        settTheme = findScreenView(R.id.sett_subtitle7);
+        plugin_folder_label = findScreenView(R.id.sett_subtitle11);
+        plugin_folder_label.setText(R.string.plugin_development_summary);
+        String dev_count = rememberedDeviceCount();
+        settRemDev.setText(dev_count);
+        settTheme.setText(themesData.getDisplayItem(utils.loadInt(Constants.WEB_INTERFACE_THEME,0)));
+
+        currentTheme = themesData.normalizeIndex(utils.loadInt(Constants.WEB_INTERFACE_THEME,0));
+
+        pmode_send_files.addAll(utils.pListReader());
+        privateModeSwitch = findScreenView(R.id.private_mode_toggle);
+        privateModeSwitch.setChecked(utils.loadSetting(Constants.PRIVATE_MODE));
+        privateModeSwitch.setOnCheckedChangeListener((button, enabled) -> {
+            if (utils.loadSetting(Constants.PRIVATE_MODE) == enabled) return;
+            utils.saveSetting(Constants.PRIVATE_MODE, enabled);
+            privateMode();
+            restartServer();
+        });
 
         initializeApp();
 
@@ -272,25 +275,21 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         ContextCompat.registerReceiver(this, updateUIReciver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
-        View qrBtn = findViewById(R.id.qrBtn);
-        qrBtn.setOnClickListener(v -> toggleQRView());
-        findViewById(R.id.qr_back_btn).setOnClickListener(v -> toggleQRView());
-        findViewById(R.id.qr_copy_btn).setOnClickListener(v -> copyConnectionAddress());
-        findViewById(R.id.qr_share_btn).setOnClickListener(v -> shareConnectionAddress());
-        findViewById(R.id.clear_session_log).setOnClickListener(v -> clearLog());
-        hide_logger_btn.setOnClickListener(v -> {
-            toggleLogger();
+        View qrBtn = findScreenView(R.id.qrBtn);
+        qrBtn.setOnClickListener(v -> {
+            if (utils.isServiceRunning(ServerService.class)) toggleQRView();
+            else showSnackbar(getString(R.string.qr_requires_sharing));
         });
-
-        findViewById(R.id.select_files_btn).setOnClickListener(v -> openFilePicker(false));
-        findViewById(R.id.select_media_btn).setOnClickListener(v -> openFilePicker(true));
-        findViewById(R.id.manage_files_btn).setOnClickListener(v -> reviewSelectedFiles());
-        findViewById(R.id.choose_folder_btn).setOnClickListener(v -> findViewById(R.id.sett_card1).performClick());
+        findScreenView(R.id.qr_back_btn).setOnClickListener(v -> toggleQRView());
+        findScreenView(R.id.qr_copy_btn).setOnClickListener(v -> copyConnectionAddress());
+        findScreenView(R.id.qr_share_btn).setOnClickListener(v -> shareConnectionAddress());
+        findScreenView(R.id.select_files_btn).setOnClickListener(v -> openFilePicker(false));
+        findScreenView(R.id.select_media_btn).setOnClickListener(v -> openFilePicker(true));
+        findScreenView(R.id.manage_files_btn).setOnClickListener(v -> reviewSelectedFiles());
+        findScreenView(R.id.choose_folder_btn).setOnClickListener(v -> findScreenView(R.id.sett_card1).performClick());
         updateSelectedFilesUI();
-        logger.setVisibility(utils.loadSetting(Constants.IS_LOGGER_VISIBLE) ? View.VISIBLE : View.GONE);
-
-        ImageButton url_cpy_btn = findViewById(R.id.url_cpy_btn);
-        ImageButton url_share_btn = findViewById(R.id.url_share_btn);
+        ImageButton url_cpy_btn = findScreenView(R.id.url_cpy_btn);
+        ImageButton url_share_btn = findScreenView(R.id.url_share_btn);
         url_cpy_btn.setOnClickListener(view -> {
             copyConnectionAddress();
         });
@@ -298,17 +297,32 @@ public class MainActivity extends AppCompatActivity {
             shareConnectionAddress();
         });
         privateMode();
-        if (savedInstanceState != null) {
-            int destination = savedInstanceState.getInt("destination", R.id.home);
-            bottomNavigation.setSelectedItemId(destination);
-            if (savedInstanceState.getBoolean("show_qr")) toggleQRView();
-        }
-        centerContent(findViewById(R.id.home_content), 680);
-        centerContent(findViewById(R.id.settings_content), 760);
+        centerContent(findScreenView(R.id.home_content), 680);
+        centerContent(findScreenView(R.id.settings_content), 760);
+    }
+
+    private int destinationFromIntent(Intent intent) {
+        return intent.getIntExtra(EXTRA_DESTINATION,
+                intent.getBooleanExtra("open_settings", false) ? R.id.settings : R.id.home);
+    }
+
+    private void syncNavigation(int position) {
+        int destination = MainPagerAdapter.destinationForPosition(position);
+        bottomNavigation.getMenu().findItem(destination).setChecked(true);
+        ((NavigationView) findScreenView(R.id.navigationView)).setCheckedItem(destination);
+    }
+
+    private void navigateToDestination(int destination, boolean animate) {
+        if (qr_view.getVisibility() == View.VISIBLE) hideQRCode();
+        int position = MainPagerAdapter.positionForDestination(destination);
+        mainPager.setCurrentItem(position, animate);
+        syncNavigation(position);
+        exit = 0;
     }
 
     @Override
     protected void onPause() {
+        activityResumed = false;
         try {
             if(qrDialog!=null) {
                 qrDialog.dismiss();
@@ -330,19 +344,29 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        try { unregisterReceiver(updateUIReciver); } catch (IllegalArgumentException ignored) { }
+        if (updateUIReciver != null) {
+            try { unregisterReceiver(updateUIReciver); } catch (IllegalArgumentException ignored) { }
+        }
         selectionExecutor.shutdown();
+        pendingPageActions.clear();
+        homePageView = null;
+        settingsPageView = null;
         super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
+        handleBackNavigation();
+    }
+
+    private void handleBackNavigation() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
-        } else if(settings_view.getVisibility()==View.VISIBLE) {
-            toggleSettings();
-        }else if(qr_view.getVisibility()==View.VISIBLE) {
-            toggleQRView();
+        } else if (qr_view.getVisibility() == View.VISIBLE) {
+            hideQRCode();
+            navigateToDestination(R.id.home, false);
+        } else if (mainPager.getCurrentItem() != MainPagerAdapter.HOME) {
+            navigateToDestination(R.id.home, true);
         }else{
             exit();
         }
@@ -364,52 +388,46 @@ public class MainActivity extends AppCompatActivity {
         if(exit==1) {
             exit++;
         }else if(exit==2) {
-            finishAffinity();
+            moveTaskToBack(true);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (utils != null && serverBtn != null) {
-            boolean running = utils.isServiceRunning(ServerService.class);
-            if (running) {
-                String savedUrl = utils.loadString(Constants.SERVER_URL);
-                if (savedUrl != null) url = savedUrl;
-            }
-            changeUI(running ? Constants.SERVER_ON : Constants.SERVER_OFF);
-            if (running && !url.isEmpty()) ((TextView) findViewById(R.id.connection_address)).setText(url);
-        }
+        activityResumed = true;
+        if (sharingPagesReady) resumeSharingUI();
+    }
+
+    private void synchronizeSharingUI() {
+        boolean running = utils.isServiceRunning(ServerService.class);
+        String savedUrl = running ? utils.loadString(Constants.SERVER_URL) : null;
+        url = savedUrl == null ? "" : savedUrl;
+        changeUI(running ? Constants.SERVER_ON : Constants.SERVER_OFF);
+        if (running && !url.isEmpty()) ((TextView) findScreenView(R.id.connection_address)).setText(url);
+        privateMode();
+    }
+
+    private void resumeSharingUI() {
+        synchronizeSharingUI();
         com.akansh.fileserversuit.server.TransferStats.Snapshot activity = com.akansh.fileserversuit.server.TransferStats.snapshot();
         lastSent = activity.sent; lastReceived = activity.received;
         lastSampleTime = android.os.SystemClock.elapsedRealtime();
         activityHandler.removeCallbacks(activitySampler);
         activityHandler.post(activitySampler);
-        if (settings_view != null && qr_view != null && qr_view.getVisibility() == View.GONE) {
-            NavigationBarView bottomNavigation = findViewById(R.id.bottom_nav);
-            bottomNavigation.setSelectedItemId(settings_view.getVisibility() == View.VISIBLE
-                    ? R.id.settings : R.id.home);
-        }
-
-        privateMode();
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        boolean openSettings = intent.getBooleanExtra("open_settings", false);
-        settings_view.setVisibility(openSettings ? View.VISIBLE : View.GONE);
-        main_view.setVisibility(openSettings ? View.GONE : View.VISIBLE);
-        qr_view.setVisibility(View.GONE);
-        ((NavigationBarView) findViewById(R.id.bottom_nav))
-                .setSelectedItemId(openSettings ? R.id.settings : R.id.home);
+        navigateToDestination(destinationFromIntent(intent), false);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        privateMode();
+        if (sharingPagesReady) privateMode();
     }
 
     @SuppressLint("SdCardPath")
@@ -420,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
             String u=utils.loadString(Constants.SERVER_URL);
             if(u!=null) {
                 url=u;
-                TextView address = findViewById(R.id.connection_address);
+                TextView address = findScreenView(R.id.connection_address);
                 if (address != null) address.setText(url);
                 if (scan_url != null) scan_url.setText(url);
                 pushLog("Server running at: "+url,false);
@@ -453,9 +471,9 @@ public class MainActivity extends AppCompatActivity {
         serverBtn.setOnClickListener(sharingListener);
         serverBtnTxt.setOnClickListener(sharingListener);
 
-        // Extract the versioned web archive; debug launches always refresh it.
+        // The installer controls version checks and optional development refreshes.
         WebInterfaceSetup webInterfaceSetup=new WebInterfaceSetup(getPackageName(), this, this, utils);
-        if(!webInterfaceSetup.isInstalled() || com.akansh.fileserversuit.BuildConfig.DEBUG) {
+        if(webInterfaceSetup.needsSetup()) {
             webInterfaceSetup.setupListeners=new WebInterfaceSetup.SetupListeners() {
                 @Override
                 public void onSetupCompeted(boolean status) {
@@ -504,33 +522,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Setup Side Bar Drawer Navigation
-        NavigationView navigationView=findViewById(R.id.navigationView);
-        boolean advancedMode = utils.loadSetting(Constants.ADVANCED_MODE);
-        navigationView.getMenu().findItem(R.id.clear_log).setVisible(advancedMode);
-        navigationView.getMenu().findItem(R.id.plugins).setVisible(advancedMode);
+        NavigationView navigationView=findScreenView(R.id.navigationView);
+        navigationView.getMenu().findItem(R.id.plugins).setVisible(true);
         navigationView.setNavigationItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
             if (itemId == R.id.home) {
-                settings_view.setVisibility(View.GONE);
-                qr_view.setVisibility(View.GONE);
-                main_view.setVisibility(View.VISIBLE);
-                bottomNavigation.setSelectedItemId(R.id.home);
+                navigateToDestination(R.id.home, false);
             } else if (itemId == R.id.plugins) {
                 Intent pluginsIntent = new Intent(MainActivity.this, PluginsActivity.class);
                 startActivity(pluginsIntent);
             } else if (itemId == R.id.settings) {
-                settings_view.setVisibility(View.VISIBLE);
-                main_view.setVisibility(View.GONE);
-                qr_view.setVisibility(View.GONE);
-                bottomNavigation.setSelectedItemId(R.id.settings);
+                navigateToDestination(R.id.settings, false);
             } else if (itemId == R.id.scan_qr) {
                 if (checkCameraPermission()) initQrScanner(); else requestCameraPermission();
             } else if (itemId == R.id.trans_hist) {
-                Intent transferHistoryIntent = new Intent(MainActivity.this, TransferHistoryActivity.class);
-                startActivity(transferHistoryIntent);
-            } else if (itemId == R.id.clear_log) {
-                clearLog();
+                navigateToDestination(R.id.trans_hist, false);
             } else if (itemId == R.id.privacy_policy) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -549,25 +556,22 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
         setUp_settingsListener();
-        findViewById(R.id.settings_permissions).setOnClickListener(view ->
+        findScreenView(R.id.settings_permissions).setOnClickListener(view ->
                 startActivity(new Intent(this, PermissionsActivity.class)));
-        findViewById(R.id.settings_web_password).setOnClickListener(view -> {
+        findScreenView(R.id.settings_web_password).setOnClickListener(view -> {
             if (getSupportFragmentManager().findFragmentByTag(WebPasswordDialog.TAG) == null) {
                 new WebPasswordDialog().show(getSupportFragmentManager(), WebPasswordDialog.TAG);
             }
         });
-        MaterialSwitch advancedModeSwitch = findViewById(R.id.advanced_mode_switch);
-        advancedModeSwitch.setChecked(advancedMode);
-        advancedModeSwitch.setOnCheckedChangeListener((buttonView, enabled) -> {
-            utils.saveSetting(Constants.ADVANCED_MODE, enabled);
-            applyAdvancedMode(enabled);
-            navigationView.getMenu().findItem(R.id.clear_log).setVisible(enabled);
-            navigationView.getMenu().findItem(R.id.plugins).setVisible(enabled);
+        MaterialSwitch transferGraphSwitch = findScreenView(R.id.transfer_graph_switch);
+        boolean showTransferGraph = utils.loadSetting(Constants.SHOW_TRANSFER_GRAPH);
+        transferGraphSwitch.setChecked(showTransferGraph);
+        transferGraphSwitch.setOnCheckedChangeListener((buttonView, enabled) -> {
+            utils.saveSetting(Constants.SHOW_TRANSFER_GRAPH, enabled);
+            updateGraphVisibility();
         });
-        applyAdvancedMode(advancedMode);
-
-        PluginsManager pluginsManager = new PluginsManager(this, this, utils);
-        pluginsManager.fetchPluginAppsFile();
+        updateRootLabel();
+        updateGraphVisibility();
     }
 
     public boolean checkStoragePermissions() {
@@ -615,14 +619,12 @@ public class MainActivity extends AppCompatActivity {
         if(action.equals(Constants.ACTION_URL)) {
             runOnUiThread(() -> {
                 url=intent.getStringExtra("url");
-                TextView address = findViewById(R.id.connection_address);
+                TextView address = findScreenView(R.id.connection_address);
                 if (address != null) address.setText(url);
                 if (scan_url != null) scan_url.setText(url);
                 changeUI(Constants.SERVER_ON);
                 pushLog("Server started at: "+url,true);
-                if(!utils.loadSetting(Constants.IS_LOGGER_VISIBLE)) {
-                    showSnackbar("Server started at: "+url);
-                }
+                showSnackbar("Server started at: "+url);
             });
         }else if(action.equals(Constants.ACTION_MSG)) {
             runOnUiThread(() -> pushLog(intent.getStringExtra("msg"),true));
@@ -630,6 +632,8 @@ public class MainActivity extends AppCompatActivity {
             updateTransferActivity();
         }else if(action.equals(Constants.ACTION_AUTH)) {
             showAuthDialog(intent.getStringExtra("device_id"), intent.getStringExtra("device_name"));
+        }else if(action.equals(Constants.ACTION_PLUGIN_AUTH)) {
+            showPluginPermissionDialog(intent.getStringExtra("device_id"), intent.getStringExtra("plugin_package"), intent.getStringExtra("plugin_name"));
         }else if(action.equals(Constants.ACTION_UPDATE_UI_STOP)) {
             runOnUiThread(()->{
                 changeUI(Constants.SERVER_OFF);
@@ -637,33 +641,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void toggleLogger() {
-        boolean visible = logger.getVisibility() != View.VISIBLE;
-        logger.setVisibility(visible ? View.VISIBLE : View.GONE);
-        hide_logger_btn.setImageResource(visible ? R.drawable.ic_caret_up : R.drawable.ic_caret_down);
-        utils.saveSetting(Constants.IS_LOGGER_VISIBLE, visible);
-    }
-
     private void setUp_settingsListener() {
-        CardView card1 = findViewById(R.id.sett_card1);
-        CardView card2 = findViewById(R.id.sett_card2);
-        CardView card3 = findViewById(R.id.sett_card3);
-        CardView card6 = findViewById(R.id.sett_card6);
-        CardView card7 = findViewById(R.id.sett_card7);
-        CardView card8 = findViewById(R.id.sett_card8);
-        CardView card9 = findViewById(R.id.sett_card9);
-        CardView card10 = findViewById(R.id.sett_card10);
-        CardView card11 = findViewById(R.id.sett_card11);
-        CompoundButton settHFCheck = findViewById(R.id.sett_hideF_checkBox);
-        CompoundButton settRMCheck = findViewById(R.id.sett_resMod_checkBox);
-        CompoundButton settAppsCheck = findViewById(R.id.sett_apps_checkBox);
-        CompoundButton settSslCheck = findViewById(R.id.sett_ssl_checkBox);
-        CompoundButton settPluginDevCheck = findViewById(R.id.sett_plugin_debug_checkBox);
-        TextView settPort = findViewById(R.id.sett_subtitle8);
-        ImageButton sett_plugin_folder = findViewById(R.id.sett_plugin_folder);
-        View settResetRoot = findViewById(R.id.sett_reset_root);
-        findViewById(R.id.sett_choose_root).setOnClickListener(view -> card1.performClick());
-        ImageButton sett_plugin_debug_link = findViewById(R.id.sett_plugin_debug_link);
+        CardView card1 = findScreenView(R.id.sett_card1);
+        CardView card2 = findScreenView(R.id.sett_card2);
+        CardView card3 = findScreenView(R.id.sett_card3);
+        CardView card6 = findScreenView(R.id.sett_card6);
+        CardView card7 = findScreenView(R.id.sett_card7);
+        CardView card8 = findScreenView(R.id.sett_card8);
+        CardView card9 = findScreenView(R.id.sett_card9);
+        CardView card10 = findScreenView(R.id.sett_card10);
+        CardView card11 = findScreenView(R.id.sett_card11);
+        CompoundButton settHFCheck = findScreenView(R.id.sett_hideF_checkBox);
+        CompoundButton settRMCheck = findScreenView(R.id.sett_resMod_checkBox);
+        CompoundButton settAppsCheck = findScreenView(R.id.sett_apps_checkBox);
+        CompoundButton settSslCheck = findScreenView(R.id.sett_ssl_checkBox);
+        CompoundButton settPluginDevCheck = findScreenView(R.id.sett_plugin_debug_checkBox);
+        TextView settPort = findScreenView(R.id.sett_subtitle8);
+        View settResetRoot = findScreenView(R.id.sett_reset_root);
+        findScreenView(R.id.sett_choose_root).setOnClickListener(view -> card1.performClick());
+        ImageButton sett_plugin_debug_link = findScreenView(R.id.sett_plugin_debug_link);
 
 
         // App Root Settings
@@ -751,7 +747,7 @@ public class MainActivity extends AppCompatActivity {
         card8.setOnClickListener(v-> {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("ShareX Port:");
-            builder.setMessage("Please enter a port number between 1024 and 65535");
+            builder.setMessage("Please enter a port number between 1024 and 65534. The next port is used for plugin WebSockets.");
             TextInputLayout textInputLayout = new TextInputLayout(MainActivity.this);
             textInputLayout.setPadding(getResources().getDimensionPixelOffset(R.dimen.dp_19),0,getResources().getDimensionPixelOffset(R.dimen.dp_19),0);
             final EditText input = new EditText(MainActivity.this);
@@ -762,7 +758,7 @@ public class MainActivity extends AppCompatActivity {
             builder.setPositiveButton("Set", (dialog, which) -> {
                 if(input.getText().toString().length()>0) {
                     int port = Integer.parseInt(input.getText().toString());
-                    if(port >= 1024 && port <= 65535) {
+                    if(port >= 1024 && port <= 65534) {
                         utils.saveInt(Constants.SERVER_PORT, port);
                         settPort.setText("Port: " + port);
                         Toast.makeText(MainActivity.this, "ShareX port changed to " + port, Toast.LENGTH_LONG).show();
@@ -796,91 +792,64 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Plugin Settings
-        card11.setOnClickListener(v -> {
-            settPluginDevCheck.setChecked(!settPluginDevCheck.isChecked());
-            if(settPluginDevCheck.isChecked()) {
-                utils.createDefualtPluginDevDir();
-            }
-        });
+        card11.setOnClickListener(v -> settPluginDevCheck.setChecked(!settPluginDevCheck.isChecked()));
         settPluginDevCheck.setChecked(utils.loadSetting(Constants.PLUGIN_DEV));
         settPluginDevCheck.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            utils.saveSetting(Constants.PLUGIN_DEV, isChecked);
-            if(isChecked) {
-                utils.createDefualtPluginDevDir();
-                restartServer();
-            }
+            new com.akansh.fileserversuit.server.PluginDevelopment(this).setEnabled(isChecked);
+            restartServer();
+            if (isChecked) showSnackbar(getString(R.string.plugin_development_enabled));
         });
 
-        sett_plugin_folder.setOnClickListener(v -> {
-            try {
-                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-                i.addCategory(Intent.CATEGORY_DEFAULT);
-                Intent fIntent = Intent.createChooser(i, "Choose plugin debug folder");
-                pluginFolderPickerResultLauncher.launch(fIntent);
-            }catch (Exception e) {
-                Log.d(Constants.LOG_TAG,e.toString());
-            }
-        });
-
-        sett_plugin_debug_link.setOnClickListener(v -> {
-            try {
-                if(utils.isServiceRunning(ServerService.class)) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url + "/SharexApp/debug/"));
-                    if (intent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(intent);
-                    } else {
-                        Toast.makeText(MainActivity.this, "No browser available to open the url!", Toast.LENGTH_LONG).show();
-                    }
-                }else{
-                    Toast.makeText(MainActivity.this, "Start ShareX first!", Toast.LENGTH_LONG).show();
-                }
-            }catch (Exception e) {
-                Log.d(Constants.LOG_TAG,e.toString());
-                Toast.makeText(MainActivity.this, "Something went wrong!", Toast.LENGTH_LONG).show();
-            }
-        });
+        sett_plugin_debug_link.setOnClickListener(v -> showPluginDevelopmentConnection());
 
 
     }
 
-    private void applyAdvancedMode(boolean enabled) {
-        int[] advancedCards = {R.id.sett_card11};
-        for (int cardId : advancedCards) {
-            View card = findViewById(cardId);
-            if (card != null) card.setVisibility(enabled ? View.VISIBLE : View.GONE);
+    private void showPluginDevelopmentConnection() {
+        if (!utils.loadSetting(Constants.PLUGIN_DEV)) {
+            showSnackbar(getString(R.string.plugin_development_enable_first));
+            return;
         }
-        int[] advancedHeadings = {R.id.settings_diagnostics_heading};
-        for (int headingId : advancedHeadings) {
-            View heading = findViewById(headingId);
-            if (heading != null) heading.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        if (!utils.isServiceRunning(ServerService.class) || url.isEmpty()) {
+            showSnackbar("Start ShareX first!");
+            return;
         }
-        if (logger_wrapper != null) logger_wrapper.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        updateGraphVisibility();
-        updateRootLabel();
+        com.akansh.fileserversuit.server.PluginDevelopment development =
+                new com.akansh.fileserversuit.server.PluginDevelopment(this);
+        String connection = url + "#sharex-dev-token=" + development.token();
+        TextView details = new TextView(this);
+        int padding = getResources().getDimensionPixelSize(R.dimen.dp_19);
+        details.setPadding(padding, padding, padding, padding);
+        details.setText(getString(R.string.plugin_development_instructions, connection));
+        details.setTextIsSelectable(true);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.plugin_development_connection)
+                .setView(details)
+                .setPositiveButton(R.string.plugin_development_copy, (dialog, which) -> {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    clipboard.setPrimaryClip(ClipData.newPlainText("ShareX development connection", connection));
+                    showSnackbar(getString(R.string.plugin_development_copied));
+                })
+                .setNeutralButton(R.string.plugin_development_rotate, (dialog, which) -> {
+                    development.setEnabled(true);
+                    restartServer();
+                    showSnackbar(getString(R.string.plugin_development_rotated));
+                })
+                .setNegativeButton(android.R.string.cancel, null).show();
     }
 
     private void updateGraphVisibility() {
-        View section = findViewById(R.id.transfer_activity_section);
-        if (section != null) section.setVisibility(utils.loadSetting(Constants.ADVANCED_MODE)
-                && Boolean.TRUE.equals(displayedSharingState) ? View.VISIBLE : View.GONE);
+        View section = findScreenView(R.id.transfer_activity_section);
+        boolean sharing = Boolean.TRUE.equals(displayedSharingState);
+        if (section != null) section.setVisibility(sharing ? View.VISIBLE : View.GONE);
+        View graph = findScreenView(R.id.transfer_graph);
+        if (graph != null) graph.setVisibility(utils.loadSetting(Constants.SHOW_TRANSFER_GRAPH)
+                ? View.VISIBLE : View.GONE);
     }
 
     private void updateRootLabel() {
         if (settDRoot == null || utils == null) return;
         settDRoot.setText(getString(R.string.settings_root_advanced_summary, serverRoot));
-    }
-
-    private void toggleSettings() {
-        qr_view.setVisibility(View.GONE);
-        if(settings_view.getVisibility() == View.GONE) {
-            settings_view.setVisibility(View.VISIBLE);
-            main_view.setVisibility(View.GONE);
-        }else{
-            settings_view.setVisibility(View.GONE);
-            main_view.setVisibility(View.VISIBLE);
-        }
-        bottomNavigation.setSelectedItemId(settings_view.getVisibility() == View.VISIBLE
-                ? R.id.settings : R.id.home);
     }
 
     private void copyConnectionAddress() {
@@ -927,18 +896,14 @@ public class MainActivity extends AppCompatActivity {
             stopService(intent);
         }
         url="";
-        TextView address = findViewById(R.id.connection_address);
+        TextView address = findScreenView(R.id.connection_address);
         if (address != null) address.setText(R.string.sharing_address_stopped);
         deviceManager.clearTmp();
 
     }
 
     public void pushLog(String log, boolean scroll) {
-        if (logger != null) logger.addEvent(log);
-    }
-
-    private void clearLog() {
-        logger.clearEvents();
+        if (log != null) Log.d(Constants.LOG_TAG, log);
     }
 
     private boolean isValidIP() {
@@ -970,29 +935,31 @@ public class MainActivity extends AppCompatActivity {
 
     public void toggleQRView() {
         if(qr_view.getVisibility()==View.GONE) {
-            main_view.setVisibility(View.GONE);
+            mainPager.setVisibility(View.INVISIBLE);
             qr_view.setVisibility(View.VISIBLE);
-            findViewById(R.id.bottom_nav).setVisibility(View.GONE);
+            findScreenView(R.id.bottom_nav).setVisibility(View.GONE);
             if(url.length()>0) {
-                TextView scan_url=findViewById(R.id.scan_url);
+                TextView scan_url=findScreenView(R.id.scan_url);
                 scan_url.setText(url);
-                TextView address=findViewById(R.id.connection_address);
+                TextView address=findScreenView(R.id.connection_address);
                 if(address!=null) address.setText(url);
-                ImageView qr_view=findViewById(R.id.qr_img);
+                ImageView qr_view=findScreenView(R.id.qr_img);
                 GenerateQR generateQR=new GenerateQR(qr_view, this, this);
                 generateQR.execute(url);
             }
-        }else{
-            main_view.setVisibility(View.VISIBLE);
-            qr_view.setVisibility(View.GONE);
-            findViewById(R.id.bottom_nav).setVisibility(View.VISIBLE);
-            ImageView qr_view=findViewById(R.id.qr_img);
-            qr_view.setImageResource(R.drawable.ic_logo);
-            scan_url.setText(R.string.qr_stopped);
-            TextView address=findViewById(R.id.connection_address);
-            if(address!=null) address.setText(R.string.address_ready_hint);
+        } else {
+            hideQRCode();
+            navigateToDestination(R.id.home, false);
         }
         ssl_note.setVisibility(utils.loadSetting(Constants.SSL) ? View.VISIBLE : View.GONE);
+    }
+
+    private void hideQRCode() {
+        qr_view.setVisibility(View.GONE);
+        mainPager.setVisibility(View.VISIBLE);
+        bottomNavigation.setVisibility(View.VISIBLE);
+        ((ImageView) findScreenView(R.id.qr_img)).setImageResource(R.drawable.ic_logo);
+        scan_url.setText(R.string.qr_stopped);
     }
 
     public void showAbout() {
@@ -1011,19 +978,19 @@ public class MainActivity extends AppCompatActivity {
         double receiving = Math.max(0, snapshot.received - lastReceived) * 1000d / interval;
         // Broadcasts can arrive many times per second; graph samples remain one second apart.
         if (interval >= 900) {
-            ((TransferGraphView) findViewById(R.id.transfer_graph)).addSample(sending, receiving);
+            ((TransferGraphView) findScreenView(R.id.transfer_graph)).addSample(sending, receiving);
             lastSampleTime = now; lastSent = snapshot.sent; lastReceived = snapshot.received;
-            ((TextView) findViewById(R.id.send_speed)).setText(formatBytes((long) sending) + "/s");
-            ((TextView) findViewById(R.id.receive_speed)).setText(formatBytes((long) receiving) + "/s");
-            findViewById(R.id.transfer_graph).setContentDescription("Sending " + formatBytes((long) sending)
+            ((TextView) findScreenView(R.id.send_speed)).setText(formatBytes((long) sending) + "/s");
+            ((TextView) findScreenView(R.id.receive_speed)).setText(formatBytes((long) receiving) + "/s");
+            findScreenView(R.id.transfer_graph).setContentDescription("Sending " + formatBytes((long) sending)
                     + " per second, receiving " + formatBytes((long) receiving) + " per second");
         }
-        ((TextView) findViewById(R.id.session_totals)).setText(formatBytes(snapshot.sent) + " sent \u00b7 " + formatBytes(snapshot.received) + " received");
-        ((TextView) findViewById(R.id.activity_state)).setText(snapshot.activeCount > 0
+        ((TextView) findScreenView(R.id.session_totals)).setText(formatBytes(snapshot.sent) + " sent \u00b7 " + formatBytes(snapshot.received) + " received");
+        ((TextView) findScreenView(R.id.activity_state)).setText(snapshot.activeCount > 0
                 ? snapshot.activeCount + (snapshot.activeCount == 1 ? " active transfer" : " active transfers") : "Waiting for a transfer");
-        View transfer = findViewById(R.id.active_transfer_card);
-        ProgressBar progress = findViewById(R.id.progressBar);
-        TextView description = findViewById(R.id.transfer_progress_label);
+        View transfer = findScreenView(R.id.active_transfer_card);
+        ProgressBar progress = findScreenView(R.id.progressBar);
+        TextView description = findScreenView(R.id.transfer_progress_label);
         if (snapshot.activeCount > 0) {
             transfer.setVisibility(View.VISIBLE);
             progress.setIndeterminate(snapshot.unknownTotal || snapshot.total <= 0);
@@ -1047,14 +1014,14 @@ public class MainActivity extends AppCompatActivity {
     private void privateMode() {
         if (utils == null) return;
         boolean enabled = utils.loadSetting(Constants.PRIVATE_MODE);
-        SharingStatusView statusDial = findViewById(R.id.sharing_status_dial);
+        SharingStatusView statusDial = findScreenView(R.id.sharing_status_dial);
         if (statusDial != null) statusDial.setPrivateMode(enabled);
         if (privateModeSwitch != null && privateModeSwitch.isChecked() != enabled) privateModeSwitch.setChecked(enabled);
-        ((TextView) findViewById(R.id.mode_description)).setText(enabled
+        ((TextView) findScreenView(R.id.mode_description)).setText(enabled
                 ? R.string.private_mode_explanation : R.string.folder_mode_explanation);
-        findViewById(R.id.file_selection_panel).setVisibility(enabled ? View.VISIBLE : View.GONE);
-        findViewById(R.id.choose_folder_btn).setVisibility(enabled ? View.GONE : View.VISIBLE);
-        findViewById(R.id.top_panel).setVisibility(View.GONE);
+        findScreenView(R.id.file_selection_panel).setVisibility(enabled ? View.VISIBLE : View.GONE);
+        findScreenView(R.id.choose_folder_btn).setVisibility(enabled ? View.GONE : View.VISIBLE);
+        findScreenView(R.id.top_panel).setVisibility(View.GONE);
         updateSelectedFilesUI();
     }
 
@@ -1069,10 +1036,10 @@ public class MainActivity extends AppCompatActivity {
     private void updateSelectedFilesUI() {
         java.util.LinkedHashSet<String> paths = new java.util.LinkedHashSet<>(pmode_send_files);
         paths.addAll(pmode_send_images);
-        TextView summary = findViewById(R.id.selected_files_summary);
+        TextView summary = findScreenView(R.id.selected_files_summary);
         summary.setText(paths.isEmpty() ? getString(R.string.no_files_selected)
                 : getResources().getQuantityString(R.plurals.files_selected, paths.size(), paths.size()));
-        findViewById(R.id.manage_files_btn).setVisibility(paths.isEmpty() ? View.GONE : View.VISIBLE);
+        findScreenView(R.id.manage_files_btn).setVisibility(paths.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     private void openFilePicker(boolean media) {
@@ -1096,9 +1063,9 @@ public class MainActivity extends AppCompatActivity {
         if (data.getClipData() != null) {
             for (int i = 0; i < data.getClipData().getItemCount(); i++) uris.add(data.getClipData().getItemAt(i).getUri());
         } else if (data.getData() != null) uris.add(data.getData());
-        findViewById(R.id.select_files_btn).setEnabled(false);
-        findViewById(R.id.select_media_btn).setEnabled(false);
-        ((TextView) findViewById(R.id.selected_files_summary)).setText("Preparing selected files...");
+        findScreenView(R.id.select_files_btn).setEnabled(false);
+        findScreenView(R.id.select_media_btn).setEnabled(false);
+        ((TextView) findScreenView(R.id.selected_files_summary)).setText("Preparing selected files...");
         selectionExecutor.execute(() -> {
             List<String> paths = new ArrayList<>();
             for (Uri uri : uris) {
@@ -1111,8 +1078,8 @@ public class MainActivity extends AppCompatActivity {
                 List<String> selected = media ? pmode_send_images : pmode_send_files;
                 for (String path : paths) if (!selected.contains(path)) selected.add(path);
                 mergeAndUpdatePFilesList();
-                findViewById(R.id.select_files_btn).setEnabled(true);
-                findViewById(R.id.select_media_btn).setEnabled(true);
+                findScreenView(R.id.select_files_btn).setEnabled(true);
+                findScreenView(R.id.select_media_btn).setEnabled(true);
                 if (paths.size() < uris.size()) showSnackbar("Some files could not be read. Choose them again from device storage.");
                 else showSnackbar(getResources().getQuantityString(R.plurals.files_ready, paths.size(), paths.size()));
             });
@@ -1175,16 +1142,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(@NonNull Bundle state) {
         super.onSaveInstanceState(state);
-        state.putInt("destination", settings_view.getVisibility() == View.VISIBLE ? R.id.settings : R.id.home);
+        state.putInt(EXTRA_DESTINATION, MainPagerAdapter.destinationForPosition(mainPager.getCurrentItem()));
         state.putBoolean("show_qr", qr_view.getVisibility() == View.VISIBLE);
     }
 
     private void changeUI(int code) {
         boolean sharing = code == Constants.SERVER_ON;
         serverBtn.setSelected(sharing);
-        ((SharingStatusView) findViewById(R.id.sharing_status_dial)).setRunning(sharing);
+        ((SharingStatusView) findScreenView(R.id.sharing_status_dial)).setRunning(sharing);
         if (displayedSharingState == null || displayedSharingState != sharing) {
-            if (sharing) ((TransferGraphView) findViewById(R.id.transfer_graph)).clearSamples();
+            if (sharing) ((TransferGraphView) findScreenView(R.id.transfer_graph)).clearSamples();
             int background = sharing ? R.drawable.bg_green : R.drawable.bg_red;
             if (displayedSharingState != null && android.animation.ValueAnimator.areAnimatorsEnabled()) {
                 TransitionDrawable transition = new TransitionDrawable(new android.graphics.drawable.Drawable[]{
@@ -1197,10 +1164,10 @@ public class MainActivity extends AppCompatActivity {
             displayedSharingState = sharing;
         }
         updateGraphVisibility();
-        TextView drawerStatus = ((NavigationView) findViewById(R.id.navigationView)).getHeaderView(0).findViewById(R.id.drawer_server_status);
+        TextView drawerStatus = ((NavigationView) findScreenView(R.id.navigationView)).getHeaderView(0).findViewById(R.id.drawer_server_status);
         if (drawerStatus != null) drawerStatus.setText(sharing ? "Sharing is running" : "Sharing is off");
-        View light = findViewById(R.id.sharing_light);
-        ((TextView) findViewById(R.id.sharing_light_label)).setText(sharing ? "LIVE" : "READY WHEN YOU ARE");
+        View light = findScreenView(R.id.sharing_light);
+        ((TextView) findScreenView(R.id.sharing_light_label)).setText(sharing ? "LIVE" : "READY WHEN YOU ARE");
         light.setVisibility(sharing ? View.VISIBLE : View.INVISIBLE);
         if (sharing && statusPulse == null && android.animation.ValueAnimator.areAnimatorsEnabled()) {
             statusPulse = android.animation.ObjectAnimator.ofFloat(light, "alpha", 1f, 0.45f, 1f);
@@ -1213,15 +1180,15 @@ public class MainActivity extends AppCompatActivity {
         serverBtnTxt.setTextColor(getColor(sharing ? R.color.share_active_icon : R.color.share_ready_icon));
         serverBtnTxt.setSelected(sharing);
         ((View) serverBtn.getParent()).setSelected(sharing);
-        TextView status = findViewById(R.id.sharing_status);
-        TextView statusHint = findViewById(R.id.sharing_status_hint);
+        TextView status = findScreenView(R.id.sharing_status);
+        TextView statusHint = findScreenView(R.id.sharing_status_hint);
         if (status != null) {
             status.setText(sharing ? R.string.sharing_active : R.string.sharing_off);
             status.setTextColor(getColor(R.color.color_white));
         }
         if (statusHint != null) statusHint.setText(sharing ? R.string.sharing_active_hint : R.string.sharing_home_hint);
         serverBtn.setContentDescription(getString(sharing ? R.string.app_stop_txt : R.string.app_start_txt));
-        TextView address = findViewById(R.id.connection_address);
+        TextView address = findScreenView(R.id.connection_address);
         if (!sharing && address != null) address.setText(R.string.sharing_address_stopped);
         if(code==Constants.SERVER_ON) {
             serverBtn.setImageResource(R.drawable.ic_stop_sharing);
@@ -1262,7 +1229,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showSnackbar(String msg) {
-        DrawerLayout drawerLayout=findViewById(R.id.root_container);
+        DrawerLayout drawerLayout=findScreenView(R.id.root_container);
         Snackbar snackbar = Snackbar.make(drawerLayout, msg, Snackbar.LENGTH_LONG);
         snackbar.setBackgroundTint(getColor(R.color.surface_container));
         snackbar.setTextColor(getColor(R.color.txt_color));
@@ -1292,5 +1259,23 @@ public class MainActivity extends AppCompatActivity {
             isAuthDialogOpened = false;
             Log.e(Constants.LOG_TAG, "Unable to show browser approval", e);
         }
+    }
+
+    private void showPluginPermissionDialog(String deviceId, String pluginPackage, String pluginName) {
+        if (deviceId == null || pluginPackage == null || pluginName == null || isFinishing() || isDestroyed()) return;
+        String request = deviceId + "|" + pluginPackage;
+        if (!pluginPermissionDialogs.add(request)) return;
+        String message = getString(R.string.plugin_permission_request, pluginName, pluginPackage);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.plugin_permission_title)
+                .setMessage(message)
+                .setNegativeButton(R.string.web_access_deny, (dialog, which) ->
+                        new com.akansh.fileserversuit.server.PluginAccessManager(this).resolve(deviceId, pluginPackage, false, false))
+                .setNeutralButton(R.string.plugin_permission_allow_once, (dialog, which) ->
+                        new com.akansh.fileserversuit.server.PluginAccessManager(this).resolve(deviceId, pluginPackage, true, false))
+                .setPositiveButton(R.string.plugin_permission_allow_always, (dialog, which) ->
+                        new com.akansh.fileserversuit.server.PluginAccessManager(this).resolve(deviceId, pluginPackage, true, true))
+                .setOnDismissListener(dialog -> pluginPermissionDialogs.remove(request))
+                .show();
     }
 }

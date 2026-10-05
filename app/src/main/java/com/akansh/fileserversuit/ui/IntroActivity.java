@@ -102,11 +102,8 @@ public class IntroActivity extends AppCompatActivity {
         if(dotstv.length>0) {
         dotstv[page].setTextColor(getColor(R.color.accent_blue));
         }
-        if(page==0) {
-            btnPrev.setVisibility(View.INVISIBLE);
-        }else{
-            btnPrev.setVisibility(View.VISIBLE);
-        }
+        btnPrev.setVisibility(View.VISIBLE);
+        btnPrev.setEnabled(page > 0);
     }
 
     private void startMain() {

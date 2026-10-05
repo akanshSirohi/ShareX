@@ -25,7 +25,6 @@ import java.util.Iterator;
 public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPluginsAdapter.ItemViewHolder> {
 
     Context ctx;
-    LayoutInflater inflater;
     ArrayList<Plugin> pluginArrayList;
 
     InstalledPluginsActionListener listener;
@@ -37,7 +36,6 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
     }
 
     public InstalledPluginsAdapter(Context ctx, ArrayList<Plugin> pluginArrayList) {
-        inflater = LayoutInflater.from(ctx);
         this.ctx = ctx;
         this.pluginArrayList = pluginArrayList;
     }
@@ -66,26 +64,37 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
 
             plugin_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if(listener != null) {
-                    listener.onPluginStatusChange(pluginArrayList.get(getAdapterPosition()).getPlugin_uid(),isChecked);
+                    int position = getBindingAdapterPosition();
+                    if (position == RecyclerView.NO_POSITION) return;
+                    listener.onPluginStatusChange(pluginArrayList.get(position).getPlugin_uid(),isChecked);
                 }
             });
 
             plugin_update_btn.setOnClickListener(v -> {
                 if(listener != null) {
-                    listener.onUpdatePlugin(pluginArrayList.get(getAdapterPosition()));
+                    int position = getBindingAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) listener.onUpdatePlugin(pluginArrayList.get(position));
                 }
             });
 
             plugin_uninstall_btn.setOnClickListener(v -> {
                 if(listener != null) {
-                    listener.onUninstallPlugin(pluginArrayList.get(getAdapterPosition()));
+                    int position = getBindingAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION) listener.onUninstallPlugin(pluginArrayList.get(position));
                 }
             });
 
-            plugin_external_link.setOnClickListener(v -> listener.onPluginExternalLinkClick(pluginArrayList.get(getAdapterPosition()).getPlugin_uid()));
+            plugin_external_link.setOnClickListener(v -> {
+                int position = getBindingAdapterPosition();
+                if (listener != null && position != RecyclerView.NO_POSITION) {
+                    listener.onPluginExternalLinkClick(pluginArrayList.get(position).getPlugin_uid());
+                }
+            });
 
             plugin_description.setOnClickListener(v -> {
-                Plugin plugin = pluginArrayList.get(getAdapterPosition());
+                int position = getBindingAdapterPosition();
+                if (position == RecyclerView.NO_POSITION) return;
+                Plugin plugin = pluginArrayList.get(position);
                 if(plugin.getPlugin_description().length() > 300) {
                     if(plugin_description.getEllipsize() == TextUtils.TruncateAt.END) {
                         plugin_description.setEllipsize(null);
@@ -102,7 +111,7 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
     @NonNull
     @Override
     public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = inflater.inflate(R.layout.plugin_list_item, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.plugin_list_item, parent, false);
         return new InstalledPluginsAdapter.ItemViewHolder(v);
     }
 
@@ -113,13 +122,10 @@ public class InstalledPluginsAdapter extends RecyclerView.Adapter<InstalledPlugi
         holder.plugin_author.setText(plugin.getPlugin_author());
         holder.plugin_version.setText(plugin.getPlugin_version());
         holder.plugin_description.setText(plugin.getPlugin_description());
-        holder.plugin_description.setText(plugin.getPlugin_description());
         holder.plugin_enabled.setChecked(plugin.isPlugin_enabled());
 
-        if(plugin.getPlugin_description().length() > 300) {
-            holder.plugin_description.setEllipsize(TextUtils.TruncateAt.END);
-            holder.plugin_description.setMaxLines(3);
-        }
+        holder.plugin_description.setEllipsize(TextUtils.TruncateAt.END);
+        holder.plugin_description.setMaxLines(3);
 
         if(apps_config.containsKey(plugin.getPlugin_package_name()) && apps_config.get(plugin.getPlugin_package_name()) != plugin.getPlugin_version_code()) {
             holder.plugin_update_btn.setVisibility(View.VISIBLE);

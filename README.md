@@ -87,6 +87,19 @@ git clone https://github.com/akanshSirohi/ShareX.git
 
 The web portal source lives in `web/`. See [the portal build guide](web/README.md) for development, static export, and copying the build into Android assets.
 
+## Plugin development and local installation
+
+You can develop plugins on your computer without copying source files onto the phone:
+
+1. Run ShareX and start sharing on the same Wi-Fi or hotspot as your computer.
+2. Open Settings, enable **Plugin development**, and wait for sharing to restart.
+3. Tap the connection button beside the development switch and select **Copy connection**.
+4. Run the [Next.js starter](https://github.com/akanshSirohi/ShareX-Plugins/tree/master/sharex.starter.plugin) with `npm run dev`. Paste the connection into the starter page.
+
+The app provides WebSocket messaging, connected browser information, and persistent plugin storage. The socket uses the sharing port plus one, supports HTTPS through `wss://`, and keeps development data separate from installed plugins. Development keys authorize plugin sockets only. Disable development or reset the key to revoke connected clients. The optional folder button remains available for legacy on-phone debugging.
+
+To install a packaged plugin, open **Plugins > Install from ZIP**, choose the ZIP, and confirm the trust warning only if you trust the plugin. The ZIP must contain `config.json` and `index.html` at its root. Local imports validate archive paths and sizes before staging the installation, and may replace an existing plugin with the same package and version. Plugin database files are preserved.
+
 ## Quick Open ShareX Url In PC
 1) Open Notepad
 2) Paste the below code in it

@@ -12,10 +12,12 @@ final class WSDSocket {
     public String uuid;
     private final ChannelHandlerContext context;
     private final JsonDBHandler jsonDBHandler;
+    private final String developmentPackage;
     private WsdSocketListener wsdSocketListener;
 
-    WSDSocket(ChannelHandlerContext context, String appPackageName) {
+    WSDSocket(ChannelHandlerContext context, String appPackageName, String developmentPackage) {
         this.context = context;
+        this.developmentPackage = developmentPackage;
         jsonDBHandler = new JsonDBHandler(appPackageName);
         jsonDBHandler.setJsonDBHandlerListener((action, data) -> {
             JSONObject result = new JSONObject();
@@ -29,15 +31,17 @@ final class WSDSocket {
 
     void setWsdSocketListener(WsdSocketListener listener) { wsdSocketListener = listener; }
     void send(String message) { if (context.channel().isActive()) context.writeAndFlush(new TextWebSocketFrame(message)); }
+    void close() { context.close(); }
 
     void onClose() {
-        if (wsdSocketListener != null) wsdSocketListener.onRemoveUser(uuid);
+        if (wsdSocketListener != null) wsdSocketListener.onRemoveUser(uuid, this);
     }
 
     void onMessage(String text) {
         try {
             JSONObject jsonObject = new JSONObject(text);
             String action = jsonObject.getString("action");
+            if (package_name == null && !SocketActions.INIT_USER.equals(action)) { context.close(); return; }
             switch (action) {
                 case SocketActions.INIT_USER:
                     handleSocketUser(jsonObject, true);
@@ -85,8 +89,16 @@ final class WSDSocket {
     private void handleSocketUser(JSONObject object, boolean add) throws Exception {
         JSONObject data = object.getJSONObject("data");
         if (add) {
-            package_name = object.getString("package_name");
+            String requestedPackage = object.getString("package_name");
+            if (package_name != null || !requestedPackage.matches("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*")
+                    || (developmentPackage != null && !developmentPackage.equals(requestedPackage))
+                    || (developmentPackage == null && requestedPackage.startsWith("dev."))) {
+                context.close();
+                return;
+            }
+            package_name = requestedPackage;
             uuid = data.getString("uuid");
+            if (!uuid.matches("[a-fA-F0-9]{8}(?:-[a-fA-F0-9]{4}){3}-[a-fA-F0-9]{12}")) { context.close(); return; }
             jsonDBHandler.setPlugin_package(package_name);
             if (wsdSocketListener != null) wsdSocketListener.onNewUser(new SocketUser(uuid, data.getJSONObject("public_data").toString(), package_name), this);
         } else if (wsdSocketListener != null) {
@@ -98,7 +110,7 @@ final class WSDSocket {
         void onNewUser(SocketUser socketUser, WSDSocket socket);
         void onUpdateUserData(String public_data, WSDSocket socket);
         void onAllUsersRequest(WSDSocket socket);
-        void onRemoveUser(String uuid);
+        void onRemoveUser(String uuid, WSDSocket socket);
         void onSendMessageToOther(String receiver_uuid, String message, String sender_package_name);
         void onGetPublicDataOfUser(String uuid, WSDSocket socket);
     }

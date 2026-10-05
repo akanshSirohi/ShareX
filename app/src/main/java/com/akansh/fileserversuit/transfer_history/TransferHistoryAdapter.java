@@ -110,7 +110,7 @@ public class TransferHistoryAdapter extends RecyclerView.Adapter<TransferHistory
         holder.textView_type.setText(label + " · " + historyItem.getSize());
         holder.textView_dt_stamp.setText(historyItem.getDate() + "\n" + historyItem.getTime());
         holder.imageButton_share.setContentDescription("Share " + historyItem.getFile_name());
-        holder.imageButton_del.setContentDescription("Delete " + historyItem.getFile_name());
+        holder.imageButton_del.setContentDescription("Remove transfer record or delete " + historyItem.getFile_name());
     }
 
     @NonNull

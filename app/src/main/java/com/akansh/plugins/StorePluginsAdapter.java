@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import com.google.android.material.button.MaterialButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,19 +23,18 @@ public class StorePluginsAdapter extends RecyclerView.Adapter<StorePluginsAdapte
 
     Context ctx;
     ArrayList<Plugin> pluginArrayList;
-    LayoutInflater inflater;
     StorePluginsActionListener storePluginsActionListener;
 
     public StorePluginsAdapter(Context ctx, ArrayList<Plugin> pluginArrayList) {
         this.ctx = ctx;
-        inflater = LayoutInflater.from(ctx);
         this.pluginArrayList = pluginArrayList;
     }
 
     @NonNull
     @Override
     public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = inflater.inflate(R.layout.store_list_item, parent, false);
+        // The RecyclerView carries the Activity's Material theme, unlike an application context.
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.store_list_item, parent, false);
         return new StorePluginsAdapter.ItemViewHolder(v);
     }
 
@@ -46,19 +45,22 @@ public class StorePluginsAdapter extends RecyclerView.Adapter<StorePluginsAdapte
         holder.plugin_author.setText(plugin.getPlugin_author());
         holder.plugin_version.setText(plugin.getPlugin_version());
         holder.plugin_description.setText(plugin.getPlugin_description());
-        holder.plugin_description.setText(plugin.getPlugin_description());
 
-        if(plugin.getPlugin_description().length() > 300) {
-            holder.plugin_description.setEllipsize(TextUtils.TruncateAt.END);
-            holder.plugin_description.setMaxLines(3);
-        }
+        holder.plugin_description.setEllipsize(TextUtils.TruncateAt.END);
+        holder.plugin_description.setMaxLines(3);
 
         if(plugin.isPlugin_installed()) {
             holder.plugin_install_btn.setText("Installed");
-            holder.plugin_install_btn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_installed, 0,0,0);
+            holder.plugin_install_btn.setIconResource(R.drawable.ic_installed);
+            holder.plugin_install_btn.setEnabled(false);
+            holder.plugin_install_btn.setAlpha(0.72f);
+            holder.plugin_install_btn.setContentDescription(plugin.getPlugin_name() + " is installed");
         }else{
             holder.plugin_install_btn.setText("Install");
-            holder.plugin_install_btn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_install, 0,0,0);
+            holder.plugin_install_btn.setIconResource(R.drawable.ic_install);
+            holder.plugin_install_btn.setEnabled(true);
+            holder.plugin_install_btn.setAlpha(1f);
+            holder.plugin_install_btn.setContentDescription("Install " + plugin.getPlugin_name());
         }
     }
 
@@ -75,7 +77,7 @@ public class StorePluginsAdapter extends RecyclerView.Adapter<StorePluginsAdapte
     public class ItemViewHolder extends RecyclerView.ViewHolder {
 
         public TextView plugin_title, plugin_version, plugin_author, plugin_description;
-        public Button plugin_install_btn;
+        public MaterialButton plugin_install_btn;
 
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -91,7 +93,9 @@ public class StorePluginsAdapter extends RecyclerView.Adapter<StorePluginsAdapte
 
             plugin_install_btn.setOnClickListener(v -> {
                 if(storePluginsActionListener != null) {
-                    Plugin p = pluginArrayList.get(getAdapterPosition());
+                    int position = getBindingAdapterPosition();
+                    if (position == RecyclerView.NO_POSITION) return;
+                    Plugin p = pluginArrayList.get(position);
                     if(!p.isPlugin_installed()) {
                         storePluginsActionListener.onPluginInstall(p.getPlugin_package_name());
                     }else{
@@ -101,7 +105,9 @@ public class StorePluginsAdapter extends RecyclerView.Adapter<StorePluginsAdapte
             });
 
             plugin_description.setOnClickListener(v -> {
-                Plugin plugin = pluginArrayList.get(getAdapterPosition());
+                int position = getBindingAdapterPosition();
+                if (position == RecyclerView.NO_POSITION) return;
+                Plugin plugin = pluginArrayList.get(position);
                 if(plugin.getPlugin_description().length() > 300) {
                     if(plugin_description.getEllipsize() == TextUtils.TruncateAt.END) {
                         plugin_description.setEllipsize(null);

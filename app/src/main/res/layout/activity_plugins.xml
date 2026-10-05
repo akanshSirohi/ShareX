@@ -1,70 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/plugins_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/plugins_root"
-    tools:context="com.akansh.plugins.ui.PluginsActivity">
+    android:background="@color/bg_color"
+    android:orientation="vertical">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout3"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/bg_color_sec"
-        android:paddingBottom="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/textView15"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="20dp"
-            android:fontFamily="@font/google_sans"
-            android:text="Plugins"
-            android:textColor="@color/txt_color"
-            android:textSize="24sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageButton
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp">
+        <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/plugins_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="12dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/back_to_sharing"
-            android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="@id/textView15"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/textView15"
-            app:srcCompat="@drawable/ic_arrow_left"
+            android:padding="12dp"
+            app:srcCompat="@drawable/ic_plugins_back"
             app:tint="@color/txt_color" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="@string/plugins_title"
+            android:textAppearance="@style/TextAppearance.ShareX.Expressive" />
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/plugins_refresh"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/plugin_store_refresh"
+            android:padding="12dp"
+            app:srcCompat="@drawable/ic_plugins_refresh"
+            app:tint="@color/txt_color_secondary" />
+    </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="12dp"
+        android:text="@string/plugins_summary"
+        android:textAppearance="@style/TextAppearance.ShareX.Body"
+        android:textColor="@color/txt_color_secondary" />
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPager"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tabLayout" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="12dp"
+        android:orientation="horizontal">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/plugins_install_zip"
+            style="@style/Widget.ShareX.Button.Secondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="8dp"
+            android:text="@string/plugin_zip_install"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_install"
+            app:iconSize="18dp"
+            app:iconTint="@color/colorPrimary" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/plugins_development"
+            style="@style/Widget.ShareX.Button.Secondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="8dp"
+            android:text="@string/plugin_development_settings"
+            android:textSize="13sp" />
+    </LinearLayout>
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/bg_color_header"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/constraintLayout3"
-        app:tabTextColor="@color/txt_color" />
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="48dp"
+        android:background="@color/bg_color"
+        app:tabIndicatorColor="@color/colorPrimary"
+        app:tabIndicatorFullWidth="false"
+        app:tabSelectedTextColor="@color/colorPrimary"
+        app:tabTextColor="@color/txt_color_secondary" />
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/plugins_catalog_progress"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:indeterminate="true"
+        android:visibility="invisible"
+        app:indicatorColor="@color/colorPrimary"
+        app:trackColor="@color/outline_soft" />
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

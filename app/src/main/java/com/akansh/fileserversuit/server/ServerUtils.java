@@ -172,6 +172,24 @@ public class ServerUtils {
         return pluginsDBHelper.getStatus(uid);
     }
 
+    public Plugin getEnabledPlugin(String uid) {
+        try (PluginsDBHelper database = new PluginsDBHelper(ctx)) {
+            for (Plugin plugin : database.getInstalledPlugins()) {
+                if (uid.equals(plugin.getPlugin_uid()) && plugin.isPlugin_enabled()) return plugin;
+            }
+        }
+        return null;
+    }
+
+    public Plugin getEnabledPluginByPackage(String packageName) {
+        try (PluginsDBHelper database = new PluginsDBHelper(ctx)) {
+            for (Plugin plugin : database.getInstalledPlugins()) {
+                if (packageName.equals(plugin.getPlugin_package_name()) && plugin.isPlugin_enabled()) return plugin;
+            }
+        }
+        return null;
+    }
+
     public String fileSize(File file) {
         String output=null;
         if(file.exists() && file.isFile()) {

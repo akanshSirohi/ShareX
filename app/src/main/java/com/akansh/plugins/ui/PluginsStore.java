@@ -3,6 +3,7 @@ package com.akansh.plugins.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +40,15 @@ public class PluginsStore extends Fragment {
     PluginsStoreActionListener pluginsStoreActionListener;
     RecyclerView storePluginsList;
 
+    public PluginsStore() {
+        // Required by FragmentManager when restoring this screen.
+    }
+
     public PluginsStore(Context ctx, Activity activity, PluginsManager pluginsManager) {
+        configure(ctx, activity, pluginsManager);
+    }
+
+    void configure(Context ctx, Activity activity, PluginsManager pluginsManager) {
         this.ctx = ctx;
         this.activity = activity;
         this.pluginsManager = pluginsManager;
@@ -57,8 +66,10 @@ public class PluginsStore extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        ensureDependencies();
         View view = inflater.inflate(R.layout.plugins_store_layout, container, false);
         storePluginsList = view.findViewById(R.id.storePluginsList);
+        View emptyState = view.findViewById(R.id.store_empty_state);
         storePluginsList.setLayoutManager(new LinearLayoutManager(ctx));
         File filePath = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
         if (filePath.exists()) {
@@ -72,19 +83,26 @@ public class PluginsStore extends Fragment {
             }
         });
         storePluginsList.setAdapter(storePluginsAdapter);
+        emptyState.setVisibility(storePluginsListItems.isEmpty() ? View.VISIBLE : View.GONE);
         return view;
+    }
+
+    private void ensureDependencies() {
+        if (getActivity() != null && ctx == null) {
+            activity = getActivity();
+            ctx = activity.getApplicationContext();
+            ((PluginsActivity) activity).configurePluginsStore(this);
+        }
     }
 
     public ArrayList<Plugin> getPluginsListFromJson(File filePath) {
         if(filePath.exists()) {
             StringBuilder stringBuilder = new StringBuilder();
-            PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx);
-            ArrayList<String> installed_packages = pluginsDBHelper.getInstalledPluginsPackages();
             ArrayList<Plugin> storeListingPlugins = new ArrayList<>();
             String line;
-            BufferedReader in;
-            try {
-                in = new BufferedReader(new FileReader(filePath));
+            try (PluginsDBHelper pluginsDBHelper = new PluginsDBHelper(ctx);
+                 BufferedReader in = new BufferedReader(new FileReader(filePath))) {
+                ArrayList<String> installed_packages = pluginsDBHelper.getInstalledPluginsPackages();
                 while ((line = in.readLine()) != null) stringBuilder.append(line);
                 String apps_json = stringBuilder.toString();
                 JSONArray jsonArray = new JSONArray(apps_json);
@@ -102,22 +120,29 @@ public class PluginsStore extends Fragment {
                 }
                 return storeListingPlugins;
             } catch (Exception e) {
-                return null;
+                Log.e(Constants.LOG_TAG, "Unable to read plugin catalog", e);
             }
-        }else{
-            return null;
         }
+        return new ArrayList<>();
     }
 
     public void updatePluginStore() {
+        ensureDependencies();
+        if (pluginsManager == null) return;
         File filePath = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
         storePluginsListItems = getPluginsListFromJson(filePath);
-        try {
-            if (storePluginsAdapter == null) {
-                storePluginsAdapter = (StorePluginsAdapter) storePluginsList.getAdapter();
-            }
+        if (getView() != null && storePluginsAdapter != null) {
             storePluginsAdapter.updateStorePluginsList(storePluginsListItems);
-        }catch (Exception e) {}
+            getView().findViewById(R.id.store_empty_state)
+                    .setVisibility(storePluginsListItems.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        storePluginsList = null;
+        storePluginsAdapter = null;
+        super.onDestroyView();
     }
 
     public interface PluginsStoreActionListener {

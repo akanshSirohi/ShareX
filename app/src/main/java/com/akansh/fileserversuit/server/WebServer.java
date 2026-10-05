@@ -65,6 +65,7 @@ public final class WebServer {
     }
 
     boolean isAuthorized(io.netty.handler.codec.http.HttpRequest request) { return requestHandler.isSocketAuthorized(request); }
+    boolean isPluginSocketAuthorized(io.netty.handler.codec.http.HttpRequest request, String packageName) { return requestHandler.isPluginSocketAuthorized(request, packageName); }
     SslContext getSslContext() { return sslContext; }
 
     public void setAllowHiddenMedia(boolean allowHiddenMedia) {

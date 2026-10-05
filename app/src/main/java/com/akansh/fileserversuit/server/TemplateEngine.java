@@ -106,7 +106,7 @@ public class TemplateEngine {
         if (type == RENDER_TYPE.NORMAL) {
             return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + path;
         } else {
-            if (plugin_uid == "debug") {
+            if ("debug".equals(plugin_uid)) {
                 return plugin_dev_dir + "/" + path;
             } else {
                 return "/data/data/" + ctx.getPackageName() + "/" + base + "/" + plugin_uid + "/" + path;

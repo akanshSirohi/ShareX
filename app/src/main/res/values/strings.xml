@@ -9,12 +9,10 @@
     <string name="open_drawer">Open Drawer</string>
     <string name="close_drawer">Close Drawer</string>
     <string name="credits">Developed By: Akansh Sirohi\n\nMade with ❤️ in INDIA</string>
-    <string name="logger_init_txt">$ Welcome To ShareX\n</string>
     <string name="pvt_lbl">Private Mode Enabled</string>
     <string name="cd_start_stop_btn">Start Sharing</string>
     <string name="cd_bg">Background</string>
     <string name="cd_show_qr_btn">Show QR</string>
-    <string name="cd_toggle_logger">Toggle Log</string>
     <string name="cd_open_navbar">Open Navigation Bar</string>
     <string name="app_start_txt">Start Sharing</string>
     <string name="app_stop_txt">Stop Sharing</string>
@@ -39,8 +37,8 @@
     <string name="recent_activity_detail">%1$s · %2$s · %3$s</string>
     <string name="cd_copy_address">Copy sharing address</string>
     <string name="cd_share_address">Share connection address</string>
-    <string name="advanced_mode">Advanced Mode</string>
-    <string name="advanced_mode_summary">Show Plugins and plugin development options, plus live transfer activity and logs on Home. All other settings stay available in either mode.</string>
+    <string name="transfer_graph">Transfer graph</string>
+    <string name="transfer_graph_summary">Show live upload and download speeds while sharing.</string>
     <string name="settings_sharing">Sharing</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_network">Connection</string>
@@ -58,6 +56,7 @@
     <string name="no_history_title">No transfer history yet</string>
     <string name="sharing_address_stopped">Start sharing to get a connection address</string>
     <string name="qr_stopped">Start sharing to create a QR code</string>
+    <string name="qr_requires_sharing">Start sharing before opening the connection QR code.</string>
     <string name="scan_connection_title">Scan a ShareX code</string>
     <string name="scan_connection_hint">Scan a nearby device to open its sharing page.</string>
     <string name="skip">Skip</string>
@@ -109,4 +108,32 @@
     </plurals>
     <string name="remembered_devices_last_connected">Last connected · %1$s</string>
     <string name="remembered_devices_date_unknown">Connection date unavailable</string>
+    <string name="plugin_development_summary">Run your plugin on your computer with live ShareX messaging and storage.</string>
+    <string name="plugin_development_enabled">Development enabled. Start sharing, then tap Share to copy the connection.</string>
+    <string name="plugin_development_enable_first">Enable plugin development first.</string>
+    <string name="plugin_development_connection">Plugin development connection</string>
+    <string name="plugin_development_instructions">In Settings under Plugins, enable Plugin development. Tap the Share icon beside it, then choose Copy connection. Run npm run dev in your plugin project and paste the copied connection into its development page:\n\n%1$s\n\nKeep both devices on the same network. This key grants plugin development access only. Disable development or reset the key to disconnect clients.</string>
+    <string name="plugin_development_copy">Copy connection</string>
+    <string name="plugin_development_copied">Development connection copied</string>
+    <string name="plugin_development_rotate">Reset key</string>
+    <string name="plugin_development_rotated">Key reset. Copy the new connection after sharing restarts.</string>
+    <string name="plugin_permission_title">Plugin permission request</string>
+    <string name="plugin_permission_request">%1$s (%2$s) asks permission to use ShareX plugin messaging and its own storage. This permission does not grant access to shared files or the file manager. Opening the ShareX home page requires separate browser approval.</string>
+    <string name="plugin_permission_allow_once">Allow once</string>
+    <string name="plugin_permission_allow_always">Always allow</string>
+    <string name="plugin_zip_install">Install from ZIP</string>
+    <string name="plugin_zip_warning_title">Do you trust this plugin?</string>
+    <string name="plugin_zip_warning">Only install plugins from sources you trust. Plugins run code in your browser and can use ShareX plugin messaging and storage. An existing plugin with the same package name will be replaced. Install only if you trust its author and contents.</string>
+    <string name="plugin_zip_trust_install">I trust it — install</string>
+    <string name="plugin_zip_installing">Installing plugin from ZIP…</string>
+    <string name="plugin_development_settings">Development</string>
+    <string name="plugins_title">Plugins</string>
+    <string name="plugins_summary">Add new tools to your ShareX web app.</string>
+    <string name="plugins_empty_title">Your plugins live here</string>
+    <string name="plugins_empty_summary">Find a plugin in the Store, or install a ZIP from your device.</string>
+    <string name="plugins_browse_store">Browse Store</string>
+    <string name="plugin_store_refresh">Refresh Store</string>
+    <string name="plugin_store_empty">No plugins available</string>
+    <string name="plugin_store_empty_summary">Refresh the Store to load plugins from GitHub.</string>
+    <string name="plugin_store_refresh_failed">Could not refresh Store. Check your connection and try again.</string>
 </resources>

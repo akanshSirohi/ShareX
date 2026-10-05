@@ -42,7 +42,6 @@
             android:exported="false" />
         <activity android:name=".ui.IntroActivity" />
         <activity android:name=".ui.PermissionsActivity" android:exported="false" />
-        <activity android:name=".transfer_history.TransferHistoryActivity" />
         <activity
             android:name=".ui.Splash"
             android:exported="true">

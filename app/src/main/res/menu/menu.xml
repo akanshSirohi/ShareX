@@ -3,7 +3,6 @@
  <item ns0:title="TOOLS"><menu><group>
  <item ns0:id="@+id/scan_qr" ns0:icon="@drawable/ic_qr_scan" ns0:title="QR scanner" />
  <item ns0:id="@+id/plugins" ns0:icon="@drawable/ic_plugin" ns0:title="Plugins" />
- <item ns0:id="@+id/clear_log" ns0:icon="@drawable/ic_clear_log" ns0:title="Clear session feed" ns0:visible="false" />
  </group></menu></item>
  <item ns0:title="SHAREX"><menu>
  <item ns0:id="@+id/privacy_policy" ns0:icon="@drawable/ic_privacy_policy" ns0:title="Privacy policy" />

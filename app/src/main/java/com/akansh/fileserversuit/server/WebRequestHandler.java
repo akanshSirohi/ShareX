@@ -71,6 +71,7 @@ final class WebRequestHandler {
     private final ServerUtils serverUtils;
     private final FileOperations fileOperations;
     private final WebPasswordSettings passwordSettings;
+    private final PluginAccessManager pluginAccess;
     private final LoginLimiter loginLimiter = new LoginLimiter();
     private volatile String root = Environment.getExternalStorageDirectory().getAbsolutePath();
     private volatile String pluginDevDir;
@@ -89,6 +90,7 @@ final class WebRequestHandler {
         this.serverUtils = serverUtils;
         this.fileOperations = new FileOperations(utils);
         this.passwordSettings = new WebPasswordSettings(context);
+        this.pluginAccess = new PluginAccessManager(context);
     }
 
     void setRoot(String root) { this.root = root; }
@@ -141,8 +143,8 @@ final class WebRequestHandler {
                             return;
                         }
                         passwordBody = new java.io.ByteArrayOutputStream();
-                    } else if (protectedPath(path) && !isAuthRequest(request) && !isAuthorized(request)) {
-                        reply(ctx, WebResponse.text(401, "Authentication required").header("Cache-Control", "no-store"));
+                    } else if (protectedPath(path) && !isAuthRequest(request) && !isRequestAuthorized(request)) {
+                        reply(ctx, unauthorizedResponse(request, ctx.pipeline().get("ssl") != null));
                         return;
                     }
                     if (passwordBody != null && message instanceof io.netty.handler.codec.http.HttpContent) {
@@ -289,8 +291,8 @@ final class WebRequestHandler {
     }
 
     private void routeAndReply(ChannelHandlerContext ctx, HttpRequest request) throws Exception {
-        if (protectedPath(pathOf(request)) && !isAuthRequest(request) && !isAuthorized(request)) {
-            reply(ctx, WebResponse.text(401, "Authentication required").header("Cache-Control", "no-store"));
+        if (protectedPath(pathOf(request)) && !isAuthRequest(request) && !isRequestAuthorized(request)) {
+            reply(ctx, unauthorizedResponse(request, ctx.pipeline().get("ssl") != null));
             return;
         }
         if (ctx.pipeline().get("readTimeout") != null) ctx.pipeline().remove("readTimeout");
@@ -299,6 +301,10 @@ final class WebRequestHandler {
             return;
         }
         QueryStringDecoder query = new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8);
+        if (isPluginPermissionRequest(request)) {
+            reply(ctx, pluginPermissionState(request, query.parameters(), ctx.pipeline().get("ssl") != null));
+            return;
+        }
         if (isAuthRequest(request)) {
             reply(ctx, authorizeBrowser(request, ctx.pipeline().get("ssl") != null));
             return;
@@ -432,9 +438,83 @@ final class WebRequestHandler {
     private static boolean protectedPath(String path) {
         return path.equals("/ShareX") || path.startsWith("/ShareX/") || path.startsWith("/SharexApp/");
     }
+    private boolean isRequestAuthorized(HttpRequest request) {
+        String path = pathOf(request);
+        if (path.startsWith("/SharexApp/")) {
+            com.akansh.plugins.common.Plugin plugin = pluginForPath(path);
+            return plugin != null && pluginAccess.isGranted(browserId(request), plugin.getPlugin_package_name());
+        }
+        return isAuthorized(request);
+    }
+    private boolean isPluginPermissionRequest(HttpRequest request) {
+        QueryStringDecoder query = new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8);
+        return HttpMethod.GET.equals(request.method()) && query.path().equals("/ShareX")
+                && "pluginPermission".equals(param(query.parameters(), "action"));
+    }
+    private com.akansh.plugins.common.Plugin pluginForPath(String path) {
+        String uid = Utils.extractPluginUID(path);
+        return uid == null ? null : serverUtils.getEnabledPlugin(uid);
+    }
+    private WebResponse unauthorizedResponse(HttpRequest request, boolean ssl) {
+        String path = pathOf(request);
+        if (path.startsWith("/SharexApp/")) {
+            com.akansh.plugins.common.Plugin plugin = pluginForPath(path);
+            if (plugin != null) return pluginPermissionPage(request, plugin, ssl);
+            return WebResponse.text(403, "Plugin unavailable").header("Cache-Control", "no-store");
+        }
+        return WebResponse.text(401, "Authentication required").header("Cache-Control", "no-store");
+    }
+    private WebResponse pluginPermissionPage(HttpRequest request, com.akansh.plugins.common.Plugin plugin, boolean ssl) {
+        String token = cookie(request, "sx_browser");
+        boolean newIdentity = WebSecurity.browserId(token).isEmpty();
+        if (newIdentity) token = WebSecurity.randomToken();
+        String name = plugin.getPlugin_name().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+        String html = "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Plugin permission</title>"
+                + "<style>body{font:16px system-ui;margin:0;background:#f4f6fa;color:#18202c;min-height:100vh;display:grid;place-items:center}.card{max-width:34rem;margin:1rem;padding:2rem;background:white;border-radius:1.25rem;box-shadow:0 12px 40px #16243a18}h1{font-size:1.5rem}p{line-height:1.55;color:#455166}.state{font-weight:600;color:#2459aa}</style>"
+                + "<main class=\"card\"><p>SHAREX PLUGINS</p><h1>Permission needed</h1><p><strong>" + name
+                + "</strong> is asking to connect to ShareX for its own plugin messaging and storage.</p><p>This does not grant access to your shared files. Opening ShareX file manager requires separate approval.</p>"
+                + "<p class=\"state\" id=\"state\">Waiting for ShareX permission…</p><p>Check your phone and allow or deny this plugin.</p></main>"
+                + "<script>const state=document.getElementById('state');async function check(){try{const r=await fetch('/ShareX?action=pluginPermission&package="
+                + plugin.getPlugin_package_name() + "',{cache:'no-store',credentials:'same-origin'});const j=await r.json();if(j.state==='granted'){state.textContent='Permission granted. Opening plugin…';location.replace(location.pathname+location.search+location.hash);return}if(j.state==='denied'){state.textContent='Permission denied. Close this page or ask ShareX to allow the plugin.';return}}catch(e){state.textContent='Cannot reach ShareX. Check that sharing is running.'}setTimeout(check,1500)}check();</script></html>";
+        WebResponse response = WebResponse.text(200, html).header("Content-Type", "text/html; charset=utf-8").header("Cache-Control", "no-store");
+        if (newIdentity) response.header("Set-Cookie", setCookie("sx_browser", token, 365L*24*60*60, ssl));
+        return response;
+    }
+    private WebResponse pluginPermissionState(HttpRequest request, Map<String, List<String>> params, boolean ssl) {
+        if (!sameOrigin(request)) return pluginStateJson(403, "denied");
+        List<String> requestedPackages = params.get("package");
+        String packageName = requestedPackages == null || requestedPackages.size() != 1 ? null : requestedPackages.get(0);
+        if (packageName == null || !packageName.matches("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*")) return pluginStateJson(400, "denied");
+        com.akansh.plugins.common.Plugin plugin = serverUtils.getEnabledPluginByPackage(packageName);
+        String device = browserId(request);
+        if (plugin == null || device.isEmpty()) return pluginStateJson(403, "denied");
+        String state = pluginAccess.state(device, packageName);
+        if (state == null && pluginAccess.markPending(device, packageName)) {
+            Intent approval = new Intent(Constants.BROADCAST_SERVICE_TO_ACTIVITY);
+            approval.setPackage(context.getPackageName());
+            approval.putExtra("action", Constants.ACTION_PLUGIN_AUTH);
+            approval.putExtra("device_id", device);
+            approval.putExtra("plugin_package", packageName);
+            approval.putExtra("plugin_name", plugin.getPlugin_name());
+            context.sendBroadcast(approval);
+            state = "pending";
+        } else if (state == null) state = "pending";
+        WebResponse response = pluginStateJson(200, state);
+        if (cookie(request, "sx_browser").isEmpty()) {
+            String token = WebSecurity.randomToken();
+            response.header("Set-Cookie", setCookie("sx_browser", token, 365L*24*60*60, ssl));
+        }
+        return response;
+    }
+    private static WebResponse pluginStateJson(int status, String state) {
+        return WebResponse.text(status, "{\"state\":\"" + state + "\"}")
+                .header("Content-Type", "application/json; charset=utf-8")
+                .header("Cache-Control", "no-store");
+    }
     private static boolean isAuthRequest(HttpRequest request) {
         QueryStringDecoder query = new QueryStringDecoder(request.uri(), StandardCharsets.UTF_8);
-        return query.path().equals("/ShareX") && "auth".equals(param(query.parameters(), "action"))
+        return query.path().equals("/ShareX") && ("auth".equals(param(query.parameters(), "action"))
+                || "pluginPermission".equals(param(query.parameters(), "action")))
                 && (HttpMethod.GET.equals(request.method()) || HttpMethod.HEAD.equals(request.method()));
     }
     static boolean sameOrigin(HttpRequest request) {
@@ -467,10 +547,19 @@ final class WebRequestHandler {
         return sameOrigin(request) && approved(request, false) && passwordAuthenticated(request);
     }
     boolean isSocketAuthorized(HttpRequest request) {
+        if (new QueryStringDecoder(request.uri()).path().equals(PluginDevelopment.SOCKET_PATH)) {
+            return new PluginDevelopment(context).socketPackage(request) != null;
+        }
         String origin = request.headers().get("Origin");
         // Browser WebSockets use the HTTP portal's origin, not the socket port.
         if (origin != null && !origin.equals(utils.loadString(Constants.SERVER_URL))) return false;
-        return approved(request, false) && passwordAuthenticated(request);
+        return (approved(request, false) && passwordAuthenticated(request)) || pluginAccess.hasAnyGrant(browserId(request));
+    }
+    boolean isPluginSocketAuthorized(HttpRequest request, String packageName) {
+        if (packageName == null || !packageName.matches("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*")) return false;
+        com.akansh.plugins.common.Plugin plugin = serverUtils.getEnabledPluginByPackage(packageName);
+        if (plugin != null) return "granted".equals(pluginAccess.state(browserId(request), packageName));
+        return isAuthorized(request);
     }
     private boolean passwordAuthenticated(HttpRequest request) {
         if (!passwordSettings.enabled()) return true;
@@ -564,8 +653,9 @@ final class WebRequestHandler {
     }
 
     private WebResponse pluginFile(String uri) throws Exception {
-        boolean pluginDebug = utils.loadSetting(Constants.PLUGIN_DEV) && (uri.contains("/debug") || uri.contains("/debug/"));
-        if (!utils.loadSetting(Constants.PLUGIN_DEV) && (uri.endsWith("/debug") || uri.endsWith("/debug/"))) return WebResponse.text(400, "400 Bad Request! Please enable plugin development mode in settings first!");
+        boolean debugRoute = uri.equals("/SharexApp/debug") || uri.startsWith("/SharexApp/debug/");
+        boolean pluginDebug = utils.loadSetting(Constants.PLUGIN_DEV) && debugRoute;
+        if (!utils.loadSetting(Constants.PLUGIN_DEV) && debugRoute) return WebResponse.text(400, "400 Bad Request! Please enable plugin development mode in settings first!");
         String pluginUid = pluginDebug ? "debug" : Utils.extractPluginUID(uri);
         if (pluginUid == null || (!pluginDebug && !serverUtils.getPluginStatus(pluginUid))) return WebResponse.text(403, "403 Access Denied!");
         Matcher matcher = Pattern.compile("\\.([^.]+)$").matcher(uri);

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/permissions_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/bg_color" android:padding="20dp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/permissions_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/bg_color">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="20dp">
     <TextView android:id="@+id/permissions_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permissions_setup_title" android:textSize="26sp" android:textStyle="bold" android:textColor="@color/txt_color" />
     <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="12dp">
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingBottom="16dp">
@@ -39,5 +40,6 @@
         </LinearLayout>
     </ScrollView>
     <com.google.android.material.button.MaterialButton android:id="@+id/permissions_finish" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/permissions_continue" />
-    <com.google.android.material.button.MaterialButton android:id="@+id/permissions_later" style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/permissions_later" />
+    <com.google.android.material.button.MaterialButton android:id="@+id/permissions_later" style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:minHeight="48dp" android:text="@string/permissions_later" />
+    </LinearLayout>
 </LinearLayout>

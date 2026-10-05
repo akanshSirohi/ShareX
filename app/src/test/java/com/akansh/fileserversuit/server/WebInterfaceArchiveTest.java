@@ -13,6 +13,28 @@ import static org.junit.Assert.*;
 public class WebInterfaceArchiveTest {
     @Rule public TemporaryFolder temporary = new TemporaryFolder();
 
+    @Test public void launchSkipsCurrentVersionUnlessWebDebugIsEnabled() throws Exception {
+        File root = temporary.newFolder("launch");
+        String version = "sharex_web_v4_8";
+        assertTrue(WebInterfaceSetup.shouldInstall(root, version, false));
+        File installed = new File(root, version);
+        assertTrue(installed.mkdir());
+        Files.writeString(new File(installed, "index.html").toPath(), "installed content");
+        File marker = new File(installed, ".installed");
+        // An interrupted installation has no marker and must retry.
+        assertTrue(WebInterfaceSetup.shouldInstall(root, version, false));
+        Files.writeString(marker.toPath(), version);
+        assertFalse(WebInterfaceSetup.shouldInstall(root, version, false));
+        assertTrue(WebInterfaceSetup.shouldInstall(root, version, true));
+        assertTrue(WebInterfaceSetup.shouldInstall(root, "sharex_web_v4_9", false));
+        assertEquals("installed content", Files.readString(new File(installed, "index.html").toPath()));
+        Files.writeString(marker.toPath(), "sharex_web_v4_7");
+        assertTrue(WebInterfaceSetup.shouldInstall(root, version, false));
+        Files.writeString(marker.toPath(), version);
+        assertTrue(new File(installed, "index.html").delete());
+        assertTrue(WebInterfaceSetup.shouldInstall(root, version, false));
+    }
+
     @Test public void actualPackagedArchiveExtractsWithAllRuntimeAssetsAndCompletionMarker() throws Exception {
         File destination = new File(temporary.getRoot(), "installed");
         File archive = new File("src/main/assets", Constants.WEB_INTERFACE_DIR + ".zip");

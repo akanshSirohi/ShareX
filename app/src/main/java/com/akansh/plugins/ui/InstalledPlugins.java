@@ -14,7 +14,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,7 +41,9 @@ public class InstalledPlugins extends Fragment {
 
     Context ctx;
     Activity activity;
-    ConstraintLayout empty_plugins_list;
+    View empty_plugins_list;
+    private final Handler viewHandler = new Handler(android.os.Looper.getMainLooper());
+    private final Runnable checkUpdates = this::checkPluginsUpdates;
     InstalledPluginsAdapter installedPluginsAdapter;
     PluginsManager pluginsManager;
 
@@ -51,7 +52,15 @@ public class InstalledPlugins extends Fragment {
     PluginsDBHelper pluginsDBHelper;
     InstalledPluginsActionListener installedPluginsActionListener;
 
+    public InstalledPlugins() {
+        // Required by FragmentManager when restoring this screen.
+    }
+
     public InstalledPlugins(Context ctx, Activity activity, PluginsManager pluginsManager) {
+        configure(ctx, activity, pluginsManager);
+    }
+
+    void configure(Context ctx, Activity activity, PluginsManager pluginsManager) {
         this.ctx = ctx;
         this.activity = activity;
         this.pluginsManager = pluginsManager;
@@ -65,9 +74,12 @@ public class InstalledPlugins extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        ensureDependencies();
         View view = inflater.inflate(R.layout.plugins_installed_layout, container, false);
         RecyclerView pluginsListView = view.findViewById(R.id.installedPluginsList);
         empty_plugins_list = view.findViewById(R.id.empty_plugins_list);
+        view.findViewById(R.id.plugins_browse_store).setOnClickListener(v ->
+                ((PluginsActivity) requireActivity()).openStore());
         pluginsListView.setLayoutManager(new LinearLayoutManager(ctx));
         pluginsDBHelper = new PluginsDBHelper(ctx);
         installedPluginsList = pluginsDBHelper.getInstalledPlugins();
@@ -82,13 +94,9 @@ public class InstalledPlugins extends Fragment {
                 boolean res = pluginsManager.uninstallPlugin(plugin.getPlugin_uid());
                 if(res) {
                     installedPluginsAdapter.removeItem(plugin.getPlugin_uid());
-                    if(installedPluginsAdapter.getItemCount() == 0) {
-                        empty_plugins_list.setVisibility(View.VISIBLE);
-                        if(installedPluginsActionListener != null) {
-                            installedPluginsActionListener.onPluginUninstalled();
-                        }
-                    }
+                    checkPluginsEmpty();
                 }
+                if(installedPluginsActionListener != null) installedPluginsActionListener.onPluginUninstalled();
             }
 
             @Override
@@ -124,13 +132,23 @@ public class InstalledPlugins extends Fragment {
         if(installedPluginsList.size() == 0) {
             empty_plugins_list.setVisibility(View.VISIBLE);
         }else{
-            final Handler handler = new Handler();
-            handler.postDelayed(() -> activity.runOnUiThread(this::checkPluginsUpdates), 3000);
+            viewHandler.postDelayed(checkUpdates, 3000);
         }
         return view;
     }
 
+    private void ensureDependencies() {
+        if (getActivity() != null && ctx == null) {
+            activity = getActivity();
+            ctx = activity.getApplicationContext();
+            ((PluginsActivity) activity).configureInstalledPlugins(this);
+        }
+    }
+
     public void checkPluginsEmpty() {
+        if (installedPluginsAdapter == null || empty_plugins_list == null) {
+            return;
+        }
         if(installedPluginsAdapter.getItemCount() == 0) {
             empty_plugins_list.setVisibility(View.VISIBLE);
         }else{
@@ -139,6 +157,7 @@ public class InstalledPlugins extends Fragment {
     }
 
     public void checkPluginsUpdates() {
+        if (getView() == null || installedPluginsAdapter == null || pluginsManager == null) return;
         File filePath = new File(pluginsManager.getPlugins_dir(), Constants.APPS_CONFIG);
         if(filePath.exists()) {
             StringBuilder stringBuilder = new StringBuilder();
@@ -164,8 +183,20 @@ public class InstalledPlugins extends Fragment {
     }
 
     public void updatePluginsList() {
+        if (getView() == null || pluginsDBHelper == null || installedPluginsAdapter == null) return;
         installedPluginsList = pluginsDBHelper.getInstalledPlugins();
         installedPluginsAdapter.updateInstalledPluginsList(installedPluginsList);
+        checkPluginsEmpty();
+    }
+
+    @Override
+    public void onDestroyView() {
+        viewHandler.removeCallbacks(checkUpdates);
+        if (pluginsDBHelper != null) pluginsDBHelper.close();
+        pluginsDBHelper = null;
+        installedPluginsAdapter = null;
+        empty_plugins_list = null;
+        super.onDestroyView();
     }
 
     public boolean isPluginsEmpty() {

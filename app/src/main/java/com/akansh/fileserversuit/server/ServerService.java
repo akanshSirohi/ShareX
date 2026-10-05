@@ -52,6 +52,7 @@ public class ServerService extends Service {
             try {
                 String host = utils.getIPAddress(true);
                 int port = utils.loadInt(Constants.SERVER_PORT,Constants.SERVER_PORT_DEFAULT);
+                if (port < 1024 || port > 65534) throw new IllegalArgumentException("Sharing port must be between 1024 and 65534; plugins use the next port");
                 webServer = new WebServer(host, port);
                 webServer.setContext(context);
                 webServer.setRoot(utils.loadRoot());
@@ -64,7 +65,10 @@ public class ServerService extends Service {
                 sendLog(Constants.ACTION_URL, "url", url);
                 utils.saveString(Constants.SERVER_URL, url);
                 showForegroundNotification("Running At: " + url);
-                webServerSocket = new WebServerSocket(port + 1, this.getApplication().getPackageName(), webServer::isAuthorized, webServer.getSslContext());
+                PluginDevelopment development = new PluginDevelopment(this);
+                development.token();
+                webServerSocket = new WebServerSocket(port + 1, this.getApplication().getPackageName(), webServer::isAuthorized,
+                        webServer::isPluginSocketAuthorized, webServer.getSslContext(), development::socketPackage);
                 webServerSocket.start();
             } catch (Exception e) {
                 SharingSession.stop();
@@ -87,6 +91,7 @@ public class ServerService extends Service {
     @Override
     public void onDestroy() {
         SharingSession.stop();
+        new PluginAccessManager(this).clearSessionGrants();
         try (DeviceManager devices = new DeviceManager(this)) { devices.clearTmp(); }
         TransferStats.flush();
         stopForeground(true);

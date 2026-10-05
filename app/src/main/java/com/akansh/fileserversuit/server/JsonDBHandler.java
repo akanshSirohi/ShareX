@@ -26,6 +26,12 @@ public class JsonDBHandler {
         this.appPackageName = appPackageName;
     }
 
+    static File safeFile(File directory, String name) {
+        if (name == null || name.length() > 180 || !name.matches("[A-Za-z0-9_.-]+")
+                || name.equals(".") || name.equals("..")) throw new IllegalArgumentException("Invalid plugin storage filename");
+        return new File(directory, name);
+    }
+
     public void setPlugin_package(String plugin_package) {
         this.pluginFilesDir = new File(String.format("/data/data/%s/plugins/plugin_files/%s", appPackageName, plugin_package));
 
@@ -44,11 +50,12 @@ public class JsonDBHandler {
                     try {
                         JSONObject jsonObject = new JSONObject(data);
                         String db_name = jsonObject.getString("db_name");
-                        File dbFile = new File(pluginFilesDir, db_name + ".json");
+                        File dbFile = safeFile(pluginFilesDir, db_name + ".json");
                         boolean dbFileExists = dbFile.exists();
                         if (!dbFile.exists()) {
                             dbFileExists = dbFile.createNewFile();
                         }
+                        if (dbFileExists && dbFile.length() == 0) dbFileExists = writeFile(dbFile, "{}");
                         String result_msg = dbFileExists ? "success" : "fail";
                         this.jsonDBHandlerListener.onJsonDBHandlerResponse(prepare_action(JsonDBActions.INIT_DB_RESULT), result_msg);
                     } catch (Exception e) {
@@ -72,7 +79,7 @@ public class JsonDBHandler {
         try {
             JSONObject jsonObject = new JSONObject(data);
             String db_name = jsonObject.getString("db_name");
-            File dbFile = new File(pluginFilesDir, db_name + ".json");
+            File dbFile = safeFile(pluginFilesDir, db_name + ".json");
             String collection = jsonObject.getString("collection");
             String new_data = jsonObject.getString("new_data");
             JSONObject result_response = new JSONObject();
@@ -160,7 +167,7 @@ public class JsonDBHandler {
             String query = jsonObject.getString("query");
             JSONArray update = jsonObject.getJSONArray("update");
 
-            File dbFile = new File(pluginFilesDir, db_name + ".json");
+            File dbFile = safeFile(pluginFilesDir, db_name + ".json");
             String dbFileContent = readFile(dbFile);
             JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
             JSONArray collectionArray = mainDBJsonObject.optJSONArray(collection);
@@ -205,7 +212,7 @@ public class JsonDBHandler {
             String collection = jsonObject.getString("collection");
             String query = jsonObject.getString("query");
 
-            File dbFile = new File(pluginFilesDir, db_name + ".json");
+            File dbFile = safeFile(pluginFilesDir, db_name + ".json");
             String dbFileContent = readFile(dbFile);
             JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
             JSONArray collectionArray = mainDBJsonObject.optJSONArray(collection);
@@ -238,7 +245,7 @@ public class JsonDBHandler {
 
     private JSONArray readCollectionFromDB(String db_name, String collection) {
         try {
-            File dbFile = new File(pluginFilesDir, db_name + ".json");
+            File dbFile = safeFile(pluginFilesDir, db_name + ".json");
             if (dbFile.exists()) {
                 String dbFileContent = readFile(dbFile);
                 JSONObject mainDBJsonObject = new JSONObject(dbFileContent);
@@ -294,7 +301,7 @@ public class JsonDBHandler {
             if(!json_files_dir.exists()) {
                 json_files_dir.mkdirs();
             }
-            File file = new File(json_files_dir, file_name);
+            File file = safeFile(json_files_dir, file_name);
             boolean fileExists = file.exists();
             if (!file.exists()) {
                 fileExists = file.createNewFile();
@@ -322,7 +329,7 @@ public class JsonDBHandler {
             if(!json_files_dir.exists()) {
                 json_files_dir.mkdirs();
             }
-            File file = new File(json_files_dir, file_name);
+            File file = safeFile(json_files_dir, file_name);
             if (file.exists()) {
                 BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
                 StringBuilder stringBuilder = new StringBuilder();
