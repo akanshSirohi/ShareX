@@ -15,7 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.akansh.fileserversuit.R;
+import com.akansh.sharex.R;
 import com.akansh.plugins.common.Plugin;
 
 import java.util.ArrayList;

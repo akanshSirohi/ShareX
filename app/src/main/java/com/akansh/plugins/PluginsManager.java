@@ -8,9 +8,9 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.akansh.fileserversuit.common.Constants;
-import com.akansh.fileserversuit.common.Utils;
-import com.akansh.fileserversuit.common.ZipUtils;
+import com.akansh.sharex.common.Constants;
+import com.akansh.sharex.common.Utils;
+import com.akansh.sharex.common.ZipUtils;
 import com.akansh.plugins.common.Plugin;
 import com.akansh.plugins.common.PluginInstallStatus;
 import com.akansh.plugins.common.PluginsManagerPluginStatusListener;

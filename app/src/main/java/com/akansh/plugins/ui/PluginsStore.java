@@ -14,8 +14,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.akansh.fileserversuit.common.Constants;
-import com.akansh.fileserversuit.R;
+import com.akansh.sharex.common.Constants;
+import com.akansh.sharex.R;
 import com.akansh.plugins.common.InstallStatus;
 import com.akansh.plugins.common.Plugin;
 import com.akansh.plugins.PluginsDBHelper;

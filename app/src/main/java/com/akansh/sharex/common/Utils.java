@@ -1,0 +1,545 @@
+package com.akansh.sharex.common;
+
+import android.app.ActivityManager;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.RelativeSizeSpan;
+import android.util.Log;
+import android.webkit.MimeTypeMap;
+
+import androidx.core.content.FileProvider;
+import androidx.core.content.res.ResourcesCompat;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.URLDecoder;
+import java.text.DecimalFormat;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static android.content.Context.MODE_PRIVATE;
+
+import com.akansh.sharex.BuildConfig;
+import com.akansh.sharex.ui.CustomTypefaceSpan;
+import com.akansh.sharex.R;
+import com.akansh.sharex.server.UriResolverUtil;
+
+
+public class Utils {
+
+    private Context ctx;
+
+    public Utils() {}
+
+    public Utils(Context ctx) {
+        this.ctx = ctx;
+    }
+
+    public String fileSize(String src) {
+        File file = new File(src);
+        String output = null;
+        if (file.exists()) {
+            float size = file.length() / 1024;
+            if (size >= 1024) {
+                size = size / 1024;
+                if (size >= 1024) {
+                    output = new DecimalFormat("##.##").format(size) + " GB";
+                } else {
+                    output = new DecimalFormat("##.##").format(size) + " MB";
+                }
+            } else {
+                output = new DecimalFormat("##.##").format(size) + " KB";
+            }
+        }
+        return output;
+    }
+
+    public String bytesToMemory(float bytes) {
+        String output = "";
+        float size = bytes / 1024;
+        if (size >= 1024) {
+            size = size / 1024;
+            if (size >= 1024) {
+                output = new DecimalFormat("##.##").format(size) + " GB";
+            } else {
+                output = new DecimalFormat("##.##").format(size) + " MB";
+            }
+        } else {
+            output = new DecimalFormat("##.##").format(size) + " KB";
+        }
+        return output;
+    }
+
+    public String getIPAddress(boolean useIPv4) {
+        try {
+            for (NetworkInterface intf : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                for (InetAddress addr : Collections.list(intf.getInetAddresses())) {
+                    if (!addr.isLoopbackAddress()) {
+                        boolean isIPv4;
+                        String sAddr = addr.getHostAddress();
+                        if (sAddr.indexOf(58) < 0) {
+                            isIPv4 = true;
+                        } else {
+                            isIPv4 = false;
+                        }
+                        if (useIPv4) {
+                            if (isIPv4) {
+                                return sAddr;
+                            }
+                        } else if (!isIPv4) {
+                            int delim = sAddr.indexOf(37);
+                            return delim < 0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return "localhost";
+        }
+        return "localhost";
+    }
+
+    public String getMimeType(String path) {
+        String type = null;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(path);
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        }
+        if (type == null || type.equals("null") || type.equals("")) {
+            type = "text";
+        }
+        return type;
+    }
+
+    public long getTotalBytes(String path) {
+        File file = new File(path);
+        long tBytes = file.length();
+        return tBytes;
+    }
+
+    public String getFileProperPath(String file) {
+        if (file.startsWith("/")) {
+            file = file.substring(1);
+        }
+        return "/data/data/" + ctx.getPackageName() + "/" + Constants.NEW_DIR + "/" + file;
+    }
+
+    public String getPluginFileProperPath(String path, String pluginUID) {
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if("debug".equals(pluginUID)) {
+            return loadPluginDevFolder() + "/" + path;
+        }else{
+            return "/data/data/" + ctx.getPackageName() + "/plugins/" + pluginUID + "/" + path;
+        }
+    }
+
+    public void saveString(String constant, String str) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putString(constant, str);
+        editor.apply();
+    }
+
+    public String loadString(String constant) {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getString(constant, null);
+    }
+
+    public void saveInt(String constant, int val) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putInt(constant, val);
+        editor.apply();
+    }
+
+    public int loadInt(String constant, int defValue) {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getInt(constant, defValue);
+    }
+
+    public void saveSetting(String constant, boolean b) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putBoolean(constant, b);
+        editor.apply();
+    }
+
+    public boolean loadSetting(String constant) {
+        boolean def = false;
+        if (
+                constant.equals(Constants.RESTRICT_MODIFY) ||
+                constant.equals(Constants.LOAD_APPS)
+        ) {
+            def = true;
+        }
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getBoolean(constant, def);
+    }
+
+    public void saveStorage(String path) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putString("SERVER_STORAGE", path);
+        editor.apply();
+    }
+
+    public String loadStorage() {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getString("SERVER_STORAGE", Environment.getExternalStorageDirectory().getAbsolutePath());
+    }
+
+    public void saveRoot(String path) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putString("SERVER_ROOT", path);
+        editor.apply();
+    }
+
+    public String loadRoot() {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getString("SERVER_ROOT", Environment.getExternalStorageDirectory().getAbsolutePath());
+    }
+
+    public String loadPluginDevFolder() {
+        SharedPreferences sharedPrefs = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE);
+        return sharedPrefs.getString("PLUGIN_DEV_ROOT", Environment.getExternalStorageDirectory().getAbsolutePath() + "/ShareX/plugin_debug");
+    }
+
+    public void savePluginDevFolder(String path) {
+        SharedPreferences.Editor editor = ctx.getSharedPreferences(ctx.getPackageName(), MODE_PRIVATE).edit();
+        editor.putString("PLUGIN_DEV_ROOT", path);
+        editor.apply();
+    }
+
+    public boolean isServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void deleteFileOrDir(File fileOrDirectory) {
+        try {
+            if (fileOrDirectory.isDirectory()) {
+                for (File child : fileOrDirectory.listFiles()) {
+                    deleteFileOrDir(child);
+                }
+            }
+            fileOrDirectory.delete();
+        } catch (Exception e) {
+            //Do nothing
+        }
+    }
+
+    public void clearTemp() {
+        File f = new File(Environment.getExternalStorageDirectory() + "/ShareX/.temp");
+        if (f.exists()) {
+            deleteFileOrDir(f);
+        }
+    }
+
+    public void clearCache() {
+        File f = new File("/data/user/0/" + ctx.getPackageName() + "/cache");
+        if (f.exists()) {
+            deleteFileOrDir(f);
+        }
+    }
+
+    public void clearThumbs() {
+        try {
+            File f = new File(Environment.getExternalStorageDirectory() + "/ShareX/.thumbs");
+            if (f.exists()) {
+                deleteFileOrDir(f);
+            }
+        } catch (Exception e) {
+            //Do nothing
+        }
+    }
+
+    public String getMimeType(File f) {
+        try {
+            if (f.isDirectory()) {
+                return "Folder";
+            }
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                uri = FileProvider.getUriForFile(ctx, BuildConfig.APPLICATION_ID + ".provider", f);
+            } else {
+                uri = Uri.fromFile(f);
+            }
+            String mimeType;
+            if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+                ContentResolver cr = ctx.getContentResolver();
+                mimeType = cr.getType(uri);
+            } else {
+                String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
+            }
+            if(mimeType == null || mimeType.equals("")) {
+                return "application/octet-stream";
+            }
+            return mimeType;
+        } catch (Exception e) {
+            return "application/octet-stream";
+        }
+    }
+
+    public boolean isUserApp(ApplicationInfo applicationInfo) {
+        int mask = ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+        boolean ans = (applicationInfo.flags & mask) == 0;
+        String src = applicationInfo.sourceDir;
+        boolean b = !src.startsWith("/system");
+        return ans && b;
+    }
+
+    public SpannableString getSpannableFont(String str) {
+        SpannableString ss = new SpannableString(str);
+        Typeface typeFace_h = ResourcesCompat.getFont(ctx, R.font.product_sans);
+        ss.setSpan(new RelativeSizeSpan(1.0f), 0, ss.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ss.setSpan(new CustomTypefaceSpan("", typeFace_h), 0, ss.length(), 0);
+        return ss;
+    }
+
+    public String getIconCode(File f) {
+        String mime = getMimeType(f);
+        String filename = f.getName();
+        if (mime.startsWith("image")) {
+            return "<i class=\"fas fa-file-image\"></i>";
+        } else if (mime.startsWith("video")) {
+            return "<i class=\"fas fa-file-video\"></i>";
+        } else if (mime.startsWith("audio")) {
+            return "<i class=\"fas fa-file-audio\"></i>";
+        } else if (mime.equals("text/plain")) {
+            return "<i class=\"fas fa-file-alt\"></i>";
+        } else if (mime.equals("application/pdf")) {
+            return "<i class=\"fas fa-file-pdf\"></i>";
+        } else if (mime.equals("application/zip")) {
+            return "<i class=\"fas fa-file-archive\"></i>";
+        } else if (filename.endsWith("js")) {
+            return "<i class=\"fab fa-js-square\"></i>";
+        } else if (filename.endsWith("css")) {
+            return "<i class=\"fab fa-css3-alt\"></i>";
+        } else if (filename.endsWith("html")) {
+            return "<i class=\"fab fa-html5\"></i>";
+        } else if (filename.endsWith("php")) {
+            return "<i class=\"fab fa-php\"></i>";
+        } else {
+            return "<i class=\"fas fa-file\"></i>";
+        }
+    }
+
+    public String getParent(String path) {
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.lastIndexOf("/"));
+        }
+        path = path.substring(0, path.lastIndexOf("/"));
+        return path;
+    }
+
+    public void verifyImage(File file) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        int imageHeight = options.outHeight;
+        int imageWidth = options.outWidth;
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, file.getName());
+        values.put(MediaStore.Images.Media.HEIGHT, imageHeight);
+        values.put(MediaStore.Images.Media.WIDTH, imageWidth);
+        values.put(MediaStore.Images.Media.MIME_TYPE, getMimeType(file));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
+            values.put(MediaStore.Images.ImageColumns.BUCKET_ID, file.getName().toLowerCase(Locale.US).hashCode());
+            values.put(MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME, file.getName().toLowerCase(Locale.US));
+        }
+        values.put("_data", file.getAbsolutePath());
+        ContentResolver cr = ctx.getContentResolver();
+        cr.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+    }
+
+    public void verifyVideo(File file) {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Video.Media.TITLE, file.getName());
+        values.put(MediaStore.Video.Media.MIME_TYPE, getMimeType(file));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            values.put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis());
+        }
+        values.put(MediaStore.Video.Media.DISPLAY_NAME, file.getName().toLowerCase(Locale.US));
+        values.put(MediaStore.Video.Media.DATA, file.getAbsolutePath());
+        ContentResolver cr = ctx.getContentResolver();
+        cr.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+    }
+
+    public boolean isExternalStorageMounted() {
+        return getSDCardRoot() != null;
+    }
+
+    public String getSDCardRoot() {
+        File[] filesDirs = ctx.getExternalFilesDirs(null);
+        for (File filesDir : filesDirs) {
+            if (filesDir != null) {
+                if(!filesDir.getAbsolutePath().contains("emulated")) {
+                    String path = filesDir.getAbsolutePath();
+                    int startIndex = path.indexOf("/storage/") + "/storage/".length();
+                    int endIndex = path.indexOf("/", startIndex);
+                    if (endIndex != -1) {
+                        return path.substring(0, endIndex);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public String filePickerUriResolve(Uri uri) {
+        if (uri == null) return null;
+        try {
+            if ("file".equals(uri.getScheme())) {
+                File file = new File(uri.getPath());
+                if (file.isFile() && file.canRead()) return file.getAbsolutePath();
+            }
+            String resolved = null;
+            try { resolved = UriResolverUtil.getPath(ctx, uri); } catch (Exception ignored) { }
+            if (resolved != null) {
+                File file = new File(resolved);
+                if (file.isFile() && file.canRead()) return file.getAbsolutePath();
+            }
+            String name = "Shared file";
+            try (android.database.Cursor cursor = ctx.getContentResolver().query(uri,
+                    new String[]{android.provider.OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) name = cursor.getString(0);
+            }
+            if (name == null || name.trim().isEmpty()) name = "Shared file";
+            name = name.replaceAll("[\\\\/\\r\\n]", "_");
+            if (name.equals(".") || name.equals("..")) name = "Shared file";
+            File directory = new File(ctx.getFilesDir(), "shared-selection/" + java.util.UUID.randomUUID());
+            if (!directory.mkdirs()) return null;
+            File destination = new File(directory, name);
+            try (java.io.InputStream input = ctx.getContentResolver().openInputStream(uri);
+                    FileOutputStream output = new FileOutputStream(destination)) {
+                if (input == null) throw new java.io.IOException("Unreadable file");
+                byte[] buffer = new byte[64 * 1024];
+                int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            } catch (Exception e) {
+                destination.delete(); directory.delete(); throw e;
+            }
+            return destination.getAbsolutePath();
+        } catch (Exception e) {
+            Log.e(Constants.LOG_TAG, "Unable to prepare selected file", e);
+            return null;
+        }
+    }
+
+    // Extract Plugin UID From URL
+    public static String extractPluginUID(String url) {
+        String pattern = "/SharexApp/([\\w-]+)(?:/[^/]+)*/?";
+        Pattern regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = regex.matcher(url);
+        if (matcher.find()) {
+            return matcher.group(1);
+        } else {
+            return "";
+        }
+    }
+
+    // Remove Directory
+    public boolean deleteDirectory(File fileOrDirectory) {
+        try {
+            if (fileOrDirectory.isDirectory()) {
+                File[] files = fileOrDirectory.listFiles();
+                if (files != null) {
+                    for (File child : files) {
+                        deleteDirectory(child);
+                    }
+                    if (files.length == 0) {
+                        fileOrDirectory.delete();
+                    }
+                }
+            } else {
+                fileOrDirectory.delete();
+            }
+            fileOrDirectory.delete();
+            return true;
+        }catch (Exception e) {
+            return false;
+        }
+    }
+
+    public synchronized void pListWriter(List<String> paths) {
+        // Atomic replacement prevents a request from reading a partly written whitelist.
+        android.util.AtomicFile file = new android.util.AtomicFile(new File(ctx.getFilesDir().getParentFile(), "pFilesList.bin"));
+        FileOutputStream output = null;
+        try {
+            output = file.startWrite();
+            String data = String.join("\n", new java.util.LinkedHashSet<>(paths));
+            output.write(data.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            file.finishWrite(output);
+        } catch (Exception e) {
+            if (output != null) file.failWrite(output);
+            Log.e(Constants.LOG_TAG, "Unable to save selected files", e);
+        }
+    }
+
+    public List<String> pListReader() {
+        List<String> paths = new java.util.ArrayList<>();
+        File file = new File(ctx.getFilesDir().getParentFile(), "pFilesList.bin");
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(file))) {
+            String path;
+            while ((path = reader.readLine()) != null) {
+                File selected = new File(path);
+                if (selected.isFile() && selected.canRead() && !paths.contains(path)) paths.add(path);
+            }
+        } catch (java.io.IOException ignored) { }
+        return paths;
+    }
+
+    public void junkCleaner() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            File file=new File("/data/data/" + ctx.getPackageName() + "/","pFilesList.bin");
+            File temp=new File(Environment.getExternalStorageDirectory() + "/ShareX/.temp");
+            File cache = new File("/data/data/" + ctx.getPackageName() + "/cache");
+            if(temp.exists()) {
+                deleteFileOrDir(temp);
+            }
+            if(cache.exists()) {
+                deleteFileOrDir(cache);
+            }
+            String blnk="";
+            try {
+                FileOutputStream fileWriter=new FileOutputStream(file);
+                fileWriter.write(blnk.getBytes());
+                fileWriter.close();
+            }catch (Exception e) {
+                //Do Nothing...
+            }
+
+        });
+    }
+
+    public void createDefualtPluginDevDir() {
+        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "ShareX/plugin_debug");
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+    }
+}

@@ -13,10 +13,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.akansh.fileserversuit.common.Constants;
-import com.akansh.fileserversuit.R;
-import com.akansh.fileserversuit.common.EdgeToEdge;
-import com.akansh.fileserversuit.common.Utils;
+import com.akansh.sharex.common.Constants;
+import com.akansh.sharex.R;
+import com.akansh.sharex.common.EdgeToEdge;
+import com.akansh.sharex.common.Utils;
 import com.akansh.plugins.common.PluginInstallStatus;
 import com.akansh.plugins.PluginsManager;
 import com.akansh.plugins.common.PluginsManagerPluginStatusListener;
@@ -70,7 +70,7 @@ public class PluginsActivity extends AppCompatActivity {
         findViewById(R.id.plugins_install_zip).setOnClickListener(view ->
                 zipPicker.launch(new String[]{"application/zip", "application/x-zip-compressed", "application/octet-stream"}));
         findViewById(R.id.plugins_development).setOnClickListener(view -> startActivity(
-                new android.content.Intent(this, com.akansh.fileserversuit.ui.MainActivity.class)
+                new android.content.Intent(this, com.akansh.sharex.ui.MainActivity.class)
                         .addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
                         .putExtra("open_settings", true)));
         tabLayout = findViewById(R.id.tabLayout);

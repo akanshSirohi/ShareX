@@ -5,7 +5,7 @@ import android.content.Context;
 import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import com.akansh.fileserversuit.common.Utils;
+import com.akansh.sharex.common.Utils;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;

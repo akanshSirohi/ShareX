@@ -17,7 +17,7 @@
                         </LinearLayout>
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                             <TextView android:id="@+id/sharing_status" android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/sharing_off" android:textSize="28sp" android:textColor="@color/color_white" android:textStyle="bold" android:layout_weight="1" />
-                            <com.akansh.fileserversuit.ui.SharingStatusView android:id="@+id/sharing_status_dial" android:layout_width="68dp" android:layout_height="68dp" android:layout_marginStart="12dp" android:importantForAccessibility="yes" />
+                            <com.akansh.sharex.ui.SharingStatusView android:id="@+id/sharing_status_dial" android:layout_width="68dp" android:layout_height="68dp" android:layout_marginStart="12dp" android:importantForAccessibility="yes" />
                         </LinearLayout>
                         <TextView android:id="@+id/sharing_status_hint" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Share files with devices on the same Wi-Fi." android:textSize="15sp" android:textColor="#D0D0D5" android:layout_marginTop="8dp" />
                         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="20dp" android:background="@drawable/share_action_background">
@@ -47,7 +47,7 @@
                         <TextView android:id="@+id/receive_speed" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0 B/s" android:textSize="24sp" android:textStyle="bold" android:textColor="@color/txt_color" android:fontFeatureSettings="tnum" />
                     </LinearLayout>
                 </LinearLayout>
-                <com.akansh.fileserversuit.ui.TransferGraphView android:id="@+id/transfer_graph" android:layout_width="match_parent" android:layout_height="168dp" android:layout_marginTop="12dp" android:importantForAccessibility="yes" />
+                <com.akansh.sharex.ui.TransferGraphView android:id="@+id/transfer_graph" android:layout_width="match_parent" android:layout_height="168dp" android:layout_marginTop="12dp" android:importantForAccessibility="yes" />
                 <TextView android:id="@+id/session_totals" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0 B sent Â· 0 B received" android:textSize="12sp" android:textColor="@color/txt_color_secondary" />
             </LinearLayout>
             <com.google.android.material.card.MaterialCardView android:layout_marginStart="@dimen/home_section_margin" android:layout_marginEnd="@dimen/home_section_margin" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" app:cardBackgroundColor="@color/surface_container" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="@color/outline_soft" app:strokeWidth="1dp">

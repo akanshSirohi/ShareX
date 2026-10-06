@@ -52,7 +52,7 @@ android {
 
     defaultConfig {
         buildConfigField 'String', 'WEB_INTERFACE_DIR', '"' + webUiFolder + '"'
-        applicationId "com.akansh.fileserversuit"
+        applicationId "com.akansh.sharex"
         minSdkVersion 26
         targetSdkVersion 36
         versionCode 33
@@ -113,7 +113,7 @@ android {
 //    }
 
 
-    namespace 'com.akansh.fileserversuit'
+    namespace 'com.akansh.sharex'
 
 }
 

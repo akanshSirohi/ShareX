@@ -6,9 +6,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.akansh.fileserversuit.R;
-import com.akansh.fileserversuit.common.Constants;
-import com.akansh.fileserversuit.common.Utils;
+import com.akansh.sharex.R;
+import com.akansh.sharex.common.Constants;
+import com.akansh.sharex.common.Utils;
 import com.akansh.plugins.PluginsManager;
 import com.akansh.plugins.StorePluginsAdapter;
 import com.akansh.plugins.InstalledPluginsAdapter;
