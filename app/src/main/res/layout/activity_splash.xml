@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0C0C0C"
-    tools:context=".Splash">
+    android:background="@color/bg_color"
+    tools:context=".ui.Splash">
 
     <ImageView
         android:id="@+id/imageView2"
@@ -23,9 +23,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:fontFamily="@font/product_sans"
+        android:fontFamily="@font/google_sans"
         android:text="@string/app_name"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/txt_color"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="@+id/imageView2"
         app:layout_constraintStart_toStartOf="@+id/imageView2"
@@ -36,8 +36,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:fontFamily="@font/product_sans"
-        android:textColor="#FFFFFF"
+        android:fontFamily="@font/google_sans"
+        android:textColor="@color/txt_color"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="@+id/imageView2"
         app:layout_constraintStart_toStartOf="@+id/imageView2"

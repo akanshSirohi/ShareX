@@ -1,29 +1,96 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-   <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
+<resources>
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorSecondaryContainer">@color/primary_container</item>
+        <item name="colorOnSecondaryContainer">@color/txt_color</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/txt_color</item>
+        <item name="colorOnSurface">@color/txt_color</item>
+        <item name="colorOnSurfaceVariant">@color/txt_color_secondary</item>
+        <item name="colorSurfaceVariant">@color/primary_container</item>
+        <item name="colorOutline">@color/outline_soft</item>
+        <item name="android:windowFullscreen">false</item>
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/accent_blue</item>
+        <item name="colorSurface">@color/bg_color</item>
+        <item name="android:colorAccent">@color/accent_blue</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@color/bg_color</item>
+        <item name="android:navigationBarColor">@color/bg_color</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
     </style>
 
-    <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.Light">
-        <item name="android:fontFamily">@font/product_sans</item>
-        <item name="titleTextColor">@android:color/white</item>
-        <item name="android:tint">@android:color/white</item>
+    <style name="ToolbarTheme" parent="ThemeOverlay.Material3.ActionBar">
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="titleTextColor">@color/txt_color</item>
+        <item name="android:tint">@color/txt_color</item>
     </style>
 
-    <style name="ProductSansStyle" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="itemTextColor">@android:color/white</item>
-        <item name="android:fontFamily">@font/product_sans</item>
-        <item name="android:textColorSecondary">@android:color/white</item>
-        <item name="itemBackground">@drawable/ripple_bg</item>
+    <style name="ProductSansStyle" parent="ThemeOverlay.Material3.NavigationView">
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textColorSecondary">@color/txt_color_secondary</item>
+        <item name="itemBackground">?attr/selectableItemBackground</item>
+    </style>
+
+    <style name="Widget.ShareX.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="strokeColor">@color/outline_soft</item>
+        <item name="android:textColor">@color/txt_color</item>
+    </style>
+
+    <style name="TextAppearance.ShareX.Title" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textColor">@color/txt_color</item>
+        <item name="android:textSize">22sp</item>
+    </style>
+
+    <style name="TextAppearance.ShareX.Expressive" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textColor">@color/txt_color</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.ShareX.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textColor">@color/txt_color</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.ShareX.Label" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textColor">@color/txt_color_secondary</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="ShapeAppearance.ShareX.Card" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.ShareX.Small" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="Widget.ShareX.SectionHeading" parent="@android:style/Widget.TextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:textColor">@color/txt_color_secondary</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <color name="white">@color/color_white</color>
-    <color name="bg_color">#FFFFFF</color>
-    <color name="bg_color_sec">#AEAEAE</color>
-    <color name="bg_color_header">#D8D8D8</color>
-    <color name="txt_color">#000000</color>
-    <color name="txt_color_secondary">#DD555555</color>
+    <style name="TextAppearance.ShareX.Navigation" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+    </style>
+<style name="TextAppearance.ShareX.Drawer" parent="TextAppearance.Material3.LabelLarge"><item name="android:textSize">14sp</item><item name="android:fontFamily">@font/google_sans</item></style>
+ <style name="ShapeAppearance.ShareX.Drawer" parent="ShapeAppearance.Material3.SmallComponent"><item name="cornerSize">14dp</item></style>
 </resources>

@@ -1,0 +1,31 @@
+<resources>
+    <string name="intro_title_1">Your files. Any device.</string>
+    <string name="intro_title_2">Share over your local network</string>
+    <string name="intro_title_3">Choose what you share</string>
+    <string name="intro_title_4">A browser is all you need</string>
+    <string name="intro_title_5">A little setup, then you’re ready</string>
+    <string name="intro_title_6">Ready when you are</string>
+    <string name="intro_description_1">ShareX keeps file sharing simple, fast, and on your local network.</string>
+    <string name="intro_description_2">Connect both devices to the same Wi-Fi or use your phone’s hotspot.</string>
+    <string name="intro_description_3">Share a folder, a storage root, or just the files you select.</string>
+    <string name="intro_description_4">Browse files, preview media, and move files between your devices.</string>
+    <string name="intro_description_5">ShareX asks for access when a feature needs it.</string>
+    <string name="intro_description_6">Choose your folder, start sharing, and open the page on another device.</string>
+    <string name="intro_details_1">No cloud uploads. Files move directly between your phone and a nearby browser.\n\nNo account needed. Works on Windows, Mac, Linux, and other phones.</string>
+    <string name="intro_details_2">Tap Start in ShareX to open a sharing session.\n\nScan the QR code or type the sharing address into the other device’s browser.</string>
+    <string name="intro_details_3">Use Shared folder in Settings to choose a folder or a storage root.\n\nPrivate mode limits the browser to files you explicitly share.</string>
+    <string name="intro_details_4">Preview images, audio, video, and supported documents before downloading.\n\nChoose a browser theme in the app. Switch light or dark mode on the web.</string>
+    <string name="intro_details_5">Allow file access so ShareX can browse your chosen folders.\n\nApprove new browsers on your phone. Remember only devices you trust.</string>
+    <string name="intro_details_6">Keep both devices on the same local network while sharing.\n\nTap Stop when you finish to end the current sharing session.</string>
+    <string name="intro_next">Next</string>
+    <string name="intro_back">Back</string>
+    <string name="intro_start">Get started</string>
+    <string name="intro_progress">%1$d of %2$d</string>
+    <string name="shared_folder_choose">Select folder</string>
+    <string name="shared_folder_reset">Storage root</string>
+    <string name="shared_root_title">Share a storage root</string>
+    <string name="shared_root_hint">Choose the top-level storage to share. Android’s folder picker cannot select storage roots.</string>
+    <string name="theme_picker_title">Sharing page theme</string>
+    <string name="theme_picker_hint">Choose how the browser looks. Every theme supports light and dark mode.</string>
+    <string name="theme_picker_apply">Apply theme</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permissions_title">Required permissions</string>
+    <string name="permissions_setup_title">Get ready to share</string>
+    <string name="permissions_summary">Manage storage access, background running, notifications, and camera permissions here or in Android app settings.</string>
+    <string name="permissions_setup_summary">Storage access is required for file sharing. Background access is needed to keep sharing when you leave the app or turn off the screen. You can manage these permissions later in Settings → Required permissions. Android asks for access only when you tap a button.</string>
+    <string name="permissions_storage_title">1. Storage access</string>
+    <string name="permissions_storage_reason">File sharing will not work without storage access. ShareX uses it to browse shared folders, download files, and save uploads. On Android 11 and newer, enable “Allow access to manage all files” on the next screen. You can change this later in Settings → Required permissions.</string>
+    <string name="permissions_background_title">2. Background running</string>
+    <string name="permissions_background_reason">Allow background running so ShareX can keep sharing when you leave the app or turn off the screen. Without it, Android may stop sharing. Some phones also need unrestricted battery or auto-start enabled in app settings. You can manage this later in Settings → Required permissions.</string>
+    <string name="permissions_notifications_title">Running notification</string>
+    <string name="permissions_notifications_reason">Allow notifications to see when ShareX is sharing, open the app, or stop sharing directly from the notification. Manage this later in Settings → Required permissions.</string>
+    <string name="permissions_notifications_action">Allow notifications</string>
+    <string name="permissions_camera_title">Camera · optional</string>
+    <string name="permissions_camera_reason">Used only to scan a ShareX connection QR code. File sharing does not need camera access.</string>
+    <string name="permissions_granted">Allowed</string>
+    <string name="permissions_missing">Not allowed</string>
+    <string name="permissions_storage_action">Allow storage access</string>
+    <string name="permissions_background_action">Allow background running</string>
+    <string name="permissions_camera_action">Allow camera access</string>
+    <string name="permissions_app_settings">Open app settings</string>
+    <string name="permissions_continue">Continue</string>
+    <string name="permissions_later">Set up later</string>
+    <string name="permissions_done">Done</string>
+    <string name="permissions_storage_needed">Allow storage access before starting file sharing.</string>
+    <string name="permissions_settings_unavailable">Unable to open Android settings. Open ShareX in your phone’s app settings.</string>
+</resources>

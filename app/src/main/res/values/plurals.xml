@@ -1,0 +1,11 @@
+<resources>
+    <plurals name="files_selected">
+        <item quantity="one">%d file selected</item>
+        <item quantity="other">%d files selected</item>
+    </plurals>
+    <plurals name="files_ready">
+        <item quantity="one">%d file ready to share</item>
+        <item quantity="other">%d files ready to share</item>
+    </plurals>
+    <string name="sharing_home_hint">Share files with devices on the same Wi-Fi.</string>
+</resources>

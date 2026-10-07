@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="dp_19">19dp</dimen>
+    <dimen name="dp_19">16dp</dimen>
+    <dimen name="space_1">4dp</dimen>
+    <dimen name="space_2">8dp</dimen>
+    <dimen name="space_3">12dp</dimen>
+    <dimen name="space_4">16dp</dimen>
+    <dimen name="space_6">24dp</dimen>
+    <dimen name="space_8">32dp</dimen>
+    <dimen name="shape_small">8dp</dimen>
+    <dimen name="shape_card">12dp</dimen>
+    <dimen name="shape_large">16dp</dimen>
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_subtle">1dp</dimen>
+    <dimen name="elevation_raised">3dp</dimen>
+    <dimen name="button_height">44dp</dimen>
+    <dimen name="icon_button_size">40dp</dimen>
+    <dimen name="list_row_min_height">56dp</dimen>
+    <dimen name="home_content_inset">8dp</dimen>
+    <dimen name="home_section_margin">12dp</dimen>
+    <dimen name="utility_content_inset">12dp</dimen>
+    <dimen name="qr_content_inset">24dp</dimen>
+    <dimen name="plugin_content_inset">8dp</dimen>
 </resources>

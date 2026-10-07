@@ -1,0 +1,5 @@
+<resources>
+    <integer name="motion_short">120</integer>
+    <integer name="motion_standard">220</integer>
+    <integer name="motion_emphasis">320</integer>
+</resources>

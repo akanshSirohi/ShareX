@@ -12,23 +12,15 @@
 <br>
 
 ## Features
-- Open-Source app.
-- Web based interface.
-- Private mode for limited file sharing.
-- View transfer history.
-- Restrict modification of any file or folder.
-- Realtime logs.
-- Custom port selection.
-- Fastest QR scanner.
-- Show/hide hidden files.
-- Remember authorised devices.
-- Multiple and switchable web interface themes.
-- No need of this app on another device to send and receive files.
-- Work with Windows, Mac, Linux, Android, iPhone.
-- Lightweight app designed for faster, multiple and parallel file sharing purposes.
-- Send and receive files over wifi or within a network with anyone or on any device.
-- Completely works offline, it uses no data to share your files.
-- 13 built-in web interface themes.
+- Share files over the same Wi-Fi network or hotspot. Nearby devices connect through a browser; they do not need the ShareX app.
+- Choose a shared folder or use Private mode to share only selected files.
+- Browse, preview, upload, download, and manage shared files from the web interface. Restrict file changes when needed.
+- Approve browser access, remember trusted browsers, and revoke access later.
+- Scan connection QR codes to open another ShareX device.
+- Track transfers in history, view live transfer speeds, and follow transfer progress.
+- Install plugins from the Store or ZIP files, manage installed plugins, and develop plugins on a computer.
+- Configure the sharing port, HTTPS, hidden files, and web interface themes.
+- Local file transfers work without an internet connection. Internet access is used for online features such as the plugin Store.
 
 ## Download
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
@@ -47,7 +39,7 @@
      height="90">](https://discord.gg/jqv67AdE6p)
      
 ## Screenshots
-<img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/4.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/5.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/6.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/7.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/8.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/9.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/10.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/11.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/12.png?raw=true" width="32%">
+<img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/4.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/5.png?raw=true" width="32%">
 
 ## License
 ```
@@ -88,6 +80,21 @@ See the [GNU General Public License](https://github.com/akanshSirohi/ShareX/blob
 git clone https://github.com/akanshSirohi/ShareX.git
 ```
 3. Run the app with Android Studio.
+
+The web portal source lives in `web/`. See [the portal build guide](web/README.md) for development, static export, and copying the build into Android assets.
+
+## Plugin development and local installation
+
+You can develop plugins on your computer without copying source files onto the phone:
+
+1. Run ShareX and start sharing on the same Wi-Fi or hotspot as your computer.
+2. Open Settings, enable **Plugin development**, and wait for sharing to restart.
+3. Tap the connection button beside the development switch and select **Copy connection**.
+4. Run the [Next.js starter](https://github.com/akanshSirohi/ShareX-Plugins/tree/master/sharex.starter.plugin) with `npm run dev`. Paste the connection into the starter page.
+
+The app provides WebSocket messaging, connected browser information, and persistent plugin storage. The socket uses the sharing port plus one, supports HTTPS through `wss://`, and keeps development data separate from installed plugins. Development keys authorize plugin sockets only. Disable development or reset the key to revoke connected clients. The optional folder button remains available for legacy on-phone debugging.
+
+To install a packaged plugin, open **Plugins > Install from ZIP**, choose the ZIP, and confirm the trust warning only if you trust the plugin. The ZIP must contain `config.json` and `index.html` at its root. Local imports validate archive paths and sizes before staging the installation, and may replace an existing plugin with the same package and version. Plugin database files are preserved.
 
 ## Quick Open ShareX Url In PC
 1) Open Notepad

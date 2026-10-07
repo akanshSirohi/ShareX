@@ -1,0 +1,8 @@
+<font-family xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <font android:font="@font/google_sans_variable" android:fontWeight="400" android:fontStyle="normal" android:fontVariationSettings="'wght' 400, 'opsz' 17"
+        app:font="@font/google_sans_variable" app:fontWeight="400" app:fontStyle="normal" app:fontVariationSettings="'wght' 400, 'opsz' 17" />
+    <font android:font="@font/google_sans_variable" android:fontWeight="500" android:fontStyle="normal" android:fontVariationSettings="'wght' 500, 'opsz' 18"
+        app:font="@font/google_sans_variable" app:fontWeight="500" app:fontStyle="normal" app:fontVariationSettings="'wght' 500, 'opsz' 18" />
+    <font android:font="@font/google_sans_variable" android:fontWeight="700" android:fontStyle="normal" android:fontVariationSettings="'wght' 700, 'opsz' 18"
+        app:font="@font/google_sans_variable" app:fontWeight="700" app:fontStyle="normal" app:fontVariationSettings="'wght' 700, 'opsz' 18" />
+</font-family>

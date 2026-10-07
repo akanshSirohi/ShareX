@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/permissions_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/bg_color">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="20dp">
+    <TextView android:id="@+id/permissions_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permissions_setup_title" android:textSize="26sp" android:textStyle="bold" android:textColor="@color/txt_color" />
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="12dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingBottom="16dp">
+            <TextView android:id="@+id/permissions_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permissions_setup_summary" android:textSize="15sp" android:textColor="@color/txt_color_secondary" android:layout_marginBottom="20dp" />
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:cardBackgroundColor="@color/surface_container" app:strokeColor="@color/outline_soft" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permissions_storage_title" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/txt_color" />
+                    <TextView android:id="@+id/permission_storage_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textSize="14sp" android:textColor="@color/accent_blue" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/permissions_storage_reason" android:textSize="15sp" android:textColor="@color/txt_color_secondary" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/permission_storage_action" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="48dp" android:text="@string/permissions_storage_action" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:cardBackgroundColor="@color/surface_container" app:strokeColor="@color/outline_soft" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permissions_background_title" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/txt_color" />
+                    <TextView android:id="@+id/permission_background_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textSize="14sp" android:textColor="@color/accent_blue" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/permissions_background_reason" android:textSize="15sp" android:textColor="@color/txt_color_secondary" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/permission_background_action" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="48dp" android:text="@string/permissions_background_action" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/permission_notifications_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:cardBackgroundColor="@color/surface_container" app:strokeColor="@color/outline_soft" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permissions_notifications_title" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/txt_color" />
+                    <TextView android:id="@+id/permission_notifications_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textSize="14sp" android:textColor="@color/accent_blue" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/permissions_notifications_reason" android:textSize="15sp" android:textColor="@color/txt_color_secondary" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/permission_notifications_action" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="48dp" android:text="@string/permissions_notifications_action" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView android:id="@+id/permission_camera_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" app:cardCornerRadius="20dp" app:cardElevation="0dp" app:cardBackgroundColor="@color/surface_container" app:strokeColor="@color/outline_soft" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permissions_camera_title" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/txt_color" />
+                    <TextView android:id="@+id/permission_camera_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textSize="14sp" android:textColor="@color/accent_blue" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/permissions_camera_reason" android:textSize="15sp" android:textColor="@color/txt_color_secondary" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/permission_camera_action" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:minHeight="48dp" android:text="@string/permissions_camera_action" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+    <com.google.android.material.button.MaterialButton android:id="@+id/permissions_finish" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/permissions_continue" />
+    <com.google.android.material.button.MaterialButton android:id="@+id/permissions_later" style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:minHeight="48dp" android:text="@string/permissions_later" />
+    </LinearLayout>
+</LinearLayout>

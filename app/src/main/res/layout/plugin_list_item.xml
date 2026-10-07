@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/surface_container"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/outline_soft"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/plugin_icon_surface"
+            android:padding="10dp"
+            android:src="@drawable/ic_plugin"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/colorPrimary" />
+
+        <TextView
+            android:id="@+id/plugin_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:fontFamily="@font/google_sans"
+            android:maxLines="2"
+            android:text="Plugin Title"
+            android:textColor="@color/txt_color"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/plugin_version"
+            app:layout_constraintStart_toEndOf="@id/imageView"
+            app:layout_constraintTop_toTopOf="@id/imageView" />
+
+        <TextView
+            android:id="@+id/plugin_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="@font/google_sans"
+            android:text="v1.0"
+            android:textColor="@color/txt_color_secondary"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@id/plugin_external_link"
+            app:layout_constraintTop_toTopOf="@id/plugin_title" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/plugin_external_link"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Open plugin page"
+            android:padding="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_external_link"
+            app:tint="@color/txt_color_secondary" />
+
+        <TextView
+            android:id="@+id/plugin_author"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="@font/google_sans"
+            android:text="Plugin Author"
+            android:textColor="@color/txt_color_secondary"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toStartOf="@id/plugin_external_link"
+            app:layout_constraintStart_toStartOf="@id/plugin_title"
+            app:layout_constraintTop_toBottomOf="@id/plugin_title" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/plugin_header_bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="imageView,plugin_author,plugin_external_link" />
+
+        <TextView
+            android:id="@+id/plugin_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/google_sans"
+            android:maxLines="3"
+            android:text="Plugin description"
+            android:textColor="@color/txt_color_secondary"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/plugin_header_bottom" />
+
+        <Switch
+            android:id="@+id/plugin_enabled"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:checked="true"
+            android:fontFamily="@font/google_sans"
+            android:minWidth="100dp"
+            android:text="Enabled"
+            android:textColor="@color/txt_color"
+            android:thumbTint="@color/colorPrimary"
+            android:trackTint="@drawable/switch_track"
+            app:layout_constraintBottom_toBottomOf="@id/plugin_uninstall_btn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/plugin_uninstall_btn" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/plugin_uninstall_btn"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:textAllCaps="false"
+            android:layout_marginTop="10dp"
+            android:contentDescription="Uninstall plugin"
+            android:drawablePadding="6dp"
+            android:fontFamily="@font/google_sans"
+            android:minWidth="0dp"
+            android:text="Uninstall"
+            android:textColor="@color/txt_color_secondary"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_delete"
+            app:iconTint="@color/txt_color_secondary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/plugin_description" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/plugin_update_btn"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:textAllCaps="false"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="Update plugin"
+            android:drawablePadding="6dp"
+            android:fontFamily="@font/google_sans"
+            android:minWidth="0dp"
+            android:text="Update"
+            android:textColor="@color/colorPrimary"
+            android:textSize="13sp"
+            android:visibility="gone"
+            app:icon="@drawable/ic_update"
+            app:iconTint="@color/colorPrimary"
+            app:layout_constraintBottom_toBottomOf="@id/plugin_uninstall_btn"
+            app:layout_constraintEnd_toStartOf="@id/plugin_uninstall_btn"
+            app:layout_constraintTop_toTopOf="@id/plugin_uninstall_btn" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

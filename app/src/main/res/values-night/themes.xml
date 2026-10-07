@@ -1,28 +1,25 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-   <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorSecondaryContainer">@color/primary_container</item>
+        <item name="colorOnSecondaryContainer">@color/txt_color</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/txt_color</item>
+        <item name="colorOnSurface">@color/txt_color</item>
+        <item name="colorOnSurfaceVariant">@color/txt_color_secondary</item>
+        <item name="colorSurfaceVariant">@color/primary_container</item>
+        <item name="colorOutline">@color/outline_soft</item>
+        <item name="android:windowFullscreen">false</item>
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
-
-    <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.Light">
-        <item name="android:fontFamily">@font/product_sans</item>
-
-    </style>
-
-    <style name="ProductSansStyle" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="itemTextColor">@android:color/white</item>
-        <item name="android:fontFamily">@font/product_sans</item>
-        <item name="android:textColorSecondary">@android:color/white</item>
-        <item name="itemBackground">@drawable/ripple_bg</item>
-    </style>
-
-    <color name="white">@color/color_white</color>
-    <color name="bg_color">#222</color>
-    <color name="bg_color_sec">#171717</color>
-    <color name="bg_color_header">#2B2B2B</color>
-    <color name="txt_color">@color/color_white</color>
-    <color name="txt_color_secondary">#AFAFAF</color>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/accent_blue</item>
+        <item name="colorSurface">@color/bg_color</item>
+        <item name="android:colorAccent">@color/accent_blue</item>
+        <item name="android:fontFamily">@font/google_sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:statusBarColor">@color/bg_color</item>
+        <item name="android:navigationBarColor">@color/bg_color</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    <item name="colorSurfaceContainer">@color/surface_container</item><item name="colorSurfaceContainerLow">@color/bg_color_sec</item><item name="colorSurfaceContainerHigh">@color/primary_container</item><item name="colorSurfaceContainerHighest">@color/primary_container</item><item name="colorSurfaceDim">@color/bg_color</item><item name="colorSurfaceBright">@color/surface_container</item><item name="elevationOverlayEnabled">false</item></style>
 </resources>

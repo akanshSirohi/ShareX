@@ -1,0 +1,53 @@
+package com.akansh.sharex.ui;
+
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.util.AttributeSet;
+import android.view.View;
+import androidx.core.content.ContextCompat;
+import com.akansh.sharex.R;
+
+import androidx.annotation.Nullable;
+
+public class PointsOverlayLayout extends View {
+    PointF[] points;
+    private Paint paint;
+
+    public PointsOverlayLayout(Context context) {
+        super(context);
+        init();
+    }
+
+    public PointsOverlayLayout(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public PointsOverlayLayout(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
+
+    private void init() {
+        paint = new Paint();
+        paint.setColor(ContextCompat.getColor(getContext(), R.color.accent_blue));
+        paint.setStyle(Paint.Style.FILL);
+    }
+
+    public void setPoints(PointF[] points) {
+        this.points = points;
+        invalidate();
+    }
+
+    @Override public void draw(Canvas canvas) {
+        super.draw(canvas);
+        if (points != null) {
+            for (PointF pointF : points) {
+                canvas.drawCircle(pointF.x, pointF.y,
+                        getResources().getDimension(R.dimen.space_3), paint);
+            }
+        }
+    }
+}

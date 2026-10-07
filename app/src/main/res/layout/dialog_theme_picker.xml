@@ -1,0 +1,6 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="24dp" android:paddingEnd="24dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/theme_picker_hint" android:textColor="@color/txt_color_secondary" android:textSize="14sp" android:paddingBottom="16dp" />
+    <ScrollView android:id="@+id/theme_picker_scroll" android:layout_width="match_parent" android:layout_height="320dp">
+        <LinearLayout android:id="@+id/theme_picker_list" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+    </ScrollView>
+</LinearLayout>

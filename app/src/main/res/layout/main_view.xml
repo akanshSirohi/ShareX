@@ -1,164 +1,80 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <ImageView
-        android:id="@+id/main_bg"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:scaleType="centerCrop"
-        android:visibility="visible"
-        android:contentDescription="@string/cd_bg"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"
-        app:srcCompat="@drawable/bg_green" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/logger_wrapper"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <ImageButton
-            android:id="@+id/hide_logger_btn"
-            android:layout_width="58dp"
-            android:layout_height="48dp"
-            android:background="@drawable/log_down_btn"
-            android:padding="12dp"
-            android:scaleType="fitCenter"
-            android:contentDescription="@string/cd_toggle_logger"
-            app:layout_constraintBottom_toTopOf="@+id/logger"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/ic_caret_down" />
-
-        <TextView
-            android:id="@+id/logger"
-            android:layout_width="0dp"
-            android:layout_height="130dp"
-            android:alpha="0.7"
-            android:background="@color/transparent_mask"
-            android:focusable="false"
-            android:focusableInTouchMode="false"
-            android:fontFamily="@font/inconsolata"
-            android:inputType="textMultiLine|textNoSuggestions"
-            android:padding="8dp"
-            android:scrollbars="vertical"
-            android:text="@string/logger_init_txt"
-            android:textColor="#00FF00"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            tools:ignore="TextViewEdits" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <ImageButton
-        android:id="@+id/serverBtn"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
-        android:contentDescription="@string/cd_start_stop_btn"
-        app:layout_constraintBottom_toBottomOf="@+id/main_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_start" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/top_panel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <TextView
-            android:id="@+id/top_panel_msg"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="#007A33"
-            android:fontFamily="@font/product_sans"
-            android:text="@string/pvt_lbl"
-            android:textAlignment="center"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:paddingVertical="2dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <include
-            layout="@layout/fab_drop_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/top_panel_msg" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/qrBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="@string/cd_show_qr_btn"
-        app:backgroundTint="#DD2C00"
-        app:fabSize="normal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/serverBtn"
-        app:srcCompat="@drawable/qr_code" />
-
-    <ImageButton
-        android:id="@+id/nav_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="26dp"
-        android:background="@drawable/ripple_bg"
-        android:clickable="true"
-        android:contentDescription="@string/cd_open_navbar"
-        android:focusable="true"
-        android:padding="10dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_menu"
-        app:tint="@color/color_white" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="0dp"
-        android:layout_height="2dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true"
-        android:max="100"
-        android:progress="0"
-        android:progressDrawable="@drawable/progress_bar"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/main_bg"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
+<?xml version='1.0' encoding='utf-8'?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/bg_color">
+    <ScrollView android:id="@+id/home_scroll" android:layout_width="0dp" android:layout_height="0dp" android:fillViewport="true" android:clipToPadding="false" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/home_content" android:paddingStart="@dimen/home_content_inset" android:paddingEnd="@dimen/home_content_inset" android:paddingBottom="24dp">
+            <LinearLayout android:layout_marginStart="@dimen/home_section_margin" android:layout_marginEnd="@dimen/home_section_margin" android:layout_width="match_parent" android:layout_height="64dp" android:gravity="center_vertical" android:orientation="horizontal">
+                <ImageButton android:id="@+id/nav_btn" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="12dp" android:contentDescription="@string/cd_open_navbar" app:srcCompat="@drawable/ic_menu" app:tint="@color/txt_color_secondary" />
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="8dp" android:text="ShareX" android:textStyle="bold" android:textSize="26sp" android:textColor="@color/txt_color" />
+            </LinearLayout>
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" app:cardBackgroundColor="#111113" app:cardCornerRadius="24dp" app:cardElevation="0dp" app:strokeColor="@color/outline_soft" app:strokeWidth="0dp" android:clipToOutline="true">
+                <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <ImageView android:id="@+id/main_bg" android:layout_width="0dp" android:layout_height="0dp" android:scaleType="centerCrop" android:contentDescription="@null" app:srcCompat="@drawable/bg_red" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+                    <View android:layout_width="0dp" android:layout_height="0dp" android:background="@drawable/sharing_panel_scrim" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent">
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="12dp">
+                            <View android:id="@+id/sharing_light" android:layout_width="8dp" android:layout_height="8dp" android:layout_marginEnd="8dp" android:background="@drawable/sharing_indicator" android:visibility="invisible" />
+                            <TextView android:id="@+id/sharing_light_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="READY WHEN YOU ARE" android:textSize="11sp" android:letterSpacing="0.06" android:textColor="#D0D0D5" android:fontFamily="@font/google_sans" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                            <TextView android:id="@+id/sharing_status" android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/sharing_off" android:textSize="28sp" android:textColor="@color/color_white" android:textStyle="bold" android:layout_weight="1" />
+                            <com.akansh.sharex.ui.SharingStatusView android:id="@+id/sharing_status_dial" android:layout_width="68dp" android:layout_height="68dp" android:layout_marginStart="12dp" android:importantForAccessibility="yes" />
+                        </LinearLayout>
+                        <TextView android:id="@+id/sharing_status_hint" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Share files with devices on the same Wi-Fi." android:textSize="15sp" android:textColor="#D0D0D5" android:layout_marginTop="8dp" />
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="20dp" android:background="@drawable/share_action_background">
+                            <ImageButton android:id="@+id/serverBtn" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="12dp" android:contentDescription="@string/cd_start_stop_btn" app:srcCompat="@drawable/ic_start_sharing" app:tint="@color/share_action_icon" android:duplicateParentState="true" />
+                            <TextView android:id="@+id/serverBtnTxt" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="56dp" android:gravity="center" android:paddingEnd="48dp" android:text="@string/app_start_txt" android:textSize="17sp" android:textStyle="bold" android:textColor="@color/share_action_icon" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:duplicateParentState="true" />
+                        </LinearLayout>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/qrBtn" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:insetTop="0dp" android:insetBottom="0dp" android:textAllCaps="false" android:text="@string/connect_with_qr" android:layout_marginTop="12dp" app:cornerRadius="12dp" app:icon="@drawable/qr_code" app:iconGravity="textStart" android:textColor="#FFFFFF" app:iconTint="#BBD5FF" app:strokeColor="#6380AF" />
+                        <LinearLayout android:id="@+id/active_transfer_card" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical">
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="0dp">
+                                <TextView android:id="@+id/transfer_progress_label" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/transfer_in_progress" android:textSize="13sp" android:textColor="#FFFFFF" />
+                                <ProgressBar android:id="@+id/progressBar" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="12dp" android:max="100" android:progressDrawable="@drawable/progress_bar" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <LinearLayout android:layout_marginStart="@dimen/home_section_margin" android:layout_marginEnd="@dimen/home_section_margin" android:id="@+id/transfer_activity_section" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="24dp" android:layout_marginBottom="8dp" android:background="@drawable/transfer_activity_background" android:padding="16dp">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Transfer activity" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/txt_color" />
+                <TextView android:id="@+id/activity_state" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Waiting for a transfer" android:textSize="13sp" android:textColor="@color/txt_color_secondary" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="16dp">
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="SENDING" android:textSize="11sp" android:letterSpacing="0.06" android:textColor="@color/accent_blue" android:drawableStart="@drawable/ic_archive_sent" android:drawableTint="@color/accent_blue" android:drawablePadding="4dp" android:gravity="center_vertical" />
+                        <TextView android:id="@+id/send_speed" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0 B/s" android:textSize="24sp" android:textStyle="bold" android:textColor="@color/txt_color" android:fontFeatureSettings="tnum" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="RECEIVING" android:textSize="11sp" android:letterSpacing="0.06" android:textColor="@color/graph_receive" android:drawableStart="@drawable/ic_archive_received" android:drawableTint="@color/graph_receive" android:drawablePadding="4dp" android:gravity="center_vertical" />
+                        <TextView android:id="@+id/receive_speed" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0 B/s" android:textSize="24sp" android:textStyle="bold" android:textColor="@color/txt_color" android:fontFeatureSettings="tnum" />
+                    </LinearLayout>
+                </LinearLayout>
+                <com.akansh.sharex.ui.TransferGraphView android:id="@+id/transfer_graph" android:layout_width="match_parent" android:layout_height="168dp" android:layout_marginTop="12dp" android:importantForAccessibility="yes" />
+                <TextView android:id="@+id/session_totals" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="0 B sent Â· 0 B received" android:textSize="12sp" android:textColor="@color/txt_color_secondary" />
+            </LinearLayout>
+            <com.google.android.material.card.MaterialCardView android:layout_marginStart="@dimen/home_section_margin" android:layout_marginEnd="@dimen/home_section_margin" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" app:cardBackgroundColor="@color/surface_container" app:cardCornerRadius="16dp" app:cardElevation="0dp" app:strokeColor="@color/outline_soft" app:strokeWidth="1dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/private_mode_toggle" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="Private mode" android:textColor="@color/txt_color" android:textSize="17sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/mode_description" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/private_mode_explanation" android:textSize="14sp" android:textColor="@color/txt_color" android:layout_marginTop="4dp" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/top_panel" android:visibility="gone">
+                        <TextView android:id="@+id/top_panel_msg" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/pvt_lbl" android:textSize="14sp" android:textColor="@color/txt_color" />
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/file_selection_panel">
+                        <TextView android:id="@+id/selected_files_summary" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/no_files_selected" android:textSize="16sp" android:textColor="@color/txt_color" android:layout_marginTop="16dp" android:textStyle="bold" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/select_files_btn" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:insetTop="0dp" android:insetBottom="0dp" android:textAllCaps="false" android:text="Choose files" android:layout_marginTop="12dp" app:cornerRadius="12dp" app:icon="@drawable/ic_folder_open" app:iconGravity="textStart" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/select_media_btn" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:insetTop="0dp" android:insetBottom="0dp" android:textAllCaps="false" android:text="Photos and videos" android:layout_marginTop="12dp" app:cornerRadius="12dp" app:icon="@drawable/ic_photo_video" app:iconGravity="textStart" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/manage_files_btn" style="@style/Widget.ShareX.Button.Secondary" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:insetTop="0dp" android:insetBottom="0dp" android:textAllCaps="false" android:text="Review selected files" android:layout_marginTop="12dp" android:visibility="gone" app:cornerRadius="12dp" />
+                    </LinearLayout>
+                    <com.google.android.material.button.MaterialButton android:id="@+id/choose_folder_btn" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:layout_marginTop="12dp" android:text="Choose shared folder" android:textAllCaps="false" style="@style/Widget.ShareX.Button.Secondary" app:icon="@drawable/ic_folder_open" app:iconGravity="textStart" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <LinearLayout android:id="@+id/home_connection_details" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+            <TextView android:layout_marginStart="@dimen/home_section_margin" android:layout_marginEnd="@dimen/home_section_margin" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Connection" android:textSize="18sp" android:textColor="@color/txt_color" android:textStyle="bold" android:layout_marginTop="28dp" />
+            <TextView android:layout_marginStart="@dimen/home_section_margin" android:layout_marginEnd="@dimen/home_section_margin" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/sharing_address" android:textSize="13sp" android:textColor="@color/txt_color" android:layout_marginTop="12dp" />
+            <LinearLayout android:layout_marginStart="@dimen/home_section_margin" android:layout_marginEnd="@dimen/home_section_margin" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                <TextView android:id="@+id/connection_address" android:layout_height="wrap_content" android:text="@string/address_ready_hint" android:textSize="15sp" android:textColor="@color/txt_color" android:layout_weight="1" android:layout_width="0dp" android:maxLines="2" />
+                <ImageButton android:id="@+id/url_cpy_btn" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="12dp" android:contentDescription="Copy sharing address" app:srcCompat="@drawable/ic_copy" app:tint="@color/txt_color_secondary" />
+                <ImageButton android:id="@+id/url_share_btn" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:padding="12dp" android:contentDescription="Share connection address" app:srcCompat="@drawable/ic_share" app:tint="@color/txt_color_secondary" />
+            </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

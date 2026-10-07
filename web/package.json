@@ -1,0 +1,42 @@
+{
+  "name": "sharex-web",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prebuild": "node scripts/write-build-info.mjs",
+    "predev": "node scripts/write-build-info.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "copy:assets": "node scripts/copy-assets.mjs",
+    "build:assets": "npm run build && npm run copy:assets",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "class-variance-authority": "latest",
+    "clsx": "latest",
+    "howler": "^2.2.4",
+    "lucide-react": "latest",
+    "movi-player": "^0.4.1",
+    "next": "latest",
+    "omni-doc-viewer": "^0.2.0",
+    "radix-ui": "^1.6.7",
+    "react": "latest",
+    "react-dom": "latest",
+    "sonner": "latest",
+    "tailwind-merge": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "jszip": "^3.10.1",
+    "tailwindcss": "latest",
+    "tw-animate-css": "latest"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "overrides": {
+    "echarts": "^6.1.0",
+    "uuid": "^11.1.1"
+  }
+}
