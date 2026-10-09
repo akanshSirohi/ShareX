@@ -23,20 +23,14 @@
 - Local file transfers work without an internet connection. Internet access is used for online features such as the plugin Store.
 
 ## Download
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="90">](https://f-droid.org/packages/com.akansh.fileserversuit/)
-[<img src="images/get_github.png"
-     alt="Download from GitHub"
-     height="90">](https://github.com/akanshSirohi/ShareX/releases)
-[<img src="images/get_telegram.png"
-     alt="Download from Telegram"
-     height="90">](https://t.me/sharex_app)
+ShareX is available on Google Play:
+
+[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+     alt="Get it on Google Play"
+     height="90">](https://play.google.com/store/apps/details?id=com.akansh.sharex)
 
 ## Community
-[<img src="images/join_discord.png"
-     alt="Join Discord"
-     height="90">](https://discord.gg/jqv67AdE6p)
+[Join the Telegram discussion channel](https://t.me/sharex_app)
      
 ## Screenshots
 <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/4.png?raw=true" width="32%"> <img src="https://github.com/akanshSirohi/ShareX/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/5.png?raw=true" width="32%">
