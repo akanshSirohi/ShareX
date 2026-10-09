@@ -60,3 +60,5 @@ replay_pid*.log
 # Interrupted packaging files; keep the completed web UI ZIP in Git
 /app/src/main/assets/sharex_web_v*.zip.pending
 /app/src/main/assets/sharex_web_v*.zip.backup
+
+output
