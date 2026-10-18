@@ -28,6 +28,9 @@ ShareX is available on Google Play:
 [<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
      alt="Get it on Google Play"
      height="90">](https://play.google.com/store/apps/details?id=com.akansh.sharex)
+[<img src="images/get_github.png"
+     alt="Download from GitHub Releases"
+     height="90">](https://github.com/akanshSirohi/ShareX/releases)
 
 ## Community
 [Join the Telegram discussion channel](https://t.me/sharex_app)
